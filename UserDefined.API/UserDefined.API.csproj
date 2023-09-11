@@ -36,8 +36,6 @@
 
   <Import Project="..\MicroService.Common\MicroService.Common.projitems" Label="Shared" />
 
-  <Import Project="..\UserDefined.Models\UserDefined.Models.projitems" Label="Shared" />
-
   <Import Project="..\UserDefined\UserDefined.projitems" Label="Shared" />
 
 </Project>
