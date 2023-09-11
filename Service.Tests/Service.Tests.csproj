@@ -10,11 +10,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USENUNIT;</DefineConstants>
+    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USENUNIT;</DefineConstants>
+    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;</DefineConstants>
   </PropertyGroup>
 
   <ImportGroup Condition="$(DefineConstants.Contains('MODEL_ADDTEST'))">
