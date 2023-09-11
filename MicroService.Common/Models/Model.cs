@@ -11,16 +11,5 @@ using MicroService.Common.Interfaces;
 
 namespace MicroService.Common.Models
 {
-    #region IModel
-    /// <summary>
-    /// This interface represents a model.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    public interface IModel
-    { }
-    #endregion
+   
 }
