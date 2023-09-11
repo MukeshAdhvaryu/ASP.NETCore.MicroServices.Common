@@ -14,38 +14,38 @@ namespace MicroService.Common.Interfaces
     { }
     #endregion
 
-    #region IContract<TModelInterface, TModel, TIDType>
+    #region IContract<TModelDTO, TModel, TID>
     /// <summary>
     /// This interface represents a contract of operations.
     /// </summary>
-    /// <typeparam name="TModelInterface">Interface representing the model.</typeparam>
+    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TIDType">Primary key type of the model.</typeparam>
-    public interface IContract<TModelInterface, TModel, TIDType> : IContract, IFirstModel<TModel, TIDType>, IModelCount
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IContract<TModelDTO, TModel, TID> : IContract, IFirstModel<TModel, TID>, IModelCount
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
-        , IReadable<TModelInterface, TModel, TIDType>
+        , IReadable<TModelDTO, TModel, TID>
 #endif
 #if MODEL_DELETABLE
-  , IDeleteable<TModelInterface, TModel, TIDType>
+  , IDeleteable<TModelDTO, TModel, TID>
 #endif
 #if MODEL_APPENDABLE
-  , IAppendable<TModelInterface, TModel, TIDType>
+  , IAppendable<TModelDTO, TModel, TID>
 #endif
 #if MODEL_UPDATABLE
-  , IUpdateable<TModelInterface, TModel, TIDType>
+  , IUpdateable<TModelDTO, TModel, TID>
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
-        where TModelInterface : IModel
-        where TModel : Model<TIDType>,
+        where TModelDTO : IModel
+        where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelInterface,
+        TModelDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TIDType : struct
+        where TID : struct
         #endregion
     {
     }
