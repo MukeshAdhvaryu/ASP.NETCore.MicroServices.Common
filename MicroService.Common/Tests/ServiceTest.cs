@@ -19,21 +19,21 @@ using MicroService.Common.Tests.Attributes;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class ServiceTest<TModelInterface, TModel, TIDType> : Test<TModelInterface, TModel, TIDType>
+    public abstract class ServiceTest<TModelDTO, TModel, TID> : Test<TModelDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TModelInterface : IModel
-        where TModel : Model<TIDType>, IModel<TIDType>,
+        where TModelDTO : IModel
+        where TModel : Model<TID>, IModel<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelInterface,
+        TModelDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TIDType : struct
+        where TID : struct
         #endregion
     {
         #region VARIABLES
-        readonly IService<TModelInterface, TModel, TIDType> Service;
+        readonly IService<TModelDTO, TModel, TID> Service;
         #endregion
 
         #region CONSTRUCTOR
@@ -49,17 +49,17 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Get_ReturnSingle()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var first = Service.GetFirstModel();
-            expected = await Service.Get(first?.ID ?? default(TIDType));
+            expected = await Service.Get(first?.ID ?? default(TID));
             Verifier.NotNull(expected);
         }
 
         [NoArgs]
         public override async Task Get_ReturnSingleFail()
         {
-            TModelInterface expected;
-            var id = default(TIDType);
+            TModelDTO expected;
+            var id = default(TID);
             try
             {
                 expected = await Service.Get(id);
@@ -100,7 +100,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Add_ReturnAdded()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var model = Fixture.Create<TModel>();
             expected = await Service.Add(model);
             Verifier.NotNull(expected);
@@ -115,9 +115,9 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Delete_ReturnDeleted()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var first = Service.GetFirstModel();
-            expected = await Service.Delete(first?.ID ?? default(TIDType));
+            expected = await Service.Delete(first?.ID ?? default(TID));
             Verifier.NotNull(expected);
         }
 #endif
@@ -130,8 +130,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Update_ReturnUpdated()
         {
-            TModelInterface expected;
-            var id = Service.GetFirstModel()?.ID ?? default(TIDType);
+            TModelDTO expected;
+            var id = Service.GetFirstModel()?.ID ?? default(TID);
             var model = Fixture.Create<TModel>();
             model.ID = id;
             expected = await Service.Update(id, model);
@@ -142,9 +142,9 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected virtual IService<TModelInterface, TModel, TIDType> CreateService()
+        protected virtual IService<TModelDTO, TModel, TID> CreateService()
         {
-            return new Service<TModelInterface, TModel, TIDType, ModelCollection<TModel, TIDType>>(new ModelCollection<TModel, TIDType>());
+            return new Service<TModelDTO, TModel, TID, ModelCollection<TModel, TID>>(new ModelCollection<TModel, TID>());
         }
         #endregion
     }

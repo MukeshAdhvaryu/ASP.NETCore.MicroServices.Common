@@ -16,26 +16,26 @@ using MicroService.Common.Tests.Attributes;
 namespace MicroService.Common.Tests
 {
     [Testable]
-    public abstract class Test<TModelInterface, TModel, TIDType> 
+    public abstract class Test<TModelDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TModelInterface : IModel
-        where TModel : Model<TIDType>, IModel<TIDType>,
+        where TModelDTO : IModel
+        where TModel : Model<TID>, IModel<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelInterface,
+        TModelDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TIDType : struct
+        where TID : struct
         #endregion
     {
         #region VARIABLES
-        static Type modelInterFaceType = typeof(TModelInterface);
+        static Type modelInterFaceType = typeof(TModelDTO);
 
         protected readonly IFixture Fixture;
         //-:cnd:noEmit
 #if MODEL_USEDTO
-        static readonly Type DTOType = typeof(TModelInterface);
+        static readonly Type DTOType = typeof(TModelDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
@@ -100,20 +100,20 @@ namespace MicroService.Common.Tests
         #region TO DTO
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
-        protected TModelInterface? ToDTO(TModel? model)
+        protected TModelDTO? ToDTO(TModel? model)
         {
             if(model == null)
-                return default(TModelInterface);
+                return default(TModelDTO);
             if (NeedToUseDTO)
-                return (TModelInterface)((IExModel)model).ToDTO(DTOType);
-            return (TModelInterface)(object)model;
+                return (TModelDTO)((IExModel)model).ToDTO(DTOType);
+            return (TModelDTO)(object)model;
         }
 #else
-        protected TModelInterface? ToDTO(TModel? model)
+        protected TModelDTO? ToDTO(TModel? model)
         {
             if(model == null)
-                return default(TModelInterface);
-            return (TModelInterface)(object)model;
+                return default(TModelDTO);
+            return (TModelDTO)(object)model;
         }
 #endif
         //+:cnd:noEmit

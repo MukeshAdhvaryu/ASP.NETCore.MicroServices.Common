@@ -20,29 +20,29 @@ using Moq;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class TestStandard<TModelInterface, TModel, TIDType>: Test<TModelInterface, TModel, TIDType>
+    public abstract class TestStandard<TModelDTO, TModel, TID>: Test<TModelDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TModelInterface : IModel
-        where TModel : Model<TIDType>, IModel<TIDType>,
+        where TModelDTO : IModel
+        where TModel : Model<TID>, IModel<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelInterface,
+        TModelDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TIDType : struct
+        where TID : struct
         #endregion
     {
         #region VARIABLES
-        protected readonly Mock<IService<TModelInterface, TModel, TIDType>> MockService;
-        readonly IContract<TModelInterface, TModel, TIDType> Contract;
+        protected readonly Mock<IService<TModelDTO, TModel, TID>> MockService;
+        readonly IContract<TModelDTO, TModel, TID> Contract;
         protected readonly List<TModel> Models;
         #endregion
 
         #region CONSTRUCTOR
         public TestStandard()
         {
-            MockService = Fixture.Freeze<Mock<IService<TModelInterface, TModel, TIDType>>>();
+            MockService = Fixture.Freeze<Mock<IService<TModelDTO, TModel, TID>>>();
             Contract = CreateContract(MockService.Object);
             var count = DummyModelCount;
             if (count < 5)
@@ -54,9 +54,9 @@ namespace MicroService.Common.Tests
         #region PROPERTIES
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
-        protected IEnumerable<TModelInterface> Items => Models.Select(x => ToDTO(x));
+        protected IEnumerable<TModelDTO> Items => Models.Select(x => ToDTO(x));
 #else
-        protected IEnumerable<TModelInterface> Items => (IEnumerable<TModelInterface>)Models;
+        protected IEnumerable<TModelDTO> Items => (IEnumerable<TModelDTO>)Models;
 
 #endif
         //+:cnd:noEmit
@@ -65,11 +65,11 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IContract<TModelInterface, TModel, TIDType> CreateContract(IService<TModelInterface, TModel, TIDType> service);
+        protected abstract IContract<TModelDTO, TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
-        protected void Setup<TResult>(Expression<Func<IService<TModelInterface, TModel, TIDType>, Task<TResult>>> expression, TResult returnedValue)
+        protected void Setup<TResult>(Expression<Func<IService<TModelDTO, TModel, TID>, Task<TResult>>> expression, TResult returnedValue)
         {
             MockService.Setup(expression).ReturnsAsync(returnedValue);
         }
@@ -81,7 +81,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Get_ReturnSingle()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var id = Models[0].ID;
             var model = ToDTO(Models[0]);
             Setup((m) => m.Get(id), model);
@@ -92,8 +92,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Get_ReturnSingleFail()
         {
-            var id = Fixture.Create<TIDType>();
-            TModelInterface model = default(TModelInterface);
+            var id = Fixture.Create<TID>();
+            TModelDTO model = default(TModelDTO);
             Setup((m) => m.Get(id), model);
             var expected = await Contract.Get(id);
             Verifier.Equal(model, expected);
@@ -105,7 +105,7 @@ namespace MicroService.Common.Tests
         [Args(-1)]
         public override async Task GetAll_ReturnAll(int limitOfResult = 0)
         {
-            IEnumerable<TModelInterface> expected;
+            IEnumerable<TModelDTO> expected;
 
             if (limitOfResult == 0)
             {
@@ -115,7 +115,7 @@ namespace MicroService.Common.Tests
             }
             else if (limitOfResult < 0)
             {
-                Setup((m) => m.GetAll(limitOfResult), new TModelInterface[] { });
+                Setup((m) => m.GetAll(limitOfResult), new TModelDTO[] { });
                 expected = await Contract.GetAll(limitOfResult);
                 limitOfResult = 0;
             }
@@ -131,7 +131,7 @@ namespace MicroService.Common.Tests
         [Args(-1)]
         public override async Task GetAll_ReturnNull(int limitOfResult = 0)
         {
-            Setup((m) => m.GetAll(limitOfResult), new TModelInterface[] { });
+            Setup((m) => m.GetAll(limitOfResult), new TModelDTO[] { });
             var expected = await Contract.GetAll(limitOfResult);
             Verifier.Empty(expected);
         }
@@ -145,7 +145,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Add_ReturnAdded()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Add(model), returnModel);
@@ -161,7 +161,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Delete_ReturnDeleted()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Delete(model.ID), returnModel);
@@ -178,7 +178,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public override async Task Update_ReturnUpdated()
         {
-            TModelInterface expected;
+            TModelDTO expected;
             var model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Update(model.ID, model), returnModel);
