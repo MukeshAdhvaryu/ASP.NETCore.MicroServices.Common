@@ -11,104 +11,7 @@ using MicroService.Common.Interfaces;
 
 namespace MicroService.Common.Models
 {
-    #region IModel
-    /// <summary>
-    /// This interface represents a model.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    public interface IModel
-    { }
-    #endregion
-
-    #region IModel<TIDType>
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    /// <typeparam name="TIDType"></typeparam>
-    public interface IModel<TIDType> : IModel, IMatch
-        where TIDType : struct
-    {
-        /// <summary>
-        /// gets primary key value of this model.
-        /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        TIDType ID { get; }
-    }
-    #endregion
-
-    #region IExModel<TIDType>
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    /// <typeparam name="TIDType"></typeparam>
-    internal interface IExModel<TIDType> : IModel<TIDType>, IExModel
-        where TIDType : struct
-    {
-        /// <summary>
-        /// gets primary key value of this model.
-        /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        new TIDType ID { get; set; }
-
-        /// <summary>
-        /// Gets unique id.
-        /// </summary>
-        /// <returns>Newly generated id.</returns>
-        TIDType GetNewID();
-
-        /// <summary>
-        /// Tries to parse the given value to the type of ID
-        /// Returns parsed value if succesful, otherwise default value.
-        /// </summary>
-        /// <param name="value">Value to be parsed as TIDType.</param>
-        /// <param name="newID">Parsed value.</param>
-        /// <returns>True if succesful, otherwise false</returns>
-        bool TryParseID(object value, out TIDType newID);
-    }
-    #endregion
-
-    #region IExModel
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// </summary>
-    internal partial interface IExModel : IModel, IExCopyable, IExParamParser
-    //-:cnd:noEmit
-#if MODEL_USEDTO
-        , IExModelToDTO
-#endif
-    //+:cnd:noEmit
-    {
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
-
-        /// <summary>
-        /// Gets initial data.
-        /// </summary>
-        /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
-        IEnumerable<IModel> GetInitialData();
-    }
-    #endregion
-
-    #region Model<TIDType>
+    #region Model<TID>
     /// <summary>
     /// This class represents a base class for any user-defined model.
     /// Highly customizable by using the following conditional compilation symbols:
@@ -117,15 +20,15 @@ namespace MicroService.Common.Models
     /// MODEL_UPDATABLE;
     /// MODEL_USEMYOWNCONTROLLER
     /// </summary>
-    public abstract partial class Model<TIDType> : IExModel<TIDType>, IExModel
-        where TIDType : struct
+    public abstract partial class Model<TID> : IExModel<TID>, IExModel
+        where TID : struct
     {
         #region VARIABLES
-        protected TIDType id;
+        protected TID id;
         #endregion
 
         #region CONSTRUCTOR
-        protected Model(bool generateNewID)
+        protected Model(bool generateNewID) 
         {
             if (generateNewID)
                 id = GetNewID();
@@ -135,8 +38,8 @@ namespace MicroService.Common.Models
         #region PROPERTIES
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public TIDType ID { get => id; set => id = value; }
-        TIDType IExModel<TIDType>.ID { get => id; set => id = value; }
+        public TID ID { get => id; set => id = value; }
+        TID IExModel<TID>.ID { get => id; set => id = value; }
         #endregion
 
         #region GET PROPERTY NAMES
@@ -186,10 +89,10 @@ namespace MicroService.Common.Models
                     currentValue = id;
                     var value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
                     parsedValue = null;
-                    if(((IExModel<TIDType>)this).TryParseID(value, out TIDType newID))
+                    if(((IExModel<TID>)this).TryParseID(value, out TID newID))
                     {
                         parsedValue = newID;
-                        if(updateValueIfParsed &&  Equals(id , default(TIDType)))
+                        if(updateValueIfParsed &&  Equals(id , default(TID)))
                             id = newID;
                         
                         return Message.Sucess(name);
@@ -212,10 +115,10 @@ namespace MicroService.Common.Models
 
         Task<bool> IExCopyable.CopyFrom(IModel model)
         {
-            if (model is IModel<TIDType>)
+            if (model is IModel<TID>)
             {
-                var m = (IModel<TIDType>)model;
-                if (Equals(id, default(TIDType)))
+                var m = (IModel<TID>)model;
+                if (Equals(id, default(TID)))
                     id = m.ID;
                 return CopyFrom(model);
             }
@@ -246,8 +149,8 @@ namespace MicroService.Common.Models
         #endregion
 
         #region GET NEW ID
-        protected abstract TIDType GetNewID();
-        TIDType IExModel<TIDType>.GetNewID()
+        protected abstract TID GetNewID();
+        TID IExModel<TID>.GetNewID()
         {
             return GetNewID();
         }
@@ -261,18 +164,18 @@ namespace MicroService.Common.Models
         /// <param name="value">Value to be parsed as TIDType.</param>
         /// <param name="newID">Parsed value.</param>
         /// <returns>True if succesful, otherwise false</returns>
-        protected abstract bool TryParseID(object value, out TIDType newID);
+        protected abstract bool TryParseID(object value, out TID newID);
 
-        bool IExModel<TIDType>.TryParseID(object value, out TIDType newID)
+        bool IExModel<TID>.TryParseID(object value, out TID newID)
         {
             if(value == null)
             {
-                newID = default(TIDType);
+                newID = default(TID);
                 return false;
             }
-            if (value is TIDType)
+            if (value is TID)
             {
-                newID = (TIDType)value;
+                newID = (TID)value;
                 return true;
             }
             return TryParseID(value, out newID);
@@ -291,7 +194,7 @@ namespace MicroService.Common.Models
         /// <returns>True if values match, otherwise false.</returns>
         protected virtual bool IsMatch (string propertyName, Criteria criteria, object currentValue, object parsedValue)
         {
-            return Operations.Compare(currentValue, criteria, parsedValue);
+            return Equals(currentValue, parsedValue);
         }
         bool IMatch.IsMatch(ISearchParameter parameter)
         {

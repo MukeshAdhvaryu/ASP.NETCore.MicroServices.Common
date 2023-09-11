@@ -108,4 +108,185 @@ namespace MicroService.Common.Interfaces
     //+:cnd:noEmit
     #endregion
 
+    #region IFirstModel<TModel, TID> 
+    /// <summary>
+    /// Represents an object which offers the first model with in its internal collection.
+    /// </summary>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IFirstModel<TModel, TID>
+        where TModel : Model<TID>
+        where TID : struct
+    {
+        TModel? GetFirstModel();
+    }
+    #endregion
+
+    #region IReadable<TModelDTO, TModel, TID>
+    //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+    /// <summary>
+    /// This interface represents an object that allows reading a single model or multiple models.
+    /// </summary>
+    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IReadable<TModelDTO, TModel, TID>
+        #region TYPE CONSTRINTS
+        where TModelDTO : IModel
+        where TModel : Model<TID>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TModelDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        /// <summary>
+        /// Gets a single model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to read.</param>
+        /// <returns></returns>
+        Task<TModelDTO> Get(TID id);
+
+        /// <summary>
+        /// Gets all models contained in this object.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IEnumerable<TModelDTO>> GetAll(int limitOfResult = 0);
+
+        /// <summary>
+        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="startIndex">Start index which to start picking records from.</param>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int limitOfResult);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        Task<IEnumerable<TModelDTO>> FindAll(ISearchParameter parameter);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IDeletable<TModelDTO, TModel, TID>
+    //-:cnd:noEmit
+#if MODEL_DELETABLE
+    /// <summary>
+    /// This interface represents an object that allows deleting a single model with a specified ID.
+    /// </summary>
+    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IDeleteable<TModelDTO, TModel, TID> 
+        #region TYPE CONSTRINTS
+        where TModelDTO : IModel
+        where TModel : Model<TID>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TModelDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        /// <summary>
+        /// Deletes the model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to delete.</param>
+        /// <returns></returns>
+        Task<TModelDTO> Delete(TID id);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IAppendable<TModelDTO, TModel, TID>
+    //-:cnd:noEmit
+#if MODEL_APPENDABLE
+    /// <summary>
+    /// This interface represents an object that has a list of models to which a new model can be appended.
+    /// Any object that implements the IModel interface can be provided. This allows DTOs to be used instead of an actual model object.
+    /// </summary>
+    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IAppendable<TModelDTO, TModel, TID> 
+        #region TYPE CONSTRINTS
+        where TModelDTO : IModel
+        where TModel : Model<TID>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TModelDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        /// <summary>
+        /// Adds a new model based on the given model.
+        /// If the given model is not TModel, then a new appropriate model will be created by copying data from the given model.
+        /// </summary>
+        /// <param name="model">
+        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
+        /// This allows DTOs to be used instead of an actual model object.
+        /// </param>
+        /// <returns>Model that is added.</returns>
+        Task<TModelDTO> Add(IModel model);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IUpdatable<TModelDTO, TModel, TID>
+    //-:cnd:noEmit
+#if MODEL_UPDATABLE
+    /// <summary>
+    /// This interface represents an object that has a list of models and allows a model with a specified ID to be updated with data from the given model parameter.
+    /// </summary>
+    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IUpdateable<TModelDTO, TModel, TID> 
+        #region TYPE CONSTRINTS
+        where TModelDTO : IModel
+        where TModel : Model<TID>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TModelDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        /// <summary>
+        /// Updates a model specified by the given ID with the data of the given model.
+        /// </summary>
+        /// <param name="id">ID of the model to be updated.</param>
+        /// <param name="model">
+        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
+        /// This allows DTOs to be used instead of an actual model object.
+        /// </param>
+        /// <returns></returns>
+        Task<TModelDTO> Update(TID id, IModel model);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
 }
