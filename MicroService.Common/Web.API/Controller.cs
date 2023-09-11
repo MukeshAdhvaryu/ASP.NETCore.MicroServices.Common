@@ -9,12 +9,18 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 using MicroService.Common.Services;
-using MicroService.Common.Web.API.Interfaces;
 
 using Microsoft.AspNetCore.Mvc;
 
 namespace MicroService.Common.Web.API
 {
+    #region IExController 
+    /// <summary>
+    /// This interface represents a contract of operations.
+    internal interface IExController
+    { }
+    #endregion
+
     #region CONTROLLER
     /// <summary>
     /// Generic controller. You must inherit this controller in your microservice project.
@@ -24,7 +30,7 @@ namespace MicroService.Common.Web.API
     /// <typeparam name="TModelDTO">Any model of your choice.</typeparam>
     [ApiController]
     [Route("[controller]")]
-    public class Controller<TModelDTO, TModel, TID> : ControllerBase, IExController<TModelDTO, TModel, TID>
+    public class Controller<TModelDTO, TModel, TID> : ControllerBase, IContract<TModelDTO, TModel, TID>, IExController
         #region TYPE CONSTRINTS
         where TModelDTO : IModel
         where TModel : Model<TID>,
@@ -54,7 +60,6 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region PROPERTIES
-        IService<TModelDTO, TModel, TID> IExController<TModelDTO, TModel, TID>.Service => service;
         #endregion
 
         #region GET FIRST MODEL

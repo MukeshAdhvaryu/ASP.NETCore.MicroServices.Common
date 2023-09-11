@@ -5,9 +5,8 @@
 
 using System.Reflection;
 
-using MicroService.Common.Interfaces;
 using MicroService.Common.Services;
-using MicroService.Common.Web.API.Interfaces;
+using MicroService.Common.Web.API;
 
 namespace MicroService.Common.Models
 {
@@ -25,15 +24,15 @@ namespace MicroService.Common.Models
         /// <exception cref="NotSupportedException">Thrown when incompitible controller type or incompitent controller type is supplied.</exception>
         protected virtual IModel GetModel(Type controllerType, out Type modelType)
         {
-            if (!controllerType.IsAssignableTo(typeof(IExController<,,>)))
+            if (!controllerType.IsAssignableTo(typeof(IExController)))
                 throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
 
             var field = controllerType.GetField("service", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null || !field.FieldType.IsAssignableTo(typeof(IService<,,>)))
+            if (field == null || !field.FieldType.IsAssignableTo(typeof(IService)))
                 throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
 
-            var modelFieldType = field.FieldType;
-            modelType = modelFieldType.GenericTypeArguments[1];
+            var serviceType = field.FieldType;
+            modelType = serviceType.GenericTypeArguments[1];
             var model = Activator.CreateInstance(modelType) as IExModel;
 
             if (model == null || !(model is IExModel))

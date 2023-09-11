@@ -33,7 +33,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\EnumSchemaFilter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelBinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\ParamBinder.cs" />

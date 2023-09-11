@@ -4,8 +4,6 @@
 */
 
 #if !TDD
-using System.Reflection.Metadata;
-
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
