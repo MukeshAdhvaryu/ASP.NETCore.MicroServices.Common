@@ -36,6 +36,154 @@ namespace MicroService.Common.Models
         /// </summary>
         MissingRequiredValue,
     }
+
+    #region AND/OR
+    /// <summary>
+    /// Enum AndOr
+    /// </summary>
+    public enum AndOr : byte
+    {
+        /// <summary>
+        /// The and
+        /// </summary>
+        AND,
+
+        /// <summary>
+        /// The or
+        /// </summary>
+        OR,
+    }
+    #endregion
+
+    #region CRITERIA
+    /// <summary>
+    /// Enum Criteria
+    /// </summary>
+    public enum Criteria : sbyte
+    {
+        /// <summary>
+        /// The equal
+        /// </summary>
+        Equal = 0,
+        /// <summary>
+        /// The greater than
+        /// </summary>
+        GreaterThan = 1,
+        /// <summary>
+        /// The less than
+        /// </summary>
+        LessThan = 2,
+        /// <summary>
+        /// The occurs
+        /// </summary>
+        Occurs = 3,
+        /// <summary>
+        /// The begins with
+        /// </summary>
+        BeginsWith = 4,
+        /// <summary>
+        /// The ends with
+        /// </summary>
+        EndsWith = 5,
+        /// <summary>
+        /// The occurs no case
+        /// </summary>
+        OccursNoCase = 6,
+        /// <summary>
+        /// The begins with no case
+        /// </summary>
+        BeginsWithNoCase = 7,
+        /// <summary>
+        /// The ends with no case
+        /// </summary>
+        EndsWithNoCase = 8,
+        /// <summary>
+        /// The string equal
+        /// </summary>
+        StringEqual = 9,
+        /// <summary>
+        /// The string equal no case
+        /// </summary>
+        StringEqualNoCase = 10,
+        /// <summary>
+        /// The string number greater than
+        /// </summary>
+        StringNumGreaterThan = 11,
+        /// <summary>
+        /// The string number less than
+        /// </summary>
+        StringNumLessThan = 12,
+        /// <summary>
+        /// The not equal
+        /// </summary>
+        NotEqual = -1,
+        /// <summary>
+        /// The not greater than
+        /// </summary>
+        NotGreaterThan = -2,
+        /// <summary>
+        /// The not less than
+        /// </summary>
+        NotLessThan = -3,
+        /// <summary>
+        /// The not occurs
+        /// </summary>
+        NotOccurs = -4,
+        /// <summary>
+        /// The not begins with
+        /// </summary>
+        NotBeginsWith = -5,
+        /// <summary>
+        /// The not ends with
+        /// </summary>
+        NotEndsWith = -6,
+        /// <summary>
+        /// The not occurs no case
+        /// </summary>
+        NotOccursNoCase = -7,
+        /// <summary>
+        /// The not begins with no case
+        /// </summary>
+        NotBeginsWithNoCase = -8,
+        /// <summary>
+        /// The not ends with no case
+        /// </summary>
+        NotEndsWithNoCase = -9,
+        /// <summary>
+        /// The not string equal
+        /// </summary>
+        NotStrEqual = -10,
+        /// <summary>
+        /// The not string equal no case
+        /// </summary>
+        NotStrEqualNoCase = -11,
+        /// <summary>
+        /// The not string greater than
+        /// </summary>
+        NotStringGreaterThan = -12,
+        /// <summary>
+        /// The not string less than
+        /// </summary>
+        NotStringLessThan = -13
+    }
+    #endregion
+
+    #region MULTI CRITERIA
+    /// <summary>
+    /// Enum MultCriteria
+    /// </summary>
+    public enum MultCriteria : sbyte
+    {
+        /// <summary>
+        /// The between
+        /// </summary>
+        Between = 0,
+        /// <summary>
+        /// The not between
+        /// </summary>
+        NotBetween = -1,
+    }
+    #endregion
 }
 namespace MicroService.Common.Services
 {
