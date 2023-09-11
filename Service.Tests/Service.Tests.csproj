@@ -10,17 +10,17 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;</DefineConstants>
+    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;TEST_USERMODELS;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;</DefineConstants>
+    <DefineConstants>$(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;TDD;MODEL_USEXUNIT;TEST_USERMODELS;</DefineConstants>
   </PropertyGroup>
 
   <ImportGroup Condition="$(DefineConstants.Contains('MODEL_ADDTEST'))">
 
     <Import Project="..\MicroService.Common\MicroService.Common.projitems" Label="Shared" />
-    <Import Project="..\UserDefined.Models\UserDefined.Models.projitems" Label="Shared"  Condition="$(DefineConstants.Contains('TEST_USERMODELS'))" />
+    <Import Project="..\UserDefined\UserDefined.projitems" Label="Shared"  Condition="$(DefineConstants.Contains('TEST_USERMODELS'))" />
   </ImportGroup>
 
   <ItemGroup Condition="$(DefineConstants.Contains('MODEL_ADDTEST'))">
