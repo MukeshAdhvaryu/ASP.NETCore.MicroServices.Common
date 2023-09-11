@@ -70,4 +70,40 @@ namespace MicroService.Common.Interfaces
 #endif
     //+:cnd:noEmit
     #endregion
+
+    #region IExCopyable
+    /// <summary>
+    /// This interface represents an object that copies data from another model.
+    /// </summary>
+    internal interface IExCopyable
+    {
+        /// <summary>
+        /// Copies model data from the given model parameter.
+        /// </summary>
+        /// <param name="model">Model to copy data from.</param>
+        /// <returns>True if the copy operation is successful; otherwise, false.</returns>
+        Task<bool> CopyFrom(IModel model);
+    }
+    #endregion
+
+    #region IExModelToDTO
+    //-:cnd:noEmit
+#if MODEL_USEDTO
+    /// <summary>
+    /// This interface represents an object which offers a DTO conversion of itself.
+    /// </summary>
+    internal interface IExModelToDTO 
+    {
+        /// <summary>
+        /// Provides compitible DTO of given type from this model.
+        /// You must implement this method to support dtos.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns>Compitible DTO.</returns>
+        IModel ToDTO(Type type);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
 }
