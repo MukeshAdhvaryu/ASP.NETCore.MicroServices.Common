@@ -9,6 +9,7 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 using MicroService.Common.Services;
+using MicroService.Common.Web.API.Interfaces;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,6 +51,10 @@ namespace MicroService.Common.Web.API
         {
             service = _service;
         }
+        #endregion
+
+        #region PROPERTIES
+        IService<TModelDTO, TModel, TID> IExController<TModelDTO, TModel, TID>.Service => service;
         #endregion
 
         #region GET FIRST MODEL
