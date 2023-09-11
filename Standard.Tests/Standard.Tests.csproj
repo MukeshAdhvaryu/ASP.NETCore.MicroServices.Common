@@ -20,6 +20,7 @@
   <ImportGroup Condition="$(DefineConstants.Contains('MODEL_ADDTEST'))">
 
     <Import Project="..\MicroService.Common\MicroService.Common.projitems" Label="Shared" />
+    <Import Project="..\UserDefined.Models\UserDefined.Models.projitems" Label="Shared"  Condition="$(DefineConstants.Contains('TEST_USERMODELS'))" />
   </ImportGroup>
 
   <ItemGroup Condition="$(DefineConstants.Contains('MODEL_ADDTEST'))">
