@@ -33,22 +33,6 @@ namespace MicroService.Common.Attributes
         public ModelAttribute(ServiceScope scope, bool autoController = true, bool provideSeedData = false) :
             this(null, scope, autoController, provideSeedData)
         { }
-        public ModelAttribute(string name, string connectionkey, bool autoController = true, bool provideSeedData = false) :
-            this(name, autoController, provideSeedData)
-        {
-            ConnectionKey = connectionkey;
-        }
-        public ModelAttribute(string name, string connectionkey, ServiceScope scope, bool autoController = true, bool provideSeedData = false) :
-            this(name, scope, autoController, provideSeedData)
-        {
-            Scope = scope;
-            ConnectionKey = connectionkey;
-        }
-        public ModelAttribute(ServiceScope scope, string connectionkey, bool autoController = true, bool provideSeedData = false) :
-            this(null, scope, autoController, provideSeedData)
-        {
-            ConnectionKey = connectionkey;
-        }
         #endregion
 
         #region PROPERTIES
@@ -56,11 +40,6 @@ namespace MicroService.Common.Attributes
         /// Gets or sets Name of a dynamic controller to be used for a model which uses this attribute.
         /// </summary>
         public string? Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets connection key to be used to connect with a db context for a model which uses this attribute.
-        /// </summary>
-        public string? ConnectionKey { get; set; }
 
         /// <summary>
         /// Gets or sets a scope of service to be used for a model which uses this attribute.

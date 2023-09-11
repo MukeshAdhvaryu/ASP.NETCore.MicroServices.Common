@@ -78,14 +78,8 @@ namespace MicroService.Common.Tests
             };
         }
 
-        protected override Action<TOptionBuilder> GetOptionsBuilderAction<TOptionBuilder>(params IParameter[] parameters)
+        protected override int GetNewID()
         {
-            return default(Action <TOptionBuilder>);
-        }
-
-        protected override int GetNewID(out int lastID)
-        {
-            lastID = iid;
             return (++iid);
         }
         protected override bool Match(string propertyName, object value)

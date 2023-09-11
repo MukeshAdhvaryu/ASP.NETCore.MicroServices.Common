@@ -97,14 +97,6 @@ namespace MicroService.Common.Models
         /// </summary>
         /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
         IEnumerable<IModel> GetInitialData();
-
-        /// <summary>
-        /// Gets an action for a specified OptionBuilder.
-        /// </summary>
-        /// <typeparam name="TOptionBuilder">Type of OptionBuilder</typeparam>
-        /// <param name="configuration"></param>
-        /// <returns></returns>
-        Action<TOptionBuilder> GetOptionsBuilderAction<TOptionBuilder>(params IParameter[] parameters);
     }
     #endregion
 
@@ -217,12 +209,6 @@ namespace MicroService.Common.Models
         protected abstract IEnumerable<IModel> GetInitialData();
 
         IEnumerable<IModel> IExModel.GetInitialData() => GetInitialData();
-        #endregion
-
-        #region GET OPTION BUILDER ACTION
-        protected abstract Action<TOptionBuilder> GetOptionsBuilderAction<TOptionBuilder>(params IParameter[] parameters);
-        Action<TOptionBuilder> IExModel.GetOptionsBuilderAction<TOptionBuilder>(params IParameter[] parameters) =>
-            GetOptionsBuilderAction<TOptionBuilder>(parameters);
         #endregion
 
         #region GET NEW ID
