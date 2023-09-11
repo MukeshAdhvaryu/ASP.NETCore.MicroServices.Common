@@ -29,6 +29,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelBinder.cs" />
