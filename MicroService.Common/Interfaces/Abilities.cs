@@ -6,5 +6,106 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Interfaces
 {
-   
+    #region IModelCount
+    /// <summary>
+    /// Represents an object which offers a number of models it holds.
+    /// </summary>
+    public interface IModelCount
+    {
+        /// <summary>
+        /// Gets the number of models this object currently holds.
+        /// </summary>
+        /// <returns></returns>
+        int GetModelCount();
+    }
+    #endregion
+
+    #region IMatch
+    /// <summary>
+    /// Reprents an object which checks if certqain value exists.
+    /// </summary>
+    public interface IMatch
+    {
+        /// <summary>
+        /// Finds whether the given value matches the current value of property found by specified property name.
+        /// </summary>
+        /// <param name="searchParameter">Search parameter to use to match records in this object.</param>
+        /// <returns>True if values match, otherwise false.</returns>
+        bool IsMatch(ISearchParameter searchParameter);
+    }
+    #endregion
+
+    #region IModifiable
+    //-:cnd:noEmit
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+    /// <summary>
+    /// This interface represents an object that is aware of changes in its internal state and allows saving those changes.
+    /// </summary>
+    public interface IModifiable
+    {
+        /// <summary>
+        /// Saves changes made to this object.
+        /// </summary>
+        /// <returns>True if the operation is successful; otherwise, false.</returns>
+        Task<bool> SaveChanges();
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IExCopyable
+    /// <summary>
+    /// This interface represents an object that copies data from another model.
+    /// </summary>
+    internal interface IExCopyable
+    {
+        /// <summary>
+        /// Copies model data from the given model parameter.
+        /// </summary>
+        /// <param name="model">Model to copy data from.</param>
+        /// <returns>True if the copy operation is successful; otherwise, false.</returns>
+        Task<bool> CopyFrom(IModel model);
+    }
+    #endregion
+
+    #region IExParamParser
+    /// <summary>
+    /// This interface represents an object that offers parameter parsing capability.
+    /// Provided, the given property exist as one of its members.
+    /// </summary>
+    internal interface IExParamParser
+    {
+        /// <summary>
+        /// Parses the specified parameter and if possible emits the value compitible with
+        /// the property this object posseses.
+        /// </summary>
+        /// <param name="parameter">Parameter to parse.</param>
+        /// <param name="currentValue">Current value exists for the given property in this object.</param>
+        /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
+        /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
+        /// <returns>Result Message with Status of the parse operation.</returns>
+        Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false);
+    }
+    #endregion
+
+    #region IExModelToDTO
+    //-:cnd:noEmit
+#if MODEL_USEDTO
+    /// <summary>
+    /// This interface represents an object which offers a DTO conversion of itself.
+    /// </summary>
+    internal interface IExModelToDTO 
+    {
+        /// <summary>
+        /// Provides compitible DTO of given type from this model.
+        /// You must implement this method to support dtos.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns>Compitible DTO.</returns>
+        IModel ToDTO(Type type);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
 }
