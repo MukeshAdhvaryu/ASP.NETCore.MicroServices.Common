@@ -5,10 +5,18 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MicroService.Common", "MicroService.Common\MicroService.Common.shproj", "{FE238988-9AE0-4016-AF48-56B477413AED}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.Tests", "Service.Tests\Service.Tests.csproj", "{22AC614E-8296-4ED8-B666-044B81C65F24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{22AC614E-8296-4ED8-B666-044B81C65F24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22AC614E-8296-4ED8-B666-044B81C65F24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22AC614E-8296-4ED8-B666-044B81C65F24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22AC614E-8296-4ED8-B666-044B81C65F24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -17,6 +25,7 @@ Global
 		SolutionGuid = {6E8FCC8F-078C-427C-A196-3D99353D2AAD}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MicroService.Common\MicroService.Common.projitems*{22ac614e-8296-4ed8-b666-044b81c65f24}*SharedItemsImports = 5
 		MicroService.Common\MicroService.Common.projitems*{fe238988-9ae0-4016-af48-56b477413aed}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
