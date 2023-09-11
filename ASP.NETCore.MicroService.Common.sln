@@ -3,29 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MicroService.Common", "MicroService.Common\MicroService.Common.shproj", "{6E992D51-E5C4-49FE-BCE5-1F286C39469B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{702C4789-0454-4DF9-9384-5B3F0309A9B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{702C4789-0454-4DF9-9384-5B3F0309A9B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{702C4789-0454-4DF9-9384-5B3F0309A9B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{702C4789-0454-4DF9-9384-5B3F0309A9B5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8C8B1613-9ACF-40EB-A4B8-EE446EC91D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8C8B1613-9ACF-40EB-A4B8-EE446EC91D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8C8B1613-9ACF-40EB-A4B8-EE446EC91D01}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8C8B1613-9ACF-40EB-A4B8-EE446EC91D01}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0087CDFE-1119-4D9E-A37E-1C46E9DF7401}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0087CDFE-1119-4D9E-A37E-1C46E9DF7401}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0087CDFE-1119-4D9E-A37E-1C46E9DF7401}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0087CDFE-1119-4D9E-A37E-1C46E9DF7401}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6E8FCC8F-078C-427C-A196-3D99353D2AAD}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MicroService.Common\MicroService.Common.projitems*{6e992d51-e5c4-49fe-bce5-1f286c39469b}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

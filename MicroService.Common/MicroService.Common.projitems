@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>6e992d51-e5c4-49fe-bce5-1f286c39469b</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MicroService.Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contract\IContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModelCollection\ModelCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameter\Parameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Test.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\ServiceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\StandardTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ValueStore\IValueStore.cs" />
+  </ItemGroup>
+</Project>
