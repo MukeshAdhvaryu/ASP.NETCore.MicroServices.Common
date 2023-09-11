@@ -1,11 +1,12 @@
 # ASP.NETCore.MicroServices.Common.Template
 
-dotnet new install ASP.NETCore.Dynamic.MicroService 
+## dotnet new install ASP.NETCore.Dynamic.MicroService 
 
 then anywhere you want to create the template use:
-dotnet new install micro
+
+## dotnet new install micro
 OR
-dotnet new install microservice
+## dotnet new install microservice
 
 Using WebAPI template for creating microservices is a faster and more efficient way.
 Creating a microservice by choosing from .NET templates is a standard way to get started. 
