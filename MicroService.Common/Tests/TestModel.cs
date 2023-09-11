@@ -15,39 +15,6 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Tests
 {
-    #region ITestModelDTO
-    /// <summary>
-    /// Represents a DTO for test model.
-    /// </summary>
-    public interface ITestModelDTO: IModel
-    {
-        /// <summary>
-        /// Gets name of the model.
-        /// </summary>
-        string Name { get; }
-    }
-    #endregion
-
-    #region TestModelDTO
-    /// <summary>
-    /// Represents a DTO for test model.
-    /// </summary>
-    public class TestModelDTO : ITestModelDTO
-    {
-        /// <summary>
-        /// Gets name of the model.
-        /// </summary>
-        public string Name { get; }
-
-        #region CONSTRUCTOR
-        public TestModelDTO(TestModel model)
-        {
-            Name = model.Name;
-        }
-        #endregion
-    }
-    #endregion
-
     #region TestModel
     [Model(ProvideSeedData = true)]
     public sealed class TestModel: Model<int>
