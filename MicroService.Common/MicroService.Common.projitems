@@ -29,8 +29,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\Interfaces.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Web.API\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\" />
   </ItemGroup>
 </Project>
