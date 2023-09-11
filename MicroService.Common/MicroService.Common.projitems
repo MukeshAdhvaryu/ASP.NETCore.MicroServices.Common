@@ -9,5 +9,28 @@
     <Import_RootNamespace>MicroService.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\ModelCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contract\IContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Parameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\ServiceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\StandardTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Test.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Comparison\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\" />
   </ItemGroup>
 </Project>

@@ -8,6 +8,12 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Parameters
 {
+    public interface ISearchParameter : IParameter
+    {
+        Criteria Criteria { get; }
+        AndOr AndOr { get; }
+    }
+
     public readonly struct SearchParameter: ISearchParameter
     {
         public SearchParameter(string name, object value, Criteria criteria = Criteria.Equal, AndOr andOr = AndOr.AND)
