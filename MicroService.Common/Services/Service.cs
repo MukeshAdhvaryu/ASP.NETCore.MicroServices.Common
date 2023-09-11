@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using MicroService.Common.Collections;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 namespace MicroService.Common.Services
 {
@@ -312,7 +313,7 @@ namespace MicroService.Common.Services
             //-:cnd:noEmit
 #if (MODEL_USEDTO)
             if (NeedToUseDTO)
-                return (IEnumerable<TModelDTO>)models.Select(m => ((IExModel)m).ToDTO(DTOType));
+                return models.Select(m => ToDTO(m));
 #endif
             //+:cnd:noEmit
 

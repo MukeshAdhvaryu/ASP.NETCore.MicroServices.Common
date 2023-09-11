@@ -3,6 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 namespace MicroService.Common.Interfaces
 {

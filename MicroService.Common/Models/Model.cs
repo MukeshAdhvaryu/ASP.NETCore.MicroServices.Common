@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
 using MicroService.Common.Interfaces;
+using MicroService.Common.Parameters;
 
 namespace MicroService.Common.Models
 {
@@ -127,7 +128,7 @@ namespace MicroService.Common.Models
 #if MODEL_USEDTO
             if (model is IModel)
             {
-                if (Equals(id, default(TIDType)))
+                if (Equals(id, default(TID)))
                     id = GetNewID();
                 return CopyFrom(model);
             }
