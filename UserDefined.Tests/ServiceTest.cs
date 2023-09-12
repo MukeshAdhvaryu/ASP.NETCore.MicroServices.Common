@@ -6,6 +6,7 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Services;
 using MicroService.Common.Tests;
 using MicroService.Common.Tests.Attributes;
+using MicroService.Common.Collections;
 
 //-:cnd:noEmit
 #if !MODEL_USEDTO

@@ -11,6 +11,7 @@ using System;
 
 using AutoFixture;
 
+using MicroService.Common.Collections;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
