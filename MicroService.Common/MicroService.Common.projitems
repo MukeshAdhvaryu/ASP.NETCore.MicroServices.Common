@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tests\StandardTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ValueStore\IValueStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\DbContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelBinder.cs" />
   </ItemGroup>
