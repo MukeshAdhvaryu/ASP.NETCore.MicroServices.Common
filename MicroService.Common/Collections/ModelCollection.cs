@@ -6,10 +6,11 @@ using System.Collections;
 using System.Reflection;
 
 using MicroService.Common.Attributes;
+using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
-namespace MicroService.Common.Interfaces
+namespace MicroService.Common.Collections
 {
     #region IModelCollection
     public interface IModelCollection

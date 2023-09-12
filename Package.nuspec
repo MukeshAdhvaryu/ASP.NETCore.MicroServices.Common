@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+  <id>ASP.NETCore.Dynamic.MicroService</id>
+    <version>1.0.7</version>
+    <authors>Mukesh Adhvaryu</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <description>ASP.NETCore WebAPI template to create a microservice faster.</description>
+    <copyright>"Copyright (c) Mukesh Adhvaryu 2023"</copyright>
+    <tags>dotnet-core webapi csharp template</tags>
+    <packageTypes>
+      <packageType name="Template" />
+    </packageTypes>
+  </metadata>
+  <files>
+    <file src="**" exclude="**\bin\**\*;**\obj\**\*;**\*.user;**\*.lock.json;**\.DS_Store;**\.git\**\*;**\.github\**\*;**\.vs\**\*;**\.vscode\**\*;**\*LICENSE;**\cls;**\*.gitattributes;**\*.gitignore;**\*nuget.config;" target="/content" />
+  </files>
+</package>

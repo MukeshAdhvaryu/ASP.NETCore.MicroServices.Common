@@ -2,6 +2,7 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+using MicroService.Common.Collections;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 

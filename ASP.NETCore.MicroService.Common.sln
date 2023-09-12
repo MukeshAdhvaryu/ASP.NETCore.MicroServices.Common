@@ -7,6 +7,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MicroService.Common", "Micr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserDefined.Tests", "UserDefined.Tests\UserDefined.Tests.csproj", "{C403350F-F8F1-458B-A6E3-5C258FBE0746}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserDefined.API", "UserDefined.API\UserDefined.API.csproj", "{C98BF9A9-5F95-4F74-9ED7-65403CB4E9F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{C403350F-F8F1-458B-A6E3-5C258FBE0746}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C403350F-F8F1-458B-A6E3-5C258FBE0746}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C403350F-F8F1-458B-A6E3-5C258FBE0746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C98BF9A9-5F95-4F74-9ED7-65403CB4E9F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C98BF9A9-5F95-4F74-9ED7-65403CB4E9F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C98BF9A9-5F95-4F74-9ED7-65403CB4E9F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C98BF9A9-5F95-4F74-9ED7-65403CB4E9F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -27,5 +33,6 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		MicroService.Common\MicroService.Common.projitems*{6e992d51-e5c4-49fe-bce5-1f286c39469b}*SharedItemsImports = 13
 		MicroService.Common\MicroService.Common.projitems*{c403350f-f8f1-458b-a6e3-5c258fbe0746}*SharedItemsImports = 5
+		MicroService.Common\MicroService.Common.projitems*{c98bf9a9-5f95-4f74-9ed7-65403cb4e9f8}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

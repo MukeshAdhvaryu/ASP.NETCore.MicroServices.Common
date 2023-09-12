@@ -73,4 +73,8 @@ If you want your model to get connected with database other than 'InMemory' one 
 By default, it provides an action to create InMemory DbContext using "InMemory" connection string stored in configuration.
 
 That's it. 
+
+## UPDATE: test projects using MSTest, xUnit, NUnit frameworks are created.
+
+### These projects are created with bare minimum code as all test classes are derived from a common Test<TModelInterface, TModel, TIDType> class.
   

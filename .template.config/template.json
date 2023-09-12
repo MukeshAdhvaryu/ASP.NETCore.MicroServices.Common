@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Mukesh Adhvaryu",
+  "classifications": [ "MicroServices", "WebApi" ],
+  "name": "Microservice By Mukesh Adhvaryu",
+  "identity": "ASP.NETCore.Dynamic.MicroService",
+  "groupIdentity": "ASP.NETCore.Dynamic.MicroService",
+  "shortName": [ "microservice", "micro" ],
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "ASP.NETCore.MicroServices.Common",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "exclude": [
+        "**/cls",
+        "**/nuget.config",
+        "**/LICENSE",
+        "**/.gitattributes",
+        "**/.gitignore",
+        "**/*.nupkg",
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**",
+        ".template.config/**/*",
+        "**.vs/**/*",
+        "**.vscode/**/*",
+        "**/*.filelist",
+        "**/*.user",
+        "**/*.lock.json",
+        "**/.git/**",
+        "**/.github/**",
+        "*.nuspec",
+        "**/node_modules/**"
+      ]
+    }
+  ]
+}
