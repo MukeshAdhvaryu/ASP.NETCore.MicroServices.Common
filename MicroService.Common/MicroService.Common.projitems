@@ -10,6 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Binders\Binder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Binders\BindingResultMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contract\IContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
