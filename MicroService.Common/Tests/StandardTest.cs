@@ -77,7 +77,7 @@ namespace MicroService.Common.Tests
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_nonreadable
+#if !MODEL_NONREADABLE
         [NoArgs]
         public override async Task Get_ReturnSingle()
         {
@@ -102,13 +102,28 @@ namespace MicroService.Common.Tests
         [WithArgs]
         [Args(0)]
         [Args(3)]
+        [Args(-1)]
         public override async Task GetAll_ReturnAll(int limitOfResult = 0)
         {
-            Setup((m) => m.GetAll(limitOfResult), Items);
-            var expected = await Contract.GetAll(limitOfResult);
+            IEnumerable<TModelInterface> expected;
 
             if (limitOfResult == 0)
+            {
                 limitOfResult = Models.Count;
+                Setup((m) => m.GetAll(limitOfResult), Items);
+                expected = await Contract.GetAll(limitOfResult);
+            }
+            else if (limitOfResult < 0)
+            {
+                Setup((m) => m.GetAll(limitOfResult), new TModelInterface[] { });
+                expected = await Contract.GetAll(limitOfResult);
+                limitOfResult = 0;
+            }
+            else
+            {
+                Setup((m) => m.GetAll(limitOfResult), Items.Take(limitOfResult));
+                expected = await Contract.GetAll(limitOfResult);
+            }
             Verifier.Equal(limitOfResult, expected.Count());
         }
 

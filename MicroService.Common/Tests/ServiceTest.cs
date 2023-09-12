@@ -11,6 +11,7 @@ using System;
 
 using AutoFixture;
 
+using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 using MicroService.Common.Tests.Attributes;
@@ -61,7 +62,7 @@ namespace MicroService.Common.Tests
             try
             {
                 expected = await Service.Get(id);
-
+                Verifier.NotNull(expected);
             }
             catch (Exception exception)
             {
@@ -129,7 +130,7 @@ namespace MicroService.Common.Tests
         public override async Task Update_ReturnUpdated()
         {
             TModelInterface expected;
-            var id = Service.GetFirstModel?.ID ?? default(TIDType);
+            var id = Service.GetFirstModel()?.ID ?? default(TIDType);
             var model = Fixture.Create<TModel>();
             model.ID = id;
             expected = await Service.Update(id, model);
@@ -140,7 +141,10 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IService<TModelInterface, TModel, TIDType> CreateService();
+        protected virtual IService<TModelInterface, TModel, TIDType> CreateService()
+        {
+            return new Service<TModelInterface, TModel, TIDType, ModelCollection<TModel, TIDType>>(new ModelCollection<TModel, TIDType>());
+        }
         #endregion
     }
 }
