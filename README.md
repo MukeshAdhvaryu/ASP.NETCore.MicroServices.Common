@@ -74,7 +74,10 @@ By default, it provides an action to create InMemory DbContext using "InMemory" 
 
 That's it. 
 
-## UPDATE: test projects using MSTest, xUnit, NUnit frameworks are created.
+## UPDATE: A sigle test project is created.
 
-### These projects are created with bare minimum code as all test classes are derived from a common Test<TModelInterface, TModel, TIDType> class.
+### This project is with bare minimum code and can be used commonly for all frameworks i.e. xUnit, NUnit or MSTest.
+
+Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. if neither of those defined then MSTest will be used.
+
   
