@@ -4,6 +4,8 @@
 */
 
 #if !TDD
+using System;
+
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
@@ -22,7 +24,7 @@ namespace MicroService.Common.Web.API
             var Query = bindingContext.ActionContext.HttpContext.Request.Query;
             bool multiple = Query.ContainsKey(bindingContext.OriginalModelName);
 
-            List<SearchParameter> list = new List<SearchParameter>();
+            List<ISearchParameter> list = new List<ISearchParameter>();
             var PropertyNames = model.GetPropertyNames();
 
             if (multiple)
@@ -32,7 +34,6 @@ namespace MicroService.Common.Web.API
                 {
                     //working on it. in next version....
                 }
-
             }
             else
             {
@@ -45,19 +46,35 @@ namespace MicroService.Common.Web.API
                         if (message.Status == ResultStatus.Sucess)
                         {
                             Enum.TryParse(Query["criteria"], out Criteria criteria);
-                            Enum.TryParse(Query["andor"], out AndOr andOr);
-
-                            list.Add(new SearchParameter(name, value, criteria, andOr));
+                            if (Query.ContainsKey("andOr"))
+                            {
+                                Enum.TryParse(Query["andor"], out AndOr andOr);
+                                list.Add(new MultiSearchParameter(name, value, criteria, andOr));
+                            }
+                            else
+                            {
+                                list.Add(new SearchParameter(name, value, criteria));
+                            }
                         }
                     }
                 }
             }
-            if(multiple)
+            if(list.Count ==0)
+            {
+                if(bindingContext.ModelType == typeof(IMultiSearchParameter)) 
+                    bindingContext.Result = ModelBindingResult.Success(MultiSearchParameter.Empty);
+                else
+                    bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
+
+                return;
+            }
+            if (multiple)
             {
                 bindingContext.Result = ModelBindingResult.Success(list);
                 return;
             }
-            bindingContext.Result = ModelBindingResult.Success(list.FirstOrDefault());
+
+            bindingContext.Result = ModelBindingResult.Success(list[0]);
         }
     }
 }

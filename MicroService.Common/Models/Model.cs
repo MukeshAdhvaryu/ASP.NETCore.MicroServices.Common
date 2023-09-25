@@ -195,7 +195,7 @@ namespace MicroService.Common.Models
         /// <returns>True if values match, otherwise false.</returns>
         protected virtual bool IsMatch (string propertyName, Criteria criteria, object currentValue, object parsedValue)
         {
-            return Equals(currentValue, parsedValue);
+            return Operations.Compare(currentValue, criteria, parsedValue);
         }
         bool IMatch.IsMatch(ISearchParameter parameter)
         {
