@@ -73,4 +73,15 @@ If you want your model to get connected with database other than 'InMemory' one 
 By default, it provides an action to create InMemory DbContext using "InMemory" connection string stored in configuration.
 
 That's it. 
+
+## UPDATE: A sigle test project is created.
+
+### This project is with bare minimum code and can be used commonly for all frameworks i.e. xUnit, NUnit or MSTest.
+
+Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
+If neither of those defined then MSTest will be used.
+
+## UPDATE: Criteria based search feature for models added.
+
+Try FindAll(ISearchParameter searchParameter) method.
   
