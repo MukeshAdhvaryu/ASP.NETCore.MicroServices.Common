@@ -2,7 +2,8 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-
+//-:cnd:noEmit
+#if !TDD
 using System.Reflection;
 
 using MicroService.Common.Services;
@@ -42,3 +43,6 @@ namespace MicroService.Common.Models
         }
     }
 }
+#endif
+//+:cnd:noEmit
+

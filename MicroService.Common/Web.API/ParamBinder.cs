@@ -3,6 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 
+//-:cnd:noEmit
 #if !TDD
 using System;
 
@@ -79,3 +80,4 @@ namespace MicroService.Common.Web.API
     }
 }
 #endif
+//+:cnd:noEmit
