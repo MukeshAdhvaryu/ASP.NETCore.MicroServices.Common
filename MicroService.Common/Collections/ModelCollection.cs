@@ -126,13 +126,50 @@ namespace MicroService.Common.Collections
     }
     #endregion
 
+    #region IExModelCollection<TModel, TID>
+    /// <summary>
+    /// Represents an object which holds a collection of models directly or indirectly.
+    /// </summary>
+    /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
+    /// <typeparam name="TID">Type of TID</typeparam>
+    internal partial interface IExModelCollection<TModel, TID> : IModelCollection<TModel, TID>
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+        , IEnumerable<TModel>
+#endif
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        , IModifiable
+#endif
+        //+:cnd:noEmit
+        #region TYPE CONSTRAINTS
+        where TModel : Model<TID>
+        where TID : struct
+        #endregion
+    {
+        #region FIND
+        //-:cnd:noEmit
+#if MODEL_NONREADABLE
+        /// <summary>
+        /// Finds a model based on given keys.
+        /// </summary>
+        /// <param name="keys">Keys to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TModel?> Find(TID id);
+#endif
+        //+:cnd:noEmit
+        #endregion
+    }
+    #endregion
+
+
+
     #region ModelCollection<TModel, TID>
     /// <summary>
     /// Represents an object which holds a collection of models directly or indirectly.
     /// </summary>
     /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
     /// <typeparam name="TID">Type of TID</typeparam>
-    public class ModelCollection<TModel, TID> : IModelCollection<TModel, TID>
+    public class ModelCollection<TModel, TID> : IExModelCollection<TModel, TID>
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE
     , IEnumerable<TModel>
@@ -215,6 +252,16 @@ namespace MicroService.Common.Collections
         /// <param name="keys">Keys to be used to find the model.</param>
         /// <returns>Task with result of type TModel.</returns>
         public Task<TModel?> Find(TID id)
+        {
+            return Task.FromResult(models.FirstOrDefault(m => Equals(m.ID, id)));
+        }
+#else
+        /// <summary>
+        /// Finds a model based on given keys.
+        /// </summary>
+        /// <param name="keys">Keys to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TModel?> IExModelCollection<TModel, TID>.Find(TID id)
         {
             return Task.FromResult(models.FirstOrDefault(m => Equals(m.ID, id)));
         }
