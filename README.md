@@ -73,7 +73,7 @@ By default, DBContext\<TModel, TID\> uses InMemory SqlLite by using "InMemory" c
 
 That's it. 
 
-## UPDATE: A sigle test project is created.
+## UPDATE: A single test project is created.
 
 ### This project is with bare minimum code and can be used commonly for all frameworks i.e. xUnit, NUnit or MSTest.
 
