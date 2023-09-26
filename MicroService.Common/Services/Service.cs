@@ -63,7 +63,7 @@ namespace MicroService.Common.Services
         #endregion
     {
         #region VARIABLES
-        protected readonly IModelCollection<TModel, TID> Context;
+        readonly IExModelCollection<TModel, TID> Context;
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TModelDTO);
@@ -75,11 +75,15 @@ namespace MicroService.Common.Services
         #region CONSTRUCTORS
         public Service(TModelCollection _context)
         {
-            Context = _context;
+            if (!(_context is IExModelCollection<TModel, TID>))
+                throw new NotSupportedException("Supplied model collection is not compitible with this service repository!");
+            Context = (IExModelCollection < TModel, TID >)_context;
+            Models = _context;
         }
         #endregion
 
         #region PROPERTIES
+        protected TModelCollection Models { get; private set; }
         #endregion
 
         #region GET ALL
@@ -155,6 +159,14 @@ namespace MicroService.Common.Services
         }
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
             ToDTO(await FindAll(parameter));
+#else
+        protected virtual async Task<TModel> Get(TID id)
+        {
+            var result = await Context.Find(id);
+            if (result == null)
+                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
+            return result;
+        }
 #endif
         //+:cnd:noEmit
         #endregion
