@@ -2,7 +2,7 @@
 <package >
   <metadata>
   <id>ASP.NETCore.Dynamic.MicroService</id>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <authors>Mukesh Adhvaryu</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
