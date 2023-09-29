@@ -84,3 +84,54 @@ If neither of those constants defined then MSTest will be used.
 
 Try FindAll (ISearchParameter searchParameter) method.
   
+## UPDATE: Support for ClassDta and MemberData attributes added.
+
+ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
+ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
+You will have to inherit from this class and provide your own data and then you can use
+
+This is an example on how to use source member data.
+To use member data, you must define a static method or property returning IEnumerable<object[]>.
+[WithArgs]
+[ArgSource(typeof(MemberDataExample), "GetData")]
+public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+{
+    //
+}
+
+This is an example on how to use source class data.
+To use class data, ArgSource\<source\> will suffice.
+[WithArgs]
+[ArgSource\<ClassDataExample\>]
+public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+{
+    //
+}
+
+class MemberDataExample 
+{
+    public static IEnumerable<object[]> GetData
+    {
+        get
+        {
+            yield return new object[] { 0 };
+            yield return new object[] { 3 };
+            yield return new object[] { -1 };
+        }
+    }
+}
+
+class ClassDataExample: ArgSource 
+{
+    public override IEnumerable\<object[]\> Data
+    {
+        get
+        {
+            yield return new object[] { 0 };
+            yield return new object[] { 3 };
+            yield return new object[] { -1 };
+        }
+    }
+}
+
+

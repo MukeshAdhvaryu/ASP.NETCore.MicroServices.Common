@@ -16,7 +16,7 @@ using MicroService.Common.Tests.Attributes;
 namespace MicroService.Common.Tests
 {
     [Testable]
-    public abstract class Test<TModelDTO, TModel, TID> 
+    public abstract class Test<TModelDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TModelDTO : IModel
         where TModel : Model<TID>, IModel<TID>,
@@ -102,7 +102,7 @@ namespace MicroService.Common.Tests
 #if (MODEL_USEDTO)
         protected TModelDTO? ToDTO(TModel? model)
         {
-            if(model == null)
+            if (model == null)
                 return default(TModelDTO);
             if (NeedToUseDTO)
                 return (TModelDTO)((IExModel)model).ToDTO(DTOType);
@@ -118,6 +118,52 @@ namespace MicroService.Common.Tests
 #endif
         //+:cnd:noEmit
         #endregion
+
+        /*      
+        //This is an example on how to use source member data.
+        //To use member data, you must define a static method or property returning IEnumerable<object[]>.
+        [WithArgs]
+        [ArgSource(typeof(MemberDataExample), "GetData")]
+        public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+        {
+            //
+        }
+
+        //This is an example on how to use source class data.
+        //To use class data, ArgSource<source> will suffice.
+        [WithArgs]
+        [ArgSource<ClassDataExample>]
+        public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+        {
+            //
+        }
+
+        class MemberDataExample 
+        {
+            public static IEnumerable<object[]> GetData
+            {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+            }
+        }
+
+        class ClassDataExample: ArgSource 
+        {
+            public override IEnumerable<object[]> Data
+            {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+            }
+        }
+        */
     }
 }
 //-:cnd:noEmit
