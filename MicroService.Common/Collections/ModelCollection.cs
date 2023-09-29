@@ -13,7 +13,16 @@ using MicroService.Common.Parameters;
 namespace MicroService.Common.Collections
 {
     #region IModelCollection
-    public interface IModelCollection
+    public interface IModelCollection : IFirstModel, IModelCount
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+        , IEnumerable
+#endif
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        , IModifiable
+#endif
+    //+:cnd:noEmit
+
     { }
     #endregion
 
@@ -23,13 +32,10 @@ namespace MicroService.Common.Collections
     /// </summary>
     /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
     /// <typeparam name="TID">Type of TID</typeparam>
-    public partial interface IModelCollection<TModel, TID> : IModelCollection, IFirstModel<TModel, TID>, IModelCount
+    public partial interface IModelCollection<TModel, TID> : IModelCollection, IFirstModel<TModel, TID>
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         , IEnumerable<TModel>
-#endif
-#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        , IModifiable
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
@@ -41,23 +47,33 @@ namespace MicroService.Common.Collections
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         /// <summary>
-        /// Finds a model based on given keys.
+        /// Finds a model based on given paramters.
         /// </summary>
-        /// <param name="keys">Keys to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<TModel?> Find(IEnumerable<ISearchParameter> keys);
+        /// <param name="paramters">Parameters to be used to find the model.</param>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<TModel?> Find(IEnumerable<ISearchParameter> paramters, AndOr conditionJoin = 0);
 
         /// <summary>
-        /// Finds all models matched based on given key.
+        /// Finds all models matched based on given paramter.
         /// </summary>
-        /// <param name="key">Keys to be used to find the model.</param>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>Task with result of type TModel.</returns>
-        Task<IEnumerable<TModel>> FindAll(ISearchParameter key);
+        Task<IEnumerable<TModel>> FindAll(ISearchParameter parameter);
 
         /// <summary>
-        /// Finds a model based on given keys.
+        /// Finds all models matched based on given parameters.
         /// </summary>
-        /// <param name="keys">Keys to be used to find the model.</param>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds a model based on given id.
+        /// </summary>
+        /// <param name="id">ID to be used to find the model.</param>
         /// <returns>Task with result of type TModel.</returns>
         Task<TModel?> Find(TID id);
 #endif
@@ -152,7 +168,7 @@ namespace MicroService.Common.Collections
         /// <summary>
         /// Finds a model based on given keys.
         /// </summary>
-        /// <param name="keys">Keys to be used to find the model.</param>
+        /// <param name="id">ID to be used to find the model.</param>
         /// <returns>Task with result of type TModel.</returns>
         Task<TModel?> Find(TID id);
 #endif
@@ -160,7 +176,6 @@ namespace MicroService.Common.Collections
         #endregion
     }
     #endregion
-
 
 
     #region ModelCollection<TModel, TID>
@@ -210,25 +225,102 @@ namespace MicroService.Common.Collections
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         /// <summary>
-        /// Finds a model based on given keys.
+        /// Finds all models matched based on given parameters.
         /// </summary>
-        /// <param name="keys">Keys to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        public Task<TModel?> Find(IEnumerable<ISearchParameter> keys)
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        public Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
         {
-            Predicate<TModel> predicate = (m) =>
-            {
-                IMatch match = m;
+            Predicate<TModel> predicate;
 
-                foreach (var key in keys)
-                {
-                    if (key == null)
-                        continue;
-                    if (!match.IsMatch(key))
-                        return false;
-                }
-                return true;
-            };
+            switch (conditionJoin)
+            {
+                case AndOr.AND:
+                default:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (!match.IsMatch(key))
+                                return false;
+                        }
+                        return true;
+                    };
+                    break;
+                case AndOr.OR:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+                        bool result = false;
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (match.IsMatch(key))
+                            {
+                                result = true;
+                            }
+                        }
+                        return result;
+                    };
+                    break;
+            }
+
+            return Task.FromResult(models.Where((m) => predicate(m)));
+        }
+
+        /// <summary>
+        /// Finds a model based on given paramters.
+        /// </summary>
+        /// <param name="paramters">Parameters to be used to find the model.</param>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        public Task<TModel?> Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+        {
+            Predicate<TModel> predicate;
+
+            switch (conditionJoin)
+            {
+                case AndOr.AND:
+                default:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (!match.IsMatch(key))
+                                return false;
+                        }
+                        return true;
+                    };
+                    break;
+                case AndOr.OR:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+                        bool result = false;
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (match.IsMatch(key))
+                            {
+                                result = true;
+                            }
+                        }
+                        return result;
+                    };
+                    break;
+            }
             return Task.FromResult(models.FirstOrDefault((m) => predicate(m)));
         }
 
@@ -401,6 +493,8 @@ namespace MicroService.Common.Collections
 
         #region GET FIRST MODEL
         TModel? IFirstModel<TModel, TID>.GetFirstModel() =>
+            models.FirstOrDefault();
+        IModel? IFirstModel.GetFirstModel() => 
             models.FirstOrDefault();
         #endregion
 

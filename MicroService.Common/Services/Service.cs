@@ -2,6 +2,8 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+using System.Data.Common;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 
 using MicroService.Common.Collections;
@@ -159,6 +161,18 @@ namespace MicroService.Common.Services
         }
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
             ToDTO(await FindAll(parameter));
+
+        protected virtual Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+        {
+            if (!Context.Any())
+                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+            return Context.FindAll(parameters, conditionJoin);
+            throw new NotImplementedException();
+        }
+
+        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
+            ToDTO(await FindAll(parameters, conditionJoin));
+
 #else
         protected virtual async Task<TModel> Get(TID id)
         {
@@ -284,6 +298,8 @@ namespace MicroService.Common.Services
 
         #region GET FIRST MODEL
         TModel? IFirstModel<TModel, TID>.GetFirstModel() =>
+            Context.GetFirstModel();
+        IModel? IFirstModel.GetFirstModel() =>
             Context.GetFirstModel();
         #endregion
 

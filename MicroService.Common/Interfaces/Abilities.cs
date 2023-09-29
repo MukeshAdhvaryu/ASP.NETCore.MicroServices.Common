@@ -85,7 +85,8 @@ namespace MicroService.Common.Interfaces
         /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
         /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
         /// <returns>Result Message with Status of the parse operation.</returns>
-        Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false);
+        /// <param name="criteria">Criteria to be used when parsing value.</param>
+        Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
     }
     #endregion
 
@@ -113,13 +114,23 @@ namespace MicroService.Common.Interfaces
     /// <summary>
     /// Represents an object which offers the first model with in its internal collection.
     /// </summary>
+    public interface IFirstModel  
+    {
+        IModel? GetFirstModel();
+    }
+    #endregion
+
+    #region IFirstModel<TModel, TID> 
+    /// <summary>
+    /// Represents an object which offers the first model with in its internal collection.
+    /// </summary>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IFirstModel<TModel, TID>
+    public interface IFirstModel<TModel, TID> : IFirstModel
         where TModel : Model<TID>
         where TID : struct
     {
-        TModel? GetFirstModel();
+        new TModel? GetFirstModel();
     }
     #endregion
 
@@ -172,11 +183,20 @@ namespace MicroService.Common.Interfaces
         Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int limitOfResult);
 
         /// <summary>
-        /// 
+        /// Finds all models matched based on given parameters.
         /// </summary>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
         Task<IEnumerable<TModelDTO>> FindAll(ISearchParameter parameter);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IEnumerable<TModelDTO>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit
@@ -289,5 +309,4 @@ namespace MicroService.Common.Interfaces
 #endif
     //+:cnd:noEmit
     #endregion
-
 }

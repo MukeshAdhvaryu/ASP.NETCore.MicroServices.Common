@@ -142,3 +142,6 @@ To use class data, ArgSource\<source\> will suffice.
         }
     }
 
+## UPDATE: Feature to perform search for multiple models using multiple search parameters added.
+
+Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.

@@ -7,6 +7,7 @@
 //+:cnd:noEmit
 using System.Collections;
 using System.Reflection;
+using System.Reflection.Metadata;
 
 using MicroService.Common.Attributes;
 using MicroService.Common.Collections;
@@ -57,7 +58,10 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region GET FIRST MODEL
-        TModel? IFirstModel<TModel, TID>.GetFirstModel() => models.FirstOrDefault();
+        TModel? IFirstModel<TModel, TID>.GetFirstModel() => 
+            models.FirstOrDefault();
+        IModel? IFirstModel.GetFirstModel() =>
+        models.FirstOrDefault();
         #endregion
 
         #region GET MODEL COUNT
@@ -71,21 +75,91 @@ namespace MicroService.Common.Web.API
         {
             return await models.FindAsync(id);
         }
-        Task<TModel?> IModelCollection<TModel, TID>.Find(IEnumerable<ISearchParameter> keys)
-        {
-            Predicate<TModel> predicate = (m) =>
-            {
-                IMatch match = m;
 
-                foreach (var key in keys)
-                {
-                    if (key == null)
-                        continue;
-                    if (!match.IsMatch(key))
-                        return false;
-                }
-                return true;
-            };
+        Task<IEnumerable<TModel>> IModelCollection<TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+        {
+            Predicate<TModel> predicate;
+
+            switch (conditionJoin)
+            {
+                case AndOr.AND:
+                default:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (!match.IsMatch(key))
+                                return false;
+                        }
+                        return true;
+                    };
+                    break;
+                case AndOr.OR:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+                        bool result = false;    
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (match.IsMatch(key))
+                            {
+                                result = true;
+                            }
+                        }
+                        return result;
+                    };
+                    break;
+            }
+
+            return Task.FromResult(this.Where((m) => predicate(m)));
+        }
+
+        Task<TModel?> IModelCollection<TModel, TID>.Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+        {
+            Predicate<TModel> predicate;
+
+            switch (conditionJoin)
+            {
+                case AndOr.AND:
+                default:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (!match.IsMatch(key))
+                                return false;
+                        }
+                        return true;
+                    };
+                    break;
+                case AndOr.OR:
+                    predicate = (m) =>
+                    {
+                        IMatch match = m;
+                        bool result = false;
+                        foreach (var key in parameters)
+                        {
+                            if (key == null)
+                                continue;
+                            if (match.IsMatch(key))
+                            {
+                                result = true;
+                            }
+                        }
+                        return result;
+                    };
+                    break;
+            }
             return Task.FromResult(models.FirstOrDefault((m) => predicate(m)));
         }
 
@@ -129,7 +203,7 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region DELTE
+        #region DELETE
         //-:cnd:noEmit
 #if MODEL_DELETABLE
         async Task<bool> IModelCollection<TModel, TID>.Delete(TModel model)

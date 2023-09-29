@@ -6,12 +6,16 @@
 //-:cnd:noEmit
 #if !TDD
 using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+
 
 namespace MicroService.Common.Web.API
 {
@@ -27,45 +31,64 @@ namespace MicroService.Common.Web.API
 
             List<ISearchParameter> list = new List<ISearchParameter>();
             var PropertyNames = model.GetPropertyNames();
-
+            
             if (multiple)
             {
                 var items = Query[bindingContext.OriginalModelName];
                 foreach (var item in items)
                 {
-                    //working on it. in next version....
+                    if (item == null)
+                        continue;
+                    JsonObject? result = JsonNode.Parse(item)?.AsObject();
+                    if(result == null)
+                        continue;
+                    string? Name = result["name"]?.GetValue<string>()?.ToLower();
+                    if (!string.IsNullOrEmpty(Name))
+                    {
+                        foreach (var name in PropertyNames)
+                        {
+                            if (Name == name.ToLower())
+                            {
+                                var pvalue = result["value"]?.GetValue<object>();
+                                var parameter = new ObjParameter(pvalue, name);
+                                Enum.TryParse(result["criteria"]?.GetValue<string>(), out Criteria criteria);
+
+                                var message = model.Parse(parameter, out _, out object value, false, criteria);
+                                if (message.Status == ResultStatus.Sucess)
+                                {
+                                    list.Add(new SearchParameter(name, value, criteria));
+                                }
+                                break;
+                            }
+                        }
+
+                    }
                 }
             }
             else
             {
+                var Name = Query["name"][0]?.ToLower();
+
                 foreach (var name in PropertyNames)
                 {
-                    if (Query["name"][0].ToLower() == name.ToLower())
+                    if (Name == name.ToLower())
                     {
                         var parameter = new ModelParameter(Query["value"], name);
                         var message = model.Parse(parameter, out _, out object value, false);
+                        Enum.TryParse(Query["criteria"], out Criteria criteria);
+
                         if (message.Status == ResultStatus.Sucess)
                         {
-                            Enum.TryParse(Query["criteria"], out Criteria criteria);
-                            if (Query.ContainsKey("andOr"))
-                            {
-                                Enum.TryParse(Query["andor"], out AndOr andOr);
-                                list.Add(new MultiSearchParameter(name, value, criteria, andOr));
-                            }
-                            else
-                            {
-                                list.Add(new SearchParameter(name, value, criteria));
-                            }
+                            list.Add(new SearchParameter(name, value, criteria));
+
                         }
+                        break;
                     }
                 }
             }
             if(list.Count ==0)
             {
-                if(bindingContext.ModelType == typeof(IMultiSearchParameter)) 
-                    bindingContext.Result = ModelBindingResult.Success(MultiSearchParameter.Empty);
-                else
-                    bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
+                bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
 
                 return;
             }

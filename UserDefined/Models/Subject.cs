@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 using MicroService.Common;
 using MicroService.Common.Attributes;
@@ -7,13 +8,13 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 
+using Microsoft.AspNetCore.Mvc;
+
 //-:cnd:noEmit
 #if MODEL_USEDTO
 using UserDefined.DTOs;
 #endif
 //+:cnd:noEmit
-
-using JsonConverter = System.Text.Json.Serialization.JsonConverter;
 
 namespace UserDefined.Models
 {
@@ -93,7 +94,8 @@ namespace UserDefined.Models
         protected override Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false)
         {
             var value = parameter is IModelParameter? ((IModelParameter)parameter).FirstValue: parameter.Value;            
-            currentValue = parsedValue = null;
+            currentValue =  null;
+            parsedValue = null;
             var name = parameter.Name;
 
             switch (name)
@@ -110,6 +112,7 @@ namespace UserDefined.Models
                     }
                     if (value == null)
                         return Message.MissingRequiredValue(name);
+
                     break;
                 case nameof(Faculty):
                     currentValue = faculty;

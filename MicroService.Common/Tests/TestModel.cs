@@ -83,7 +83,7 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region PARSE
-        protected override Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false)
+        protected override Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
         {
             var value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
             currentValue = parsedValue = null;

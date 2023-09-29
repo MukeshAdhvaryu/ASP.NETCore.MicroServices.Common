@@ -4,12 +4,8 @@
 using System.ComponentModel.DataAnnotations;
 
 using MicroService.Common.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 using UserDefined.Models;
-
-using JsonConverter = System.Text.Json.Serialization.JsonConverter;
 
 namespace UserDefined.DTOs
 {
@@ -20,7 +16,6 @@ namespace UserDefined.DTOs
         string? Name { get; }
 
         [Required]
-        [JsonConverter(typeof(StringEnumConverter))]
         Faculty Faculty { get; }
     }
 

@@ -21,7 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Parameters\MultiSearchParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\ArgSource.cs" />

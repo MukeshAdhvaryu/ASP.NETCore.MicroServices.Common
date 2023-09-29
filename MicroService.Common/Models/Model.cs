@@ -78,18 +78,46 @@ namespace MicroService.Common.Models
         /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
         /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
         /// <returns>Result Message with Status of the parse operation.</returns>
-        protected abstract Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false);
+        protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
 
-        Message IExParamParser.Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed)
+        Message IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
             var name = parameter.Name;
+            parsedValue = null;
+            object? value;
 
             switch (name)
             {
                 case nameof(ID):
                     currentValue = id;
-                    var value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                    parsedValue = null;
+                    value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
+                    switch (criteria)
+                    {
+                        case Criteria.Occurs:
+                        case Criteria.BeginsWith:
+                        case Criteria.EndsWith:
+                        case Criteria.OccursNoCase:
+                        case Criteria.BeginsWithNoCase:
+                        case Criteria.EndsWithNoCase:
+                        case Criteria.StringEqual:
+                        case Criteria.StringEqualNoCase:
+                        case Criteria.StringNumGreaterThan:
+                        case Criteria.StringNumLessThan:
+                        case Criteria.NotOccurs:
+                        case Criteria.NotBeginsWith:
+                        case Criteria.NotEndsWith:
+                        case Criteria.NotOccursNoCase:
+                        case Criteria.NotBeginsWithNoCase:
+                        case Criteria.NotEndsWithNoCase:
+                        case Criteria.NotStrEqual:
+                        case Criteria.NotStrEqualNoCase:
+                        case Criteria.NotStringGreaterThan:
+                        case Criteria.NotStringLessThan:
+                            parsedValue = value.ToString();
+                            return Message.Sucess(name);
+                        default:
+                            break;
+                    }
                     if(((IExModel<TID>)this).TryParseID(value, out TID newID))
                     {
                         parsedValue = newID;
@@ -100,6 +128,35 @@ namespace MicroService.Common.Models
                     }
                     return Message.Ignored(name);
                 default:
+                    switch (criteria)
+                    {
+                        case Criteria.Occurs:
+                        case Criteria.BeginsWith:
+                        case Criteria.EndsWith:
+                        case Criteria.OccursNoCase:
+                        case Criteria.BeginsWithNoCase:
+                        case Criteria.EndsWithNoCase:
+                        case Criteria.StringEqual:
+                        case Criteria.StringEqualNoCase:
+                        case Criteria.StringNumGreaterThan:
+                        case Criteria.StringNumLessThan:
+                        case Criteria.NotOccurs:
+                        case Criteria.NotBeginsWith:
+                        case Criteria.NotEndsWith:
+                        case Criteria.NotOccursNoCase:
+                        case Criteria.NotBeginsWithNoCase:
+                        case Criteria.NotEndsWithNoCase:
+                        case Criteria.NotStrEqual:
+                        case Criteria.NotStrEqualNoCase:
+                        case Criteria.NotStringGreaterThan:
+                        case Criteria.NotStringLessThan:
+                            value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
+                            parsedValue = value.ToString();
+                            currentValue = value;
+                            return Message.Sucess(name);
+                        default:
+                            break;
+                    }
                     break;
             }
             return Parse(parameter, out currentValue, out parsedValue, updateValueIfParsed);

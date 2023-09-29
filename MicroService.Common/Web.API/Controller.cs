@@ -63,7 +63,10 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region GET FIRST MODEL
-        TModel? IFirstModel<TModel, TID>.GetFirstModel() => service.GetFirstModel();
+        TModel? IFirstModel<TModel, TID>.GetFirstModel() => 
+            service.GetFirstModel();
+        IModel? IFirstModel.GetFirstModel() => 
+            service.GetFirstModel();
         #endregion
 
         #region GET MODEL COUNT
@@ -107,9 +110,20 @@ namespace MicroService.Common.Web.API
         public async Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int count) =>
            await service.GetAll(startIndex, count);
 
-        [HttpGet("FindAll")]
+        [HttpGet("FindAll/parameter")]
         public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter) =>
             await service.FindAll(parameter);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        [HttpGet("FindAll/parameters")]
+        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0) =>
+            await service.FindAll(parameters, conditionJoin);
 #endif
         //+:cnd:noEmit
         #endregion
@@ -127,7 +141,7 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>Model that is added.</returns>
         [HttpPost("Post")]
-        public async Task<TModelDTO> Add([ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model) =>
+        public async Task<TModelDTO> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model) =>
             await service.Add(model);
         async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model) =>
             await service.Add(model);
@@ -165,7 +179,7 @@ namespace MicroService.Common.Web.API
         /// otherwise you will have to call SaveChanges method manually.</param>
         /// <returns></returns>
         [HttpPut("Put/{id}")]
-        public async Task<TModelDTO> Update(TID id, [ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model) =>
+        public async Task<TModelDTO> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model) =>
             await service.Update(id, model);
 
         async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel model) =>
