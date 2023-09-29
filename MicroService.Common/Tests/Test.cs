@@ -51,7 +51,7 @@ namespace MicroService.Common.Tests
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_nonreadable
+#if !MODEL_NONREADABLE
         [NoArgs]
         public abstract Task Get_ReturnSingle();
 

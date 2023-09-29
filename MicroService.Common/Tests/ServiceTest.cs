@@ -45,7 +45,7 @@ namespace MicroService.Common.Tests
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_nonreadable
+#if !MODEL_NONREADABLE
         [NoArgs]
         public override async Task Get_ReturnSingle()
         {
