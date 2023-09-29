@@ -10,7 +10,7 @@
     "language": "C#",
     "type": "project"
   },
-  "sourceName": "ASP.NETCore.MicroServices.Common",
+  "sourceName": "ASP.NETCore.MicroService.Common",
   "preferNameDirectory": true,
   "sources": [
     {
