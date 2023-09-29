@@ -92,46 +92,53 @@ You will have to inherit from this class and provide your own data and then you 
 
 This is an example on how to use source member data.
 To use member data, you must define a static method or property returning IEnumerable<object[]>.
-[WithArgs]
-[ArgSource(typeof(MemberDataExample), "GetData")]
-public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
-{
-    //
-}
+
+
+    [WithArgs]
+    [ArgSource(typeof(MemberDataExample), "GetData")]
+    public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+    {
+        //
+    }
 
 This is an example on how to use source class data.
 To use class data, ArgSource\<source\> will suffice.
-[WithArgs]
-[ArgSource\<ClassDataExample\>]
-public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
-{
-    //
-}
 
-class MemberDataExample 
-{
-    public static IEnumerable<object[]> GetData
+
+    [WithArgs]
+    [ArgSource\<ClassDataExample\>]
+    public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
     {
-        get
+        //
+    
+    }
+    
+ Then, those classes can be defined in the following manner:
+ 
+    class MemberDataExample 
+    {
+        public static IEnumerable<object[]> GetData   
         {
-            yield return new object[] { 0 };
-            yield return new object[] { 3 };
-            yield return new object[] { -1 };
+            get
+            {
+                yield return new object[] { 0 };
+                yield return new object[] { 3 };
+                yield return new object[] { -1 };
+            }
         }
     }
-}
 
-class ClassDataExample: ArgSource 
-{
-    public override IEnumerable\<object[]\> Data
+    class ClassDataExample: ArgSource 
     {
-        get
+
+        public override IEnumerable<object[]> Data  
         {
-            yield return new object[] { 0 };
-            yield return new object[] { 3 };
-            yield return new object[] { -1 };
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
         }
     }
-}
-
 
