@@ -126,10 +126,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Get(id));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -153,9 +152,8 @@ namespace MicroService.Common.Web.API
             {
                return await service.GetAll(count);
             }
-            catch 
+            catch
             {
-
                 throw;
             }
         }
@@ -174,10 +172,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.GetAll(count));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -206,7 +203,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }
@@ -226,10 +222,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.GetAll(count));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -251,7 +246,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }
@@ -268,10 +262,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.FindAll(parameter));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -299,7 +292,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }        
@@ -318,10 +310,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.FindAll(parameters));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -348,11 +339,9 @@ namespace MicroService.Common.Web.API
             try
             {
                 return await service.Add(model);
-
             }
             catch
             {
-
                 throw;
             }
         }
@@ -364,7 +353,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }
@@ -385,10 +373,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Add(model));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
         async Task<IActionResult> IAppendable<TModel, TID>.Add(IModel model)
@@ -397,10 +384,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Add(model));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -426,7 +412,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }        
@@ -443,10 +428,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Delete(id));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif
@@ -478,7 +462,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }
@@ -490,7 +473,6 @@ namespace MicroService.Common.Web.API
             }
             catch
             {
-
                 throw;
             }
         }
@@ -511,10 +493,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Update(id, model));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 
@@ -524,10 +505,9 @@ namespace MicroService.Common.Web.API
             {
                 return Ok(await service.Update(id, model));
             }
-            catch (Exception e)
+            catch
             {
-
-                return BadRequest(e);
+                throw;
             }
         }
 #endif

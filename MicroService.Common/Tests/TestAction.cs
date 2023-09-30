@@ -116,10 +116,16 @@ namespace MicroService.Common.Tests
             var id = default(TID);
             var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             Setup((m) => m.Get(id), e);
-            var result = await Contract.Get(id) as ObjectResult;
-            var expected = result?.Value as IModelException;
-            Verifier.Equal(e.Message, expected?.Message);
-            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
+            try
+            {
+                await Contract.Get(id);
+                Verifier.Equal(true, false);
+            }
+            catch (Exception ex)
+            {
+                var expected = ex as IModelException;
+                Verifier.Equal(e.Message, ex?.Message);
+            }
         }
 
         [WithArgs]
@@ -153,10 +159,16 @@ namespace MicroService.Common.Tests
         {
             var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, limitOfResult.ToString());
             Setup((m) => m.GetAll(limitOfResult), e);
-            var result = await Contract.GetAll(limitOfResult) as ObjectResult;
-            var expected = (result )?.Value as IModelException;
-            Verifier.Equal(e.Message, expected?.Message);
-            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
+            try
+            {
+                await Contract.GetAll(limitOfResult);
+                Verifier.Equal(true, false);
+            }
+            catch (Exception ex)
+            {
+                var expected = ex as IModelException;
+                Verifier.Equal(e.Message, ex?.Message);
+            }
         }
 #endif
         //+:cnd:noEmit
@@ -186,10 +198,16 @@ namespace MicroService.Common.Tests
             var model = Fixture.Create<TModel>();
             model.ID = ID;
             Setup((m) => m.Add(model), e);
-            var result = await Contract.Add(model) as ObjectResult;
-            var expected = (result)?.Value as IModelException;
-            Verifier.Equal(e.Message, expected?.Message);
-            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
+            try
+            {
+                await Contract.Add(model);
+                Verifier.Equal(true, false);
+            }
+            catch (Exception ex)
+            {
+                var expected = ex as IModelException;
+                Verifier.Equal(e.Message, ex?.Message);
+            }
         }
 #endif
         //+:cnd:noEmit
@@ -217,10 +235,16 @@ namespace MicroService.Common.Tests
             var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, ID.ToString());
 
             Setup((m) => m.Delete(ID), e);
-            var result = await Contract.Delete(ID) as ObjectResult;
-            var expected = result?.Value as IModelException;
-            Verifier.Equal(e.Message, expected?.Message);
-            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
+            try
+            {
+                await Contract.Delete(ID);
+                Verifier.Equal(true, false);
+            }
+            catch (Exception ex)
+            {
+                var expected = ex as IModelException;
+                Verifier.Equal(e.Message, ex?.Message);
+            }
         }
 #endif
         //+:cnd:noEmit
@@ -248,10 +272,16 @@ namespace MicroService.Common.Tests
             var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, ID.ToString());
             var model = Fixture.Create<TModel>();
             Setup((m) => m.Update(ID, model), e);
-            var result = await Contract.Update(ID, model) as ObjectResult;
-            var expected = result?.Value as IModelException;
-            Verifier.Equal(e.Message, expected?.Message);
-            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
+            try
+            {
+                await Contract.Update(ID, model);
+                Verifier.Equal(true, false);
+            }
+            catch (Exception ex)
+            {
+                var expected = ex as IModelException;
+                Verifier.Equal(e.Message, ex?.Message);
+            }
         }
 #endif
         //+:cnd:noEmit

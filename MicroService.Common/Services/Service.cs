@@ -113,7 +113,7 @@ namespace MicroService.Common.Services
         {
             var result = await Context.Find(id);
             if (result == null)
-                throw dummyModel.GetAppropriateException(ExceptionType.NoModelFoundForIDException, id.ToString());
+                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
 #endif
