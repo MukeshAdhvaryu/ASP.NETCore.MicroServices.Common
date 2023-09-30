@@ -4,7 +4,7 @@ Author: Mukesh Adhvaryu.
 */
 
 //-:cnd:noEmit
-#if MODEL_ADDTEST && MODEL_USEDTO
+#if MODEL_ADDTEST 
 //+:cnd:noEmit
 
 using System.ComponentModel.DataAnnotations;

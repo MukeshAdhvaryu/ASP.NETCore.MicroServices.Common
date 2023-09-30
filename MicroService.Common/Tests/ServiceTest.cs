@@ -10,6 +10,7 @@ Author: Mukesh Adhvaryu.
 using System;
 
 using AutoFixture;
+using AutoFixture.AutoMoq;
 
 using MicroService.Common.Collections;
 using MicroService.Common.Interfaces;
@@ -19,7 +20,7 @@ using MicroService.Common.Tests.Attributes;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class ServiceTest<TModelDTO, TModel, TID> : Test<TModelDTO, TModel, TID>
+    public abstract class ServiceTest<TModelDTO, TModel, TID>  
         #region TYPE CONSTRINTS
         where TModelDTO : IModel
         where TModel : Model<TID>, IModel<TID>,
@@ -34,11 +35,19 @@ namespace MicroService.Common.Tests
     {
         #region VARIABLES
         readonly IService<TModelDTO, TModel, TID> Service;
+        protected readonly IFixture Fixture;
+        //-:cnd:noEmit
+#if MODEL_USEDTO
+        static readonly Type DTOType = typeof(TModelDTO);
+        static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
+#endif
+        //+:cnd:noEmit
         #endregion
 
         #region CONSTRUCTOR
         public ServiceTest()
         {
+            Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
             Service = CreateService();
         }
         #endregion
@@ -47,7 +56,7 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         [NoArgs]
-        public override async Task Get_ReturnSingle()
+        public async Task Get_ReturnSingle()
         {
             TModelDTO expected;
             var first = Service.GetFirstModel();
@@ -56,7 +65,7 @@ namespace MicroService.Common.Tests
         }
 
         [NoArgs]
-        public override async Task Get_ReturnSingleFail()
+        public async Task Get_ReturnSingleFail()
         {
             TModelDTO expected;
             var id = default(TID);
@@ -74,7 +83,7 @@ namespace MicroService.Common.Tests
         [WithArgs]
         [Args(0)]
         [Args(3)]
-        public override async Task GetAll_ReturnAll(int limitOfResult = 0)
+        public async Task GetAll_ReturnAll(int limitOfResult = 0)
         {
             var expected = await Service.GetAll(limitOfResult);
 
@@ -85,7 +94,7 @@ namespace MicroService.Common.Tests
 
         [WithArgs]
         [Args(-1)]
-        public override async Task GetAll_ReturnNull(int limitOfResult = 0)
+        public async Task GetAll_ReturnNull(int limitOfResult = 0)
         {
             var expected = await Service.GetAll(limitOfResult);
             Verifier.Empty(expected);
@@ -98,7 +107,7 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_APPENDABLE
         [NoArgs]
-        public override async Task Add_ReturnAdded()
+        public async Task Add_ReturnAdded()
         {
             TModelDTO expected;
             var model = Fixture.Create<TModel>();
@@ -113,7 +122,7 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_DELETABLE
         [NoArgs]
-        public override async Task Delete_ReturnDeleted()
+        public async Task Delete_ReturnDeleted()
         {
             TModelDTO expected;
             var first = Service.GetFirstModel();
@@ -128,7 +137,7 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_UPDATABLE
         [NoArgs]
-        public override async Task Update_ReturnUpdated()
+        public async Task Update_ReturnUpdated()
         {
             TModelDTO expected;
             var id = Service.GetFirstModel()?.ID ?? default(TID);
@@ -147,6 +156,74 @@ namespace MicroService.Common.Tests
             return new Service<TModelDTO, TModel, TID, ModelCollection<TModel, TID>>(new ModelCollection<TModel, TID>());
         }
         #endregion
+
+        #region TO DTO
+        //-:cnd:noEmit
+#if (MODEL_USEDTO)
+        protected TModelDTO? ToDTO(TModel? model)
+        {
+            if (model == null)
+                return default(TModelDTO);
+            if (NeedToUseDTO)
+                return (TModelDTO)((IExModel)model).ToDTO(DTOType);
+            return (TModelDTO)(object)model;
+        }
+#else
+        protected TModelDTO? ToDTO(TModel? model)
+        {
+            if(model == null)
+                return default(TModelDTO);
+            return (TModelDTO)(object)model;
+        }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        /*      
+        //This is an example on how to use source member data.
+        //To use member data, you must define a static method or property returning IEnumerable<object[]>.
+        [WithArgs]
+        [ArgSource(typeof(MemberDataExample), "GetData")]
+        public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+        {
+            //
+        }
+
+        //This is an example on how to use source class data.
+        //To use class data, ArgSource<source> will suffice.
+        [WithArgs]
+        [ArgSource<ClassDataExample>]
+        public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+        {
+            //
+        }
+
+        class MemberDataExample 
+        {
+            public static IEnumerable<object[]> GetData
+            {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+            }
+        }
+
+        class ClassDataExample: ArgSource 
+        {
+            public override IEnumerable<object[]> Data
+            {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+            }
+        }
+        */
     }
 }
 //-:cnd:noEmit
