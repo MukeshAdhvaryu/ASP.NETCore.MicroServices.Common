@@ -11,7 +11,28 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Web.API.Interfaces
 {
-    
+    public interface IActionContract<TModel, TID>: IContract, IFirstModel<TModel, TID>, IModelCount
+    //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+   , IReadable<TModel, TID>
+#endif
+#if MODEL_DELETABLE
+  , IDeleteable<TModel, TID>
+#endif
+#if MODEL_APPENDABLE
+  , IAppendable<TModel, TID>
+#endif
+#if MODEL_UPDATABLE
+  , IUpdateable<TModel, TID>
+#endif
+    //+:cnd:noEmit
+    #region TYPE CONSTRINTS
+        where TModel : Model<TID>,
+        new()
+        where TID : struct
+        #endregion
+    {
+    }
 }
 //-:cnd:noEmit
 #endif
