@@ -184,6 +184,26 @@ namespace MicroService.Common.Models
         NotBetween = -1,
     }
     #endregion
+
+    #region EXCEPTION TYPES
+    public enum ExceptionType : ushort
+    {
+        Unknown = 0,
+        NoModelFoundException,
+        NoModelFoundForIDException,
+        NoModelsFoundException,
+        NoModelSuppliedException,
+        NegativeFetchCountException,
+        ModelCopyOperationFailed,
+        NoParameterSuppliedException,
+        NoParametersSuppliedException,
+        AddOperationFailedException,
+        UpdateOperationFailedException,
+        DeleteOperationFailedException,
+        InternalServerErrorException,
+        ExpectationFailedException,
+    }
+    #endregion
 }
 namespace MicroService.Common.Services
 {
