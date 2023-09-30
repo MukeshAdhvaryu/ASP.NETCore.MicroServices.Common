@@ -2,6 +2,7 @@ using UserDefined.Models;
 using MicroService.Common.Web.API;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
+using MicroService.Common.Web.API.Middlewares;
 
 //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -18,7 +19,7 @@ namespace UserDefined.API
             var builder = WebApplication.CreateBuilder(args);
 
             #region *** IMPORTANT PART
-            builder.Services.AddMVC();
+            var mvc = builder.Services.AddMVC(builder.Environment.IsProduction());
 
             /*This single call will bind every thing together.
              * Since we are using default Service class: Service<ISubject, Subject, int>,
@@ -34,7 +35,7 @@ namespace UserDefined.API
             //-:cnd:noEmit
 #if MODEL_USEDTO
             //If you are using DTO the follwing model can be added:
-            builder.Services.AddModel<ISubjectDTO, Subject>(builder.Configuration);
+            builder.Services.AddModel<ISubject, Subject>(builder.Configuration);
 #else
             /*
              * Single Subject object can be used as in and out type.
@@ -43,14 +44,26 @@ namespace UserDefined.API
             builder.Services.AddModel<ISubject, Subject>(builder.Configuration);
 #endif
             //+:cnd:noEmit
+
+            //builder.Services.AddTransient<HttpExceptionMiddleWare>();
             #endregion
 
             // Add services to the container.
 
-            builder.Services.AddControllers().AddJsonOptions(option=>
-            {
-                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
+             mvc = builder.Services.AddControllers(option =>
+             {
+                 option.Filters.Add<HttpExceptionFilter>();
+             }
+                 
+             );
+
+             mvc.AddJsonOptions(option =>
+             {
+                 option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+             });
+             
+            
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
@@ -70,7 +83,7 @@ namespace UserDefined.API
             //+:cnd:noEmit
 
             var app = builder.Build();
-
+            
             //-:cnd:noEmit
 #if MODEL_USESWAGGER
             // Configure the HTTP request pipeline.
@@ -81,6 +94,9 @@ namespace UserDefined.API
             }
 #endif
             //+:cnd:noEmit
+
+            //if (app.Environment.IsDevelopment())
+            //app.UseMiddleware<HttpExceptionMiddleWare>();
 
             app.UseHttpsRedirection();
 

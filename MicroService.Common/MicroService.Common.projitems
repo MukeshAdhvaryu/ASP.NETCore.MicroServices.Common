@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contract\IContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Parameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
@@ -31,12 +32,18 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Configuration.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controller.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\EnumSchemaFilter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelBinder.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\ModelCreator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\ParamBinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Binders\ModelBinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Binders\ModelCreator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Binders\ParamBinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Configurations\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controllers\Controller.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext\DBContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Middlewares\ExceptionMiddleWare.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Middlewares\HttpExceptionFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Swagger\EnumSchemaFilter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\Controllers\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\DBContext\" />
   </ItemGroup>
 </Project>

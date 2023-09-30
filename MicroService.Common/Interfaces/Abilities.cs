@@ -2,6 +2,7 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+using MicroService.Common.Exceptions;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
@@ -308,5 +309,22 @@ namespace MicroService.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
+    #endregion
+
+    #region IExModelExceptionSupplier
+    /// <summary>
+    /// This interface represents an object which supplies an appropriate exception for a failure in a specified method.
+    /// </summary>
+    internal interface IExModelExceptionSupplier
+    {
+        /// <summary>
+        /// Supplies an appropriate exception for a failure in a specified method.
+        /// </summary>
+        /// <param name="exceptionType">Type of exception to get.</param>
+        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
+        /// <param name="innerException">Inner exception which is already thrown.</param>
+        /// <returns>Instance of SpecialException class.</returns>
+        ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+    }
     #endregion
 }

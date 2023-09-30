@@ -35,14 +35,19 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
+        #region PROPERTIES
+        public static bool IsProductionEnvironment { get; private set; }
+        #endregion
+
         #region CONFIGURE MVC
         /// <summary>
         /// Creates MVCBuilder from the given WebApplication builder.
         /// </summary>
         /// <param name="builder">Instance of web application builder which to build mvc builder for.</param>
         /// <returns>IMvcBuilder instance.</returns>
-        public static IMvcBuilder AddMVC(this IServiceCollection services)
+        public static IMvcBuilder AddMVC(this IServiceCollection services, bool isProductionEnvironment)
         {
+            IsProductionEnvironment = isProductionEnvironment;
             var mvcBuilder = MvcServiceCollectionExtensions.AddMvc(services);
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER

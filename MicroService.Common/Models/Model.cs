@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
+using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Parameters;
 
@@ -26,6 +27,7 @@ namespace MicroService.Common.Models
     {
         #region VARIABLES
         protected TID id;
+        readonly string modelName;
         #endregion
 
         #region CONSTRUCTOR
@@ -33,6 +35,7 @@ namespace MicroService.Common.Models
         {
             if (generateNewID)
                 id = GetNewID();
+            modelName = GetType().Name;
         }
         #endregion
 
@@ -41,6 +44,7 @@ namespace MicroService.Common.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public TID ID { get => id; set => id = value; }
         TID IExModel<TID>.ID { get => id; set => id = value; }
+        public string ModelName => modelName;
         #endregion
 
         #region GET PROPERTY NAMES
@@ -269,6 +273,64 @@ namespace MicroService.Common.Models
                     return false;
             }
         }
+        #endregion
+
+        #region GET APPROPRIATE EXCEPTION
+        /// <summary>
+        /// Supplies an appropriate exception for a failure in a specified method.
+        /// </summary>
+        /// <param name="exceptionType">Type of exception to get.</param>
+        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
+        /// <returns>Instance of SpecialException class.</returns>
+        protected virtual ModelException GetAppropriateException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null)
+        {
+            bool noAdditionalInfo = string.IsNullOrEmpty(additionalInfo);
+
+            switch (exceptionType)
+            {
+                case ExceptionType.NoModelFoundException:
+                case ExceptionType.NoModelFoundForIDException:
+                    return ModelException.Create(string.Format("No {0} is found additional info: {1}", modelName, noAdditionalInfo ? "None" : "ID = " + additionalInfo), exceptionType, innerException);
+
+                case ExceptionType.NoModelsFoundException:
+                    return ModelException.Create(string.Format("No {0} are found additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.NoModelSuppliedException:
+                    return ModelException.Create(string.Format("Null {0} can not be supplied additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.NegativeFetchCountException:
+                    return ModelException.Create(string.Format("{0} fetch count must be > 0; provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.ModelCopyOperationFailed:
+                    return ModelException.Create(string.Format("Copy operation of {0} is failed; model provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.NoParameterSuppliedException:
+                    return ModelException.Create(string.Format("Null parameter for searching a {0} is not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.NoParametersSuppliedException:
+                    return ModelException.Create(string.Format("Null parameters for searching  {0}s are not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.AddOperationFailedException:
+                    return ModelException.Create(string.Format("Add operation for adding new {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.UpdateOperationFailedException:
+                    return ModelException.Create(string.Format("Update operation for updating the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.DeleteOperationFailedException:
+                    return ModelException.Create(string.Format("Delete operation for deleting the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.InternalServerErrorException:
+                    return ModelException.Create(string.Format("Model {0}: internal server error; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.ExpectationFailedException:
+                    return ModelException.Create(string.Format("Model {0}: expectation failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                default:
+                    return ModelException.Create("Need to supply your message", ExceptionType.Unknown);
+            }
+        }
+        ModelException IExModelExceptionSupplier.GetModelException(ExceptionType exceptionType, string? additionalInfo, Exception? innerException) =>
+            GetAppropriateException(exceptionType, additionalInfo, innerException);
         #endregion
 
         //-:cnd:noEmit

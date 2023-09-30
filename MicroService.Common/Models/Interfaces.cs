@@ -86,7 +86,7 @@ namespace MicroService.Common.Models
     /// <summary>
     /// This interface represents a model with primary key named as ID.
     /// </summary>
-    internal partial interface IExModel : IModel, IExCopyable, IExParamParser
+    internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
     //-:cnd:noEmit
 #if MODEL_USEDTO
         , IExModelToDTO

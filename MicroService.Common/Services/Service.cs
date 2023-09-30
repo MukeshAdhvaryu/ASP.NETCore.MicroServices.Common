@@ -2,11 +2,11 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using System.Data.Common;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 
 using MicroService.Common.Collections;
+using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
@@ -66,6 +66,7 @@ namespace MicroService.Common.Services
     {
         #region VARIABLES
         readonly IExModelCollection<TModel, TID> Context;
+        readonly static IExModel DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TModelDTO);
@@ -101,7 +102,7 @@ namespace MicroService.Common.Services
         {
             var result = await Context.Find(id);
             if (result == null)
-                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
         async Task<TModelDTO> IReadable<TModelDTO, TModel, TID>.Get(TID id) =>
@@ -112,7 +113,7 @@ namespace MicroService.Common.Services
         {
             var result = await Context.Find(id);
             if (result == null)
-                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
+                throw dummyModel.GetAppropriateException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
 #endif
@@ -133,17 +134,17 @@ namespace MicroService.Common.Services
         protected virtual Task<IEnumerable<TModel>> GetAll(int count = 0)
         {
             if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
+
             if (count < 0)
-                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
+                throw DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, count.ToString());
 
             if (count > 0)
                 return Task.FromResult(Context.Take(count));
             return Task.FromResult((IEnumerable<TModel>)Context);
         }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int limitOfResult) =>
-            ToDTO(await GetAll(limitOfResult));
-
+        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int count) =>
+            ToDTO(await GetAll(count));
 #endif
         //+:cnd:noEmit
         #endregion
@@ -162,18 +163,21 @@ namespace MicroService.Common.Services
         protected Task<IEnumerable<TModel>> GetAll(int startIndex, int count)
         {
             if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             if (count < 0)
-                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
+                throw DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, count.ToString());
+
+            if(startIndex < 0)
+                startIndex = 0;
 
             if (count > 0)
                 return Task.FromResult(Context.Skip(startIndex).Take(count));
             else
                 return Task.FromResult(Context.Skip(startIndex));
         }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int startIndex, int count) =>
-            ToDTO(await GetAll(startIndex, count));
+        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int startIndex, int limitOfResult) =>
+            ToDTO(await GetAll(startIndex, limitOfResult));
 #endif
         //+:cnd:noEmit
         #endregion
@@ -181,10 +185,13 @@ namespace MicroService.Common.Services
         #region FIND ALL (parameter)
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
-        protected Task<IEnumerable<TModel>> FindAll(ISearchParameter parameter)
+        protected virtual Task<IEnumerable<TModel>> FindAll(ISearchParameter parameter)
         {
+            if(parameter == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
+
             if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
             return Context.FindAll(parameter);
         }
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
@@ -198,10 +205,12 @@ namespace MicroService.Common.Services
 #if !MODEL_NONREADABLE
         protected virtual Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
         {
+            if (parameters == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
             if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
+
             return Context.FindAll(parameters, conditionJoin);
-            throw new NotImplementedException();
         }
 
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
@@ -209,7 +218,7 @@ namespace MicroService.Common.Services
 #endif
         //+:cnd:noEmit
         #endregion
-
+         
         #region ADD
         //-:cnd:noEmit
 #if (MODEL_APPENDABLE)
@@ -219,25 +228,34 @@ namespace MicroService.Common.Services
         /// <param name="model">Model to add.</param>
         /// <returns>Task with type of Model as result.</returns>
         /// <exception cref="Exception"></exception>
-        protected async Task<TModel> Add(IModel model)
+        protected virtual async Task<TModel> Add(IModel model)
         {
-            if (model == null) throw new Exception(string.Format("Null {0} value is not allowed!", typeof(TModelDTO).Name));
+            if (model == null)
+                throw DummyModel.GetModelException(ExceptionType.NoModelSuppliedException);
             TModel result;
             if (model is TModel)
                 result = (TModel)model;
             else
             {
                 result = new TModel();
-                await ((IExCopyable)result).CopyFrom(model);
+                bool ok = await ((IExCopyable)result).CopyFrom(model);
+                if (!ok)
+                    throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
             }
-            bool success = await Context.Add(result);
-            if(success)
-                return result;
-            return default(TModel);
+            try
+            {
+                await Context.Add(result);
+            }
+            catch (Exception e)
+            {
+                throw DummyModel.GetModelException(ExceptionType.AddOperationFailedException, null, e);
+
+            }
+            return result;
         }
-        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel entity)
+        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model)
         {
-            var result = await Add(entity);
+            var result = await Add(model);
 #if MODEL_USEDTO
             if (NeedToUseDTO)
                 return (TModelDTO)((IExModel)result).ToDTO(DTOType);
@@ -263,11 +281,18 @@ namespace MicroService.Common.Services
         {
             var model = await Context.Find(id);
             if (model == null)
-                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
-            var result = await Context.Delete(model);
-            if(result)
-                return model;
-            return default(TModel);
+                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
+            try
+            {
+                var result = await Context.Delete(model);
+                if (result)
+                    return model;
+            }
+            catch (Exception e)
+            {
+                throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString(), e);
+            }
+            throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString());
         }
         async Task<TModelDTO> IDeleteable<TModelDTO, TModel, TID>.Delete(TID id)
         {
@@ -297,14 +322,22 @@ namespace MicroService.Common.Services
         {
             var result = await Context.Find(id);
             if (result == null)
-                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
+                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
 
-            if (await ((IExCopyable)result).CopyFrom(model))
+            bool ok = await ((IExCopyable)result).CopyFrom(model);
+            if (!ok)
+                throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
+            try
             {
+                await Context.Add(result);
                 await Context.SaveChanges();
                 return result;
             }
-            return default(TModel);
+            catch (Exception e)
+            {
+                throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString(), e);
+            }
+            throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString());
         }
         async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel entity)
         {
@@ -331,6 +364,18 @@ namespace MicroService.Common.Services
         #region GET MODEL COUNT
         int IModelCount.GetModelCount() =>
             Context.GetModelCount();
+        #endregion
+
+        #region GET MODEL EXCEPTION
+        /// <summary>
+        /// Supplies an appropriate exception for a failure in a specified method.
+        /// </summary>
+        /// <param name="exceptionType">Type of exception to get.</param>
+        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
+        /// <param name="innerException">Inner exception which is already thrown.</param>
+        /// <returns>Instance of SpecialException class.</returns>
+        protected ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null)=>
+            DummyModel.GetModelException(exceptionType, additionalInfo, innerException);
         #endregion
 
         #region TO DTO
