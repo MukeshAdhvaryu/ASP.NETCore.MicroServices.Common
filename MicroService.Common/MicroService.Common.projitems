@@ -27,8 +27,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\ArgSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Tests\ServiceTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Tests\StandardTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestStandard.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />

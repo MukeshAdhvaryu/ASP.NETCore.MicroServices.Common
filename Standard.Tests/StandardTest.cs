@@ -8,6 +8,12 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Services;
 using MicroService.Common.Web.API;
 
+//-:cnd:noEmit
+#if !(MODEL_ADDTEST && (!MODEL_USEACTION || TDD))
+using MicroService.Common.Web.API.Interfaces;
+#endif
+//+:cnd:noEmit
+
 /*
  * Yo can choose your own model to test by changing the using statements given beolow:
  * For example:
@@ -40,10 +46,20 @@ namespace UserDefined.Tests
     [Testable]
     public class StandardTest: TestStandard<TModelDTO, TModel, TID>
     {
+        //-:cnd:noEmit
+#if MODEL_ADDTEST && (!MODEL_USEACTION || TDD)
+
         protected override IContract<TModelDTO, TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service)
         {
             return new Controller<TModelDTO, TModel, TID>(service);
         }
+#else
+        protected override IActionContract<TModel, int> CreateContract(IService<TModelDTO, TModel, int> service)
+        {
+            return new Controller<TModelDTO, TModel, TID>(service);
+        }
+#endif
+        //+:cnd:noEmit
     }
 }
 //-:cnd:noEmit

@@ -33,7 +33,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult Get(TID id);
+        Task<IActionResult> Get(TID id);
 
         /// <summary>
         /// Gets all models contained in this object.
@@ -42,7 +42,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </summary>
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult GetAll(int limitOfResult = 0);
+        Task<IActionResult> GetAll(int limitOfResult = 0);
 
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -52,14 +52,14 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <param name="startIndex">Start index which to start picking records from.</param>
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult GetAll(int startIndex, int limitOfResult);
+        Task<IActionResult> GetAll(int startIndex, int limitOfResult);
 
         /// <summary>
         /// Finds all models matched based on given parameters.
         /// </summary>
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult FindAll(ISearchParameter parameter);
+        Task<IActionResult> FindAll(ISearchParameter parameter);
 
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -68,7 +68,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+        Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit
@@ -94,7 +94,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to delete.</param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult Delete(TID id);
+        Task<IActionResult> Delete(TID id);
     }
 #endif
     //+:cnd:noEmit
@@ -125,7 +125,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult Add(IModel model);
+        Task<IActionResult> Add(IModel model);
     }
 #endif
     //+:cnd:noEmit
@@ -155,7 +155,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        IActionResult Update(TID id, IModel model);
+        Task<IActionResult> Update(TID id, IModel model);
     }
 #endif
     //+:cnd:noEmit

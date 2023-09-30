@@ -4,7 +4,7 @@ Author: Mukesh Adhvaryu.
 */
 
 //-:cnd:noEmit
-#if MODEL_ADDTEST && (!MODEL_USEACTION || TDD)
+#if MODEL_ADDTEST && MODEL_USEACTION && !TDD
 //+:cnd:noEmit
 
 using System.Linq.Expressions;
@@ -12,10 +12,15 @@ using System.Linq.Expressions;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 
+using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 using MicroService.Common.Tests.Attributes;
+using MicroService.Common.Web.API.Interfaces;
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 using Moq;
 
@@ -36,9 +41,11 @@ namespace MicroService.Common.Tests
     {
         #region VARIABLES
         protected readonly Mock<IService<TModelDTO, TModel, TID>> MockService;
-        readonly IContract<TModelDTO, TModel, TID> Contract;
+        readonly IActionContract<TModel, TID> Contract;
         protected readonly List<TModel> Models;
         protected readonly IFixture Fixture;
+
+        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TModelDTO);
@@ -74,7 +81,7 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IContract<TModelDTO, TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service);
+        protected abstract IActionContract<TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
@@ -82,67 +89,74 @@ namespace MicroService.Common.Tests
         {
             MockService.Setup(expression).ReturnsAsync(returnedValue);
         }
+        protected void Setup<TResult>(Expression<Func<IService<TModelDTO, TModel, TID>, Task<TResult>>> expression, Exception exception)
+        {
+            MockService.Setup(expression).Throws(exception);
+        }
         #endregion
 
         #region GET MODEL/S
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         [NoArgs]
-        public async Task Get_ReturnSingle()
+        public async Task Get_ByIDSuccess()
         {
-            TModelDTO expected;
             var id = Models[0].ID;
             var model = ToDTO(Models[0]);
             Setup((m) => m.Get(id), model);
-            expected = await Contract.Get(id);
+            var result = await Contract.Get(id) as ObjectResult;
+            var expected = result?.Value;
             Verifier.Equal(model, expected);
+            Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
         }
 
         [NoArgs]
-        public async Task Get_ReturnSingleFail()
+        public async Task Get_ByIDFail()
         {
-            var id = Fixture.Create<TID>();
-            TModelDTO model = default(TModelDTO);
-            Setup((m) => m.Get(id), model);
-            var expected = await Contract.Get(id);
-            Verifier.Equal(model, expected);
+            var id = default(TID);
+            var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
+            Setup((m) => m.Get(id), e);
+            var result = await Contract.Get(id) as ObjectResult;
+            var expected = result?.Value as IModelException;
+            Verifier.Equal(e.Message, expected?.Message);
+            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
         }
 
         [WithArgs]
         [Args(0)]
         [Args(3)]
-        [Args(-1)]
-        public async Task GetAll_ReturnAll(int limitOfResult = 0)
+        public async Task GetAll_Success(int limitOfResult = 0)
         {
-            IEnumerable<TModelDTO> expected;
+            int count = limitOfResult;
 
             if (limitOfResult == 0)
             {
                 limitOfResult = Models.Count;
                 Setup((m) => m.GetAll(limitOfResult), Items);
-                expected = await Contract.GetAll(limitOfResult);
-            }
-            else if (limitOfResult < 0)
-            {
-                Setup((m) => m.GetAll(limitOfResult), new TModelDTO[] { });
-                expected = await Contract.GetAll(limitOfResult);
-                limitOfResult = 0;
+                var result = await Contract.GetAll(limitOfResult) as ObjectResult;
+                var expected = result?.Value as IEnumerable<TModelDTO>;
+                Verifier.Equal(limitOfResult, expected?.Count());
             }
             else
             {
                 Setup((m) => m.GetAll(limitOfResult), Items.Take(limitOfResult));
-                expected = await Contract.GetAll(limitOfResult);
+                var result = await Contract.GetAll(limitOfResult) as ObjectResult;
+                var expected = result?.Value as IEnumerable<TModelDTO>;
+                Verifier.Equal(limitOfResult, expected?.Count());
+                Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
             }
-            Verifier.Equal(limitOfResult, expected.Count());
         }
 
         [WithArgs]
         [Args(-1)]
-        public async Task GetAll_ReturnNull(int limitOfResult = 0)
+        public async Task GetAll_Fail(int limitOfResult = 0)
         {
-            Setup((m) => m.GetAll(limitOfResult), new TModelDTO[] { });
-            var expected = await Contract.GetAll(limitOfResult);
-            Verifier.Empty(expected);
+            var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, limitOfResult.ToString());
+            Setup((m) => m.GetAll(limitOfResult), e);
+            var result = await Contract.GetAll(limitOfResult) as ObjectResult;
+            var expected = (result )?.Value as IModelException;
+            Verifier.Equal(e.Message, expected?.Message);
+            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
         }
 #endif
         //+:cnd:noEmit
@@ -152,13 +166,30 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_APPENDABLE
         [NoArgs]
-        public async Task Add_ReturnAdded()
+        public async Task Add_Sucess()
         {
-            TModelDTO expected;
             var model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Add(model), returnModel);
-            expected = await Contract.Add(model);
+            var result = await Contract.Add(model) as ObjectResult;
+            var expected = (result)?.Value;
+            Verifier.Equal(expected, returnModel);
+            Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
+        }
+        [NoArgs]
+        public async Task Add_Fail()
+        {
+            var ID = Models[0].ID;
+
+            var e = DummyModel.GetModelException(ExceptionType.AddOperationFailedException, ID.ToString());
+
+            var model = Fixture.Create<TModel>();
+            model.ID = ID;
+            Setup((m) => m.Add(model), e);
+            var result = await Contract.Add(model) as ObjectResult;
+            var expected = (result)?.Value as IModelException;
+            Verifier.Equal(e.Message, expected?.Message);
+            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
         }
 #endif
         //+:cnd:noEmit
@@ -168,14 +199,28 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_DELETABLE
         [NoArgs]
-        public async Task Delete_ReturnDeleted()
+        public async Task Delete_Success()
         {
-            TModelDTO expected;
-            var model = Fixture.Create<TModel>();
+            TModel? model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Delete(model.ID), returnModel);
-            expected = await Contract.Delete(model.ID);
+            var result = await Contract.Delete(model.ID) as ObjectResult;
+            var expected = result?.Value;
             Verifier.Equal(returnModel, expected);
+            Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
+        }
+
+        [NoArgs]
+        public async Task Delete_Fail()
+        {
+            var ID = Fixture.Create<TID>();
+            var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, ID.ToString());
+
+            Setup((m) => m.Delete(ID), e);
+            var result = await Contract.Delete(ID) as ObjectResult;
+            var expected = result?.Value as IModelException;
+            Verifier.Equal(e.Message, expected?.Message);
+            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
         }
 #endif
         //+:cnd:noEmit
@@ -185,14 +230,28 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_UPDATABLE
         [NoArgs]
-        public async Task Update_ReturnUpdated()
+        public async Task Update_Success()
         {
-            TModelDTO expected;
-            var model = Fixture.Create<TModel>();
+            TModel? model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
             Setup((m) => m.Update(model.ID, model), returnModel);
-            expected = await Contract.Update(model.ID, model);
+            var result = await Contract.Update(model.ID, model) as ObjectResult;
+            var expected = result?.Value;
             Verifier.Equal(returnModel, expected);
+            Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
+        }
+
+        [NoArgs]
+        public async Task Update_Fail()
+        {
+            var ID = Fixture.Create<TID>();
+            var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, ID.ToString());
+            var model = Fixture.Create<TModel>();
+            Setup((m) => m.Update(ID, model), e);
+            var result = await Contract.Update(ID, model) as ObjectResult;
+            var expected = result?.Value as IModelException;
+            Verifier.Equal(e.Message, expected?.Message);
+            Verifier.Equal(StatusCodes.Status400BadRequest, result?.StatusCode);
         }
 #endif
         //+:cnd:noEmit
@@ -220,6 +279,7 @@ namespace MicroService.Common.Tests
         //+:cnd:noEmit
         #endregion
 
+        #region CLASS DATA & MEMBER DATA EXAMPLE 
         /*      
         //This is an example on how to use source member data.
         //To use member data, you must define a static method or property returning IEnumerable<object[]>.
@@ -265,6 +325,7 @@ namespace MicroService.Common.Tests
             }
         }
         */
+        #endregion
     }
 }
 //-:cnd:noEmit

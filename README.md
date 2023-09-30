@@ -145,3 +145,12 @@ To use class data, ArgSource\<source\> will suffice.
 ## UPDATE: Feature to perform search for multiple models using multiple search parameters added.
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
+
+## UPDATE: Added Exception Middleware.
+
+Middleware type: IExceptionFiter type
+
+## UPDATE: Added Support for IActionResult for controller. 
+
+So, Now we have support for IActionResult and actual object return types.
+Use conditional compiler constant: MODEL_USEACTION

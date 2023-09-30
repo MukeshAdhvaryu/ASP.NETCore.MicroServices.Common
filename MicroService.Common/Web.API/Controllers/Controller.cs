@@ -7,6 +7,7 @@
 //+:cnd:noEmit
 using System.Data.Common;
 using System.Reflection.Metadata;
+using System.Security.Cryptography;
 
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
@@ -101,8 +102,17 @@ namespace MicroService.Common.Web.API
         /// <param name="id">ID of the model to read.</param>
         /// <returns>Instance of TModelImplementation represented through TModelDTO</returns>
         [HttpGet("Get/{id}")]
-        public async Task<TModelDTO> Get(TID id) =>
-            await service.Get(id);
+        public async Task<TModelDTO> Get(TID id)
+        {
+            try
+            {
+                return await service.Get(id);
+            }
+            catch 
+            {
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Gets a single model with the specified ID.
@@ -110,9 +120,17 @@ namespace MicroService.Common.Web.API
         /// <param name="id">ID of the model to read.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("Get/{id}")]
-        public IActionResult Get(TID id)
+        public async Task<IActionResult> Get(TID id)
         {
-            return Ok(service.Get(id).Result);
+            try
+            {
+                return Ok(await service.Get(id));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -129,8 +147,18 @@ namespace MicroService.Common.Web.API
         /// <param name="count">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
         /// <returns>IEnumerable of TModel</returns>
         [HttpGet("GetAll/{count}")]
-        public async Task<IEnumerable<TModelDTO>> GetAll(int count = 0) =>
-            await service.GetAll(count);
+        public async Task<IEnumerable<TModelDTO>> GetAll(int count = 0)
+        {
+            try
+            {
+               return await service.GetAll(count);
+            }
+            catch 
+            {
+
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Gets all models contained in this object.
@@ -140,9 +168,17 @@ namespace MicroService.Common.Web.API
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("GetAll/{count}")]
-        public IActionResult GetAll(int count = 0)
+        public async Task<IActionResult> GetAll(int count = 0)
         {
-            return Ok(service.GetAll(count).Result);
+            try
+            {
+                return Ok(await service.GetAll(count));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -162,8 +198,18 @@ namespace MicroService.Common.Web.API
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
-        public async Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int count) =>
-           await service.GetAll(startIndex, count);
+        public async Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int count)
+        {
+            try
+            {
+                return await service.GetAll(startIndex, count);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -174,9 +220,17 @@ namespace MicroService.Common.Web.API
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
-        public IActionResult GetAll(int startIndex, int count)
+        public async Task<IActionResult> GetAll(int startIndex, int count)
         {
-            return Ok(service.GetAll(startIndex, count).Result);
+            try
+            {
+                return Ok(await service.GetAll(count));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -189,8 +243,18 @@ namespace MicroService.Common.Web.API
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter) =>
-            await service.FindAll(parameter);
+        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter)
+        {
+            try
+            {
+                return await service.FindAll(parameter);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -198,9 +262,17 @@ namespace MicroService.Common.Web.API
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/parameter")]
-        public IActionResult FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter parameter)
         {
-            return Ok(service.FindAll(parameter).Result);
+            try
+            {
+                return Ok(await service.FindAll(parameter));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -219,8 +291,18 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR) =>
-            await service.FindAll(parameters, conditionJoin);
+        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        {
+            try
+            {
+                return await service.FindAll(parameters, conditionJoin);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }        
 #else
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -230,9 +312,17 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public IActionResult FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
         {
-            return Ok(service.FindAll(parameters).Result);
+            try
+            {
+                return Ok(await service.FindAll(parameters));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -253,10 +343,31 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>Model that is added.</returns>
         [HttpPost("Post")]
-        public async Task<TModelDTO> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model) =>
-            await service.Add(model);
-        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model) =>
-            await service.Add(model);
+        public async Task<TModelDTO> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model)
+        {
+            try
+            {
+                return await service.Add(model);
+
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
+        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model)
+        {
+            try
+            {
+               return await service.Add(model);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Adds a new model based on the given model.
@@ -268,13 +379,29 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpPost("Post")]
-        public IActionResult Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
+        public async Task<IActionResult> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
         {
-            return Ok(service.Add(model).Result);
+            try
+            {
+                return Ok(await service.Add(model));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
-        IActionResult IAppendable<TModel, TID>.Add(IModel model)
+        async Task<IActionResult> IAppendable<TModel, TID>.Add(IModel model)
         {
-            return Ok(service.Add(model).Result);
+            try
+            {
+                return Ok(await service.Add(model));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -291,8 +418,18 @@ namespace MicroService.Common.Web.API
         /// <param name="id">ID of the model to delete.</param>
         /// <returns></returns>
         [HttpDelete("Delete/{id}")]
-        public async Task<TModelDTO> Delete(TID id) =>
-            await service.Delete(id);
+        public async Task<TModelDTO> Delete(TID id)
+        {
+            try
+            {
+                return await service.Delete(id);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }        
 #else
         /// <summary>
         /// Deletes the model with the specified ID.
@@ -300,9 +437,17 @@ namespace MicroService.Common.Web.API
         /// <param name="id">ID of the model to delete.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpDelete("Delete/{id}")]
-        public IActionResult Delete(TID id)
+        public async Task<IActionResult> Delete(TID id)
         {
-            return Ok(service.Delete(id).Result);
+            try
+            {
+                return Ok(await service.Delete(id));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif
@@ -325,11 +470,30 @@ namespace MicroService.Common.Web.API
         /// otherwise you will have to call SaveChanges method manually.</param>
         /// <returns></returns>
         [HttpPut("Put/{id}")]
-        public async Task<TModelDTO> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model) =>
-            await service.Update(id, model);
+        public async Task<TModelDTO> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model)
+        {
+            try
+            {
+                return await service.Update(id, model);
+            }
+            catch
+            {
 
-        async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel model) =>
-            await service.Update(id, model);
+                throw;
+            }
+        }
+        async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel model)
+        {
+            try
+            {
+                return await service.Update(id, model);
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
 #else
         /// <summary>
         /// Updates a model specified by the given ID with the data of the given model.
@@ -341,14 +505,30 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpPut("Put/{id}")]
-        public IActionResult Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
+        public async Task<IActionResult> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
         {
-            return Ok(service.Update(id, model).Result);
+            try
+            {
+                return Ok(await service.Update(id, model));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 
-        IActionResult IUpdateable<TModel, TID>.Update(TID id, IModel model)
+        async Task<IActionResult> IUpdateable<TModel, TID>.Update(TID id, IModel model)
         {
-            return Ok(service.Update(id, model).Result);
+            try
+            {
+                return Ok(await service.Update(id, model));
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e);
+            }
         }
 #endif
 #endif

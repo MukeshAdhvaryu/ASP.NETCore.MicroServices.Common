@@ -329,7 +329,6 @@ namespace MicroService.Common.Services
                 throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
             try
             {
-                await Context.Add(result);
                 await Context.SaveChanges();
                 return result;
             }

@@ -18,7 +18,6 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 
 using System.Collections;
-using Castle.Components.DictionaryAdapter.Xml;
 
 namespace MicroService.Common.Tests
 {
@@ -36,6 +35,24 @@ namespace MicroService.Common.Tests
             return;
 #else
             Assert.AreEqual(expected, actual);
+            return;
+#endif
+            //+:cnd:noEmit
+        }
+        #endregion
+
+        #region EQUAL
+        public static void NotEqual<T>(T expected, T actual)
+        {
+            //-:cnd:noEmit
+#if MODEL_USEXUNIT
+            Assert.NotEqual(expected, actual);
+            return;
+#elif MODEL_USENUNIT
+            Assert.AreNotEqual(expected, actual);
+            return;
+#else
+            Assert.AreNotEqual(expected, actual);
             return;
 #endif
             //+:cnd:noEmit
@@ -76,6 +93,7 @@ namespace MicroService.Common.Tests
         }
         #endregion
 
+        #region IS NULL
         public static void IsNull<T>(T expected)
         {
             //-:cnd:noEmit
@@ -91,7 +109,9 @@ namespace MicroService.Common.Tests
 #endif
             //+:cnd:noEmit
         }
+        #endregion
 
+        #region NOT NULL
         public static void NotNull<T>(T expected)
         {
             //-:cnd:noEmit
@@ -107,6 +127,25 @@ namespace MicroService.Common.Tests
 #endif
             //+:cnd:noEmit
         }
+        #endregion
+
+        #region IsType
+        public static void IsOfType<T>(object expected)
+        {
+            //-:cnd:noEmit
+#if MODEL_USEXUNIT
+            Assert.IsType<T>(expected);
+            return;
+#elif MODEL_USENUNIT
+            Assert.IsInstanceOf<T>(expected);
+            return;
+#else
+            Assert.IsInstanceOfType(expected, typeof(T));
+            return;
+#endif
+            //+:cnd:noEmit
+        }
+        #endregion
     }
 }
 //-:cnd:noEmit
