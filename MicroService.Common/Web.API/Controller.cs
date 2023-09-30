@@ -70,10 +70,11 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region GET MODEL COUNT
-        int IModelCount.GetModelCount() => service.GetModelCount();
+        int IModelCount.GetModelCount() =>
+            service.GetModelCount();
         #endregion
 
-        #region GET MODEL/S
+        #region GET MODEL BY ID
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         /// <summary>
@@ -86,18 +87,26 @@ namespace MicroService.Common.Web.API
             await service.Get(id);
 #endif
         //+:cnd:noEmit
+        #endregion
 
+        #region GET ALL (Optional: count)
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
         /// <summary>
         /// Gets enumerable of model items.
         /// </summary>
-        /// <param name="limitOfResult">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
+        /// <param name="count">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
         /// <returns>IEnumerable of TModel</returns>
         [HttpGet("GetAll/{count}")]
         public async Task<IEnumerable<TModelDTO>> GetAll(int count = 0) =>
             await service.GetAll(count);
+#endif
+        //+:cnd:noEmit
+        #endregion
 
+        #region GET ALL (start, count)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -109,11 +118,24 @@ namespace MicroService.Common.Web.API
         [HttpGet("GetAll/{startIndex}, {count}")]
         public async Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int count) =>
            await service.GetAll(startIndex, count);
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region FIND ALL (parameter)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
 
         [HttpGet("FindAll/parameter")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter) =>
+        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter parameter) =>
             await service.FindAll(parameter);
+#endif
+        //+:cnd:noEmit
+        #endregion
 
+        #region FIND ALL (parameters)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
         /// <summary>
         /// Finds all models matched based on given parameters.
         /// </summary>
@@ -121,8 +143,8 @@ namespace MicroService.Common.Web.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("FindAll/parameters")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0) =>
+        [HttpGet("FindAll/{conditionJoin}")]
+        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR) =>
             await service.FindAll(parameters, conditionJoin);
 #endif
         //+:cnd:noEmit
