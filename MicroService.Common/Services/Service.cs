@@ -88,55 +88,9 @@ namespace MicroService.Common.Services
         protected TModelCollection Models { get; private set; }
         #endregion
 
-        #region GET ALL
+        #region GET MODEL BY ID
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
-        /// <summary>
-        /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of Instance of TModelImplementations represented through TModelInterfaces.</returns>
-        /// <exception cref="Exception"></exception>
-        protected virtual Task<IEnumerable<TModel>> GetAll(int limitOfResult = 0)
-        {
-            if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
-            if (limitOfResult < 0)
-                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
-
-            if (limitOfResult > 0)
-                return Task.FromResult(Context.Take(limitOfResult));
-            return Task.FromResult((IEnumerable<TModel>)Context);
-        }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int limitOfResult) =>
-            ToDTO(await GetAll(limitOfResult));
-
-        /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of models.</returns>
-        protected Task<IEnumerable<TModel>> GetAll(int startIndex, int limitOfResult)
-        {
-            if (!Context.Any())
-                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
-
-            if (limitOfResult < 0)
-                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
-
-            if (limitOfResult > 0)
-                return Task.FromResult(Context.Skip(startIndex).Take(limitOfResult));
-            else
-                return Task.FromResult(Context.Skip(startIndex));
-        }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int startIndex, int limitOfResult) =>
-            ToDTO(await GetAll(startIndex, limitOfResult));
-
         /// <summary>
         /// Gets a single model with the specified ID.
         /// </summary>
@@ -153,6 +107,80 @@ namespace MicroService.Common.Services
         async Task<TModelDTO> IReadable<TModelDTO, TModel, TID>.Get(TID id) =>
            ToDTO(await Get(id));
 
+#else
+        protected virtual async Task<TModel> Get(TID id)
+        {
+            var result = await Context.Find(id);
+            if (result == null)
+                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
+            return result;
+        }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region GET ALL (Optional: count)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+        /// <summary>
+        /// Gets all models contained in this object.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="count">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of Instance of TModelImplementations represented through TModelInterfaces.</returns>
+        /// <exception cref="Exception"></exception>
+        protected virtual Task<IEnumerable<TModel>> GetAll(int count = 0)
+        {
+            if (!Context.Any())
+                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+            if (count < 0)
+                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
+
+            if (count > 0)
+                return Task.FromResult(Context.Take(count));
+            return Task.FromResult((IEnumerable<TModel>)Context);
+        }
+        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int limitOfResult) =>
+            ToDTO(await GetAll(limitOfResult));
+
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region GET ALL (start, count)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+        /// <summary>
+        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="startIndex">Start index which to start picking records from.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        protected Task<IEnumerable<TModel>> GetAll(int startIndex, int count)
+        {
+            if (!Context.Any())
+                throw new Exception(string.Format("No {0} are found", typeof(TModel).Name));
+
+            if (count < 0)
+                return Task.FromResult((IEnumerable<TModel>)new TModel[] { });
+
+            if (count > 0)
+                return Task.FromResult(Context.Skip(startIndex).Take(count));
+            else
+                return Task.FromResult(Context.Skip(startIndex));
+        }
+        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int startIndex, int count) =>
+            ToDTO(await GetAll(startIndex, count));
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region FIND ALL (parameter)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
         protected Task<IEnumerable<TModel>> FindAll(ISearchParameter parameter)
         {
             if (!Context.Any())
@@ -161,7 +189,13 @@ namespace MicroService.Common.Services
         }
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
             ToDTO(await FindAll(parameter));
+#endif
+        //+:cnd:noEmit
+        #endregion
 
+        #region FIND ALL (parameters)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE
         protected virtual Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
         {
             if (!Context.Any())
@@ -172,15 +206,6 @@ namespace MicroService.Common.Services
 
         async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
             ToDTO(await FindAll(parameters, conditionJoin));
-
-#else
-        protected virtual async Task<TModel> Get(TID id)
-        {
-            var result = await Context.Find(id);
-            if (result == null)
-                throw new Exception(string.Format("No such {0} found with ID: " + id, typeof(TModel).Name));
-            return result;
-        }
 #endif
         //+:cnd:noEmit
         #endregion
