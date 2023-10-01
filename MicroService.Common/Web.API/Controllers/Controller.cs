@@ -308,7 +308,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.FindAll(parameters));
+                return Ok(await service.FindAll(parameters, conditionJoin));
             }
             catch
             {
