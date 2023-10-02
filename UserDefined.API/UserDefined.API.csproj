@@ -18,9 +18,22 @@
   <ItemGroup Condition="$(DefineConstants.Contains('MODEL_USESWAGGER'))">
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-  </ItemGroup>    
+  </ItemGroup>
+  
+  <ItemGroup Condition="$(DefineConstants.Contains('MODEL_CONNECTSQLSERVER'))">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.11" />
+  </ItemGroup>
 
-    <ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('MODEL_CONNECTPOSTGRESQL'))">
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
+  </ItemGroup>
+
+      <ItemGroup Condition="$(DefineConstants.Contains('MODEL_CONNECTMYSQL'))">
+    <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
+  </ItemGroup>
+
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
       <PrivateAssets>all</PrivateAssets>

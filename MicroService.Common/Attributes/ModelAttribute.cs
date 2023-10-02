@@ -2,6 +2,7 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+using MicroService.Common.Models;
 using MicroService.Common.Services;
 
 namespace MicroService.Common.Attributes
@@ -19,19 +20,20 @@ namespace MicroService.Common.Attributes
             AutoController = true;
             ProvideSeedData = false;
         }
-        public ModelAttribute(string name, bool autoController = true, bool provideSeedData = false)
+        public ModelAttribute(string? name, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0)
         {
             Name = name;
             AutoController = autoController;
             ProvideSeedData = provideSeedData;
+            ConnectionKey = connectionKey;
         }
-        public ModelAttribute(string name, ServiceScope scope, bool autoController = true, bool provideSeedData = false) :
-            this(name, autoController, provideSeedData)
+        public ModelAttribute(string? name, ServiceScope scope, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0) :
+            this(name, autoController, provideSeedData, connectionKey)
         {
             Scope = scope;
         }
-        public ModelAttribute(ServiceScope scope, bool autoController = true, bool provideSeedData = false) :
-            this(null, scope, autoController, provideSeedData)
+        public ModelAttribute(ServiceScope scope, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0) :
+            this(null, scope, autoController, provideSeedData, connectionKey)
         { }
         #endregion
 
@@ -55,6 +57,11 @@ namespace MicroService.Common.Attributes
         /// Gets or sets a flag to indicate whether or not to provide an initial collection of models when model collection is empty for a model which uses this attribute.
         /// </summary>
         public bool ProvideSeedData { get; set; }
+
+        /// <summary>
+        /// Gets or sets a connection key to use a connection with a particular database via DBContext for a model which uses this attribute.
+        /// </summary>
+        public ConnectionKey ConnectionKey { get; set; }
         #endregion
     }
     #endregion

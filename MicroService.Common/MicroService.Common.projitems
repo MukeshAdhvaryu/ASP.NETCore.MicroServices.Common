@@ -39,6 +39,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Configurations\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controllers\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext\DBContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Enums\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\Abilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\IActionContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Middlewares\ExceptionMiddleWare.cs" />

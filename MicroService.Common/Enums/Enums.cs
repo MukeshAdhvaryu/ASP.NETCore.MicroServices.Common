@@ -189,19 +189,87 @@ namespace MicroService.Common.Models
     public enum ExceptionType : ushort
     {
         Unknown = 0,
+
+        /// <summary>
+        /// Represents an exception to indicate that no model is found in the collection for a given search or the collection is empty.
+        /// </summary>
         NoModelFoundException,
+
+        /// <summary>
+        /// Represents an exception to indicate that no model is found in the collection while searching it with specific ID.
+        /// </summary>
         NoModelFoundForIDException,
+
+        /// <summary>
+        /// Represents an exception to indicate that the query to search multiple models returned no models.
+        /// </summary>
         NoModelsFoundException,
+
+        /// <summary>
+        /// Represents an exception to indicate that no model is supplied where it required for example Add or Update functions.
+        /// </summary>
         NoModelSuppliedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that a negative number is supplied as a count of models to be returned.
+        /// </summary>
         NegativeFetchCountException,
+
+        /// <summary>
+        /// Represents an exception to indicate that a copy operation from either DTO or another model is failed.
+        /// </summary>
         ModelCopyOperationFailed,
+
+        /// <summary>
+        /// Represents an exception to indicate that no valid paramter is supplied in a model search intended to find multiple or single models with single search criteria.
+        /// </summary>
         NoParameterSuppliedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that no valid paramters are supplied in a model search intended to find multiple or single models with multiple search criteria.
+        /// </summary>
         NoParametersSuppliedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that an operation of adding a model in the collection failed.
+        /// </summary>
         AddOperationFailedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that an operation of updating a model in the collection failed.
+        /// </summary>
         UpdateOperationFailedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that an operation of deleting a model in the collection failed.
+        /// </summary>
         DeleteOperationFailedException,
+
+        /// <summary>
+        /// Represents an exception to indicate that server is failed due to an internal error.
+        /// </summary>
         InternalServerErrorException,
+
+        /// <summary>
+        /// Represents an exception to indicate that the current operation failed an expectation of the requirement for conducting the operation.
+        /// </summary>
         ExpectationFailedException,
+    }
+    #endregion
+
+    #region CONNECTION KEYS
+    public enum ConnectionKey
+    {
+        InMemory,
+        //-:cnd:noEmit
+#if MODEL_CONNECTSQLSERVER        
+        SQLServer = 1,
+#elif MODEL_CONNECTPOSTGRESQL
+        PostgreSQL = 1,
+#elif MODEL_CONNECTMYSQL
+        MySQL = 1,
+#endif
+        //+:cnd:noEmit
     }
     #endregion
 }

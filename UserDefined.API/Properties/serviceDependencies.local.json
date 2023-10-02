@@ -8,6 +8,13 @@
       "type": "sqlite.local",
       "connectionId": "ConnectionStrings:InMemory",
       "dynamicId": null
+    },
+    "mssql1": {
+      "serviceConnectorResourceId": "",
+      "secretStore": "LocalSecretsFile",
+      "type": "mssql.local",
+      "connectionId": "ConnectionStrings:SQLServer",
+      "dynamicId": null
     }
   }
 }
