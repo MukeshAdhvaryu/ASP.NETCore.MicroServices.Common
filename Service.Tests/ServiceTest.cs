@@ -10,11 +10,11 @@ using MicroService.Common.Collections;
 /*
  * Yo can choose your own model to test by changing the using statements given beolow:
  * For example:
- * using TModelDTO = UserDefined.Models.ISubject;
+ * using TOutDTO = UserDefined.Models.ISubject;
  * using TID = System.Int32;
  * using TModel = UserDefined.Models.Subject;
  * OR
- * using TModelDTO = UserDefined.DTOs.ISubjectDTO;
+ * using TOutDTO = UserDefined.DTOs.ISubjectDTO;
  * using TID = System.Int32;
  * using TModel = UserDefined.Models.Subject;
  * 
@@ -22,11 +22,11 @@ using MicroService.Common.Collections;
 */
 //-:cnd:noEmit
 #if !MODEL_USEDTO
-using TModelDTO = MicroService.Common.Tests.TestModel;
+using TOutDTO = MicroService.Common.Tests.TestModel;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #else
-using TModelDTO = MicroService.Common.Tests.ITestModelDTO;
+using TOutDTO = MicroService.Common.Tests.ITestModelDTO;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #endif
@@ -35,11 +35,11 @@ using TModel = MicroService.Common.Tests.TestModel;
 namespace UserDefined.Tests
 {
     [Testable]
-    public class ServiceTest : ServiceTest<TModelDTO, TModel, TID>
+    public class ServiceTest : ServiceTest<TOutDTO, TModel, TID>
     {
-        protected override IService<TModelDTO, TModel, TID> CreateService()
+        protected override IService<TOutDTO, TModel, TID> CreateService()
         {
-            return new Service<TModelDTO, TModel, TID, ModelCollection<TModel, TID>>(new ModelCollection<TModel, TID>());
+            return new Service<TOutDTO, TModel, TID, ModelCollection<TModel, TID>>(new ModelCollection<TModel, TID>());
         }
     }
 }

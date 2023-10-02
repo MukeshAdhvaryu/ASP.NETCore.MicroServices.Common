@@ -175,9 +175,9 @@ namespace UserDefined.Models
 
             //-:cnd:noEmit
 #if MODEL_USEDTO
-            if (model is ISubjectDTO)
+            if (model is ISubjectOutDTO)
             {
-                var createSubjectDTO = (ISubjectDTO)model;
+                var createSubjectDTO = (ISubjectOutDTO)model;
                 Name = createSubjectDTO.Name;
                 faculty = createSubjectDTO.Faculty;
                 return Task.FromResult(true);
@@ -225,10 +225,12 @@ namespace UserDefined.Models
         #region Model To DTO
         //-:cnd:noEmit
 #if MODEL_USEDTO
-        protected override IModel ToDTO(Type type)
+        protected override IModel? ToDTO(Type type)
         {
-           if(type == typeof(ISubjectDTO) || type == typeof(SubjectDTO))
-                return new SubjectDTO(this);
+           if(type == typeof(ISubjectOutDTO) || type == typeof(SubjectOutDTO))
+                return new SubjectOutDTO(this);
+            if (type == typeof(ISubjectInDTO) || type == typeof(SubjectInDTO))
+                return new SubjectInDTO(this);
             return base.ToDTO(type);
         }
 #endif

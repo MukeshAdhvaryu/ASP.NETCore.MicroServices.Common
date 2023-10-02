@@ -254,13 +254,13 @@ namespace MicroService.Common.Models
         /// <param name="currentValue">Current value exists for the given property.</param>
         /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
         /// <returns>True if values match, otherwise false.</returns>
-        protected virtual bool IsMatch (string propertyName, Criteria criteria, object currentValue, object parsedValue)
+        protected virtual bool IsMatch (string propertyName, Criteria criteria, object? currentValue, object? parsedValue)
         {
             return Operations.Compare(currentValue, criteria, parsedValue);
         }
         bool IMatch.IsMatch(ISearchParameter parameter)
         {
-            var result = Parse(parameter, out var currentValue, out object newValue);
+            var result = Parse(parameter, out var currentValue, out var newValue);
             switch (result.Status)
             {
                 case ResultStatus.Sucess:
@@ -342,14 +342,14 @@ namespace MicroService.Common.Models
         /// </summary>
         /// <param name="type"></param>
         /// <returns>Compitible DTO.</returns>
-        protected virtual IModel ToDTO(Type type)
+        protected virtual IModel? ToDTO(Type type)
         {
             var t = GetType();
             if(type == t || t.IsAssignableTo(type))
                 return this;
             return null;
         }
-        IModel IExModelToDTO.ToDTO(Type type) =>
+        IModel? IExModelToDTO.ToDTO(Type type) =>
             ToDTO(type);
         #endregion
 #endif

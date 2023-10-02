@@ -5,10 +5,6 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
-using System.Data.Common;
-using System.Reflection.Metadata;
-using System.Security.Cryptography;
-
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
@@ -37,28 +33,29 @@ namespace MicroService.Common.Web.API
     /// We are using repository pattern so, we need a service repository
     /// to divert contract calls to it to perform contracted operations.
     /// </summary>
-    /// <typeparam name="TModelDTO">Any model of your choice.</typeparam>
+    /// <typeparam name="TOutDTO">Any model of your choice.</typeparam>
     [ApiController]
     [Route("[controller]")]
-    public class Controller<TModelDTO, TModel, TID> : ControllerBase, IExController
+    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController
         //-:cnd:noEmit
 #if !MODEL_USEACTION
-        , IContract<TModelDTO, TModel, TID>
+        , IContract<TOutDTO, TModel, TID>
 #else
         , IActionContract<TModel, TID>
 #endif
         //+:cnd:noEmit
 
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
         where TID : struct
+        where TInDTO: IModel
         #endregion
     {
         #region VARIABLES
@@ -67,11 +64,11 @@ namespace MicroService.Common.Web.API
         /// to divert contract calls to perform contract operations.
         /// Since this contro
         /// </summary>
-        IService<TModelDTO, TModel, TID> service;
+        IService<TOutDTO, TModel, TID> service;
         #endregion
 
         #region CONSTRUCTORS
-        public Controller(IService<TModelDTO, TModel, TID> _service)
+        public Controller(IService<TOutDTO, TModel, TID> _service)
         {
             service = _service;
         }
@@ -100,9 +97,9 @@ namespace MicroService.Common.Web.API
         /// Gets a single model with the specified ID.
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
-        /// <returns>Instance of TModelImplementation represented through TModelDTO</returns>
+        /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
         [HttpGet("Get/{id}")]
-        public async Task<TModelDTO> Get(TID id)
+        public async Task<TOutDTO> Get(TID id)
         {
             try
             {
@@ -146,7 +143,7 @@ namespace MicroService.Common.Web.API
         /// <param name="count">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
         /// <returns>IEnumerable of TModel</returns>
         [HttpGet("GetAll/{count}")]
-        public async Task<IEnumerable<TModelDTO>> GetAll(int count = 0)
+        public async Task<IEnumerable<TOutDTO>> GetAll(int count = 0)
         {
             try
             {
@@ -195,7 +192,7 @@ namespace MicroService.Common.Web.API
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
-        public async Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int count)
+        public async Task<IEnumerable<TOutDTO>> GetAll(int startIndex, int count)
         {
             try
             {
@@ -238,7 +235,7 @@ namespace MicroService.Common.Web.API
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter)
         {
             try
             {
@@ -284,7 +281,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IEnumerable<TModelDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -334,7 +331,7 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>Model that is added.</returns>
         [HttpPost("Post")]
-        public async Task<TModelDTO> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model)
+        public async Task<TOutDTO> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TInDTO model)
         {
             try
             {
@@ -345,7 +342,7 @@ namespace MicroService.Common.Web.API
                 throw;
             }
         }
-        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model)
+        async Task<TOutDTO> IAppendable<TOutDTO, TModel, TID>.Add(IModel model)
         {
             try
             {
@@ -367,7 +364,7 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpPost("Post")]
-        public async Task<IActionResult> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
+        public async Task<IActionResult> Add([FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TInDTO model)
         {
             try
             {
@@ -404,7 +401,7 @@ namespace MicroService.Common.Web.API
         /// <param name="id">ID of the model to delete.</param>
         /// <returns></returns>
         [HttpDelete("Delete/{id}")]
-        public async Task<TModelDTO> Delete(TID id)
+        public async Task<TOutDTO> Delete(TID id)
         {
             try
             {
@@ -450,11 +447,10 @@ namespace MicroService.Common.Web.API
         /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
-        /// <param name="UpdateImmediately">If true, updates changes immediately, 
         /// otherwise you will have to call SaveChanges method manually.</param>
         /// <returns></returns>
         [HttpPut("Put/{id}")]
-        public async Task<TModelDTO> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))]TModelDTO model)
+        public async Task<TOutDTO> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TInDTO model)
         {
             try
             {
@@ -465,7 +461,7 @@ namespace MicroService.Common.Web.API
                 throw;
             }
         }
-        async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel model)
+        async Task<TOutDTO> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel model)
         {
             try
             {
@@ -487,7 +483,7 @@ namespace MicroService.Common.Web.API
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpPut("Put/{id}")]
-        public async Task<IActionResult> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TModelDTO model)
+        public async Task<IActionResult> Update(TID id, [FromQuery][ModelBinder(BinderType = typeof(ModelBinder))] TInDTO model)
         {
             try
             {
@@ -499,7 +495,7 @@ namespace MicroService.Common.Web.API
             }
         }
 
-        async Task<IActionResult> IUpdateable<TModel, TID>.Update(TID id, IModel model)
+        async Task<IActionResult> IUpdatable<TModel, TID>.Update(TID id, IModel model)
         {
             try
             {

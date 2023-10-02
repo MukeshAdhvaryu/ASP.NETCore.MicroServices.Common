@@ -14,34 +14,34 @@ namespace MicroService.Common.Interfaces
     { }
     #endregion
 
-    #region IContract<TModelDTO, TModel, TID>
+    #region IContract<TOutDTO, TModel, TID>
     /// <summary>
     /// This interface represents a contract of operations.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IContract<TModelDTO, TModel, TID> : IContract, IFirstModel<TModel, TID>, IModelCount
+    public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel, TID>, IModelCount
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE
-        , IReadable<TModelDTO, TModel, TID>
+        , IReadable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_DELETABLE
-  , IDeleteable<TModelDTO, TModel, TID>
+  , IDeleteable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_APPENDABLE
-  , IAppendable<TModelDTO, TModel, TID>
+  , IAppendable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_UPDATABLE
-  , IUpdateable<TModelDTO, TModel, TID>
+  , IUpdatable<TOutDTO, TModel, TID>
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()

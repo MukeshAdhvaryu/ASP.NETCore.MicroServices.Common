@@ -26,13 +26,14 @@ using Moq;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class TestStandard<TModelDTO, TModel, TID>
+    public abstract class TestStandard<TOutDTO, TModel, TID, TInDTO>
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
+        where TInDTO : IModel
         where TModel : Model<TID>, IModel<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -40,7 +41,7 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        protected readonly Mock<IService<TModelDTO, TModel, TID>> MockService;
+        protected readonly Mock<IService<TOutDTO, TModel, TID>> MockService;
         readonly IActionContract<TModel, TID> Contract;
         protected readonly List<TModel> Models;
         protected readonly IFixture Fixture;
@@ -48,7 +49,7 @@ namespace MicroService.Common.Tests
         static readonly IExModelExceptionSupplier DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
-        static readonly Type DTOType = typeof(TModelDTO);
+        static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
@@ -58,7 +59,7 @@ namespace MicroService.Common.Tests
         public TestStandard()
         {
             Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
-            MockService = Fixture.Freeze<Mock<IService<TModelDTO, TModel, TID>>>();
+            MockService = Fixture.Freeze<Mock<IService<TOutDTO, TModel, TID>>>();
             Contract = CreateContract(MockService.Object);
             var count = DummyModelCount;
             if (count < 5)
@@ -70,9 +71,9 @@ namespace MicroService.Common.Tests
         #region PROPERTIES
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
-        protected IEnumerable<TModelDTO> Items => Models.Select(x => ToDTO(x));
+        protected IEnumerable<TOutDTO> Items => Models.Select(x => ToDTO(x));
 #else
-        protected IEnumerable<TModelDTO> Items => (IEnumerable<TModelDTO>)Models;
+        protected IEnumerable<TOutDTO> Items => (IEnumerable<TOutDTO>)Models;
 
 #endif
         //+:cnd:noEmit
@@ -81,15 +82,15 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IActionContract<TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service);
+        protected abstract IActionContract<TModel, TID> CreateContract(IService<TOutDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
-        protected void Setup<TResult>(Expression<Func<IService<TModelDTO, TModel, TID>, Task<TResult>>> expression, TResult returnedValue)
+        protected void Setup<TResult>(Expression<Func<IService<TOutDTO, TModel, TID>, Task<TResult>>> expression, TResult returnedValue)
         {
             MockService.Setup(expression).ReturnsAsync(returnedValue);
         }
-        protected void Setup<TResult>(Expression<Func<IService<TModelDTO, TModel, TID>, Task<TResult>>> expression, Exception exception)
+        protected void Setup<TResult>(Expression<Func<IService<TOutDTO, TModel, TID>, Task<TResult>>> expression, Exception exception)
         {
             MockService.Setup(expression).Throws(exception);
         }
@@ -140,14 +141,14 @@ namespace MicroService.Common.Tests
                 limitOfResult = Models.Count;
                 Setup((m) => m.GetAll(limitOfResult), Items);
                 var result = await Contract.GetAll(limitOfResult) as ObjectResult;
-                var expected = result?.Value as IEnumerable<TModelDTO>;
+                var expected = result?.Value as IEnumerable<TOutDTO>;
                 Verifier.Equal(limitOfResult, expected?.Count());
             }
             else
             {
                 Setup((m) => m.GetAll(limitOfResult), Items.Take(limitOfResult));
                 var result = await Contract.GetAll(limitOfResult) as ObjectResult;
-                var expected = result?.Value as IEnumerable<TModelDTO>;
+                var expected = result?.Value as IEnumerable<TOutDTO>;
                 Verifier.Equal(limitOfResult, expected?.Count());
                 Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
             }
@@ -181,9 +182,11 @@ namespace MicroService.Common.Tests
         public async Task Add_Sucess()
         {
             var model = Fixture.Create<TModel>();
+            var inModel = Fixture.Create<TInDTO>();
+
             var returnModel = ToDTO(model);
-            Setup((m) => m.Add(model), returnModel);
-            var result = await Contract.Add(model) as ObjectResult;
+            Setup((m) => m.Add(inModel), returnModel);
+            var result = await Contract.Add(inModel) as ObjectResult;
             var expected = (result)?.Value;
             Verifier.Equal(expected, returnModel);
             Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
@@ -195,12 +198,11 @@ namespace MicroService.Common.Tests
 
             var e = DummyModel.GetModelException(ExceptionType.AddOperationFailedException, ID.ToString());
 
-            var model = Fixture.Create<TModel>();
-            model.ID = ID;
-            Setup((m) => m.Add(model), e);
+            var inModel = Fixture.Create<TInDTO>();
+            Setup((m) => m.Add(inModel), e);
             try
             {
-                await Contract.Add(model);
+                await Contract.Add(inModel);
                 Verifier.Equal(true, false);
             }
             catch (Exception ex)
@@ -256,10 +258,11 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Update_Success()
         {
-            TModel? model = Fixture.Create<TModel>();
+            var model = Fixture.Create<TModel>();
+            var inModel = Fixture.Create<TInDTO>();
             var returnModel = ToDTO(model);
-            Setup((m) => m.Update(model.ID, model), returnModel);
-            var result = await Contract.Update(model.ID, model) as ObjectResult;
+            Setup((m) => m.Update(model.ID, inModel), returnModel);
+            var result = await Contract.Update(model.ID, inModel) as ObjectResult;
             var expected = result?.Value;
             Verifier.Equal(returnModel, expected);
             Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
@@ -270,11 +273,11 @@ namespace MicroService.Common.Tests
         {
             var ID = Fixture.Create<TID>();
             var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, ID.ToString());
-            var model = Fixture.Create<TModel>();
-            Setup((m) => m.Update(ID, model), e);
+            var inModel = Fixture.Create<TInDTO>();
+            Setup((m) => m.Update(ID, inModel), e);
             try
             {
-                await Contract.Update(ID, model);
+                await Contract.Update(ID, inModel);
                 Verifier.Equal(true, false);
             }
             catch (Exception ex)
@@ -290,20 +293,20 @@ namespace MicroService.Common.Tests
         #region TO DTO
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
-        protected TModelDTO? ToDTO(TModel? model)
+        protected TOutDTO? ToDTO(TModel? model)
         {
             if (model == null)
-                return default(TModelDTO);
+                return default(TOutDTO);
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)model).ToDTO(DTOType);
-            return (TModelDTO)(object)model;
+                return (TOutDTO)((IExModel)model).ToDTO(DTOType);
+            return (TOutDTO)(object)model;
         }
 #else
-        protected TModelDTO? ToDTO(TModel? model)
+        protected TOutDTO? ToDTO(TModel? model)
         {
             if(model == null)
-                return default(TModelDTO);
-            return (TModelDTO)(object)model;
+                return default(TOutDTO);
+            return (TOutDTO)(object)model;
         }
 #endif
         //+:cnd:noEmit

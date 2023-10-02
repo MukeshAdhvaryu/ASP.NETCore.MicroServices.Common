@@ -84,7 +84,7 @@ If neither of those constants defined then MSTest will be used.
 
 Try FindAll (ISearchParameter searchParameter) method.
   
-## UPDATE: Support for ClassDta and MemberData attributes added.
+## UPDATE: Support for ClassData and MemberData attributes added.
 
 ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
 ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
@@ -154,3 +154,39 @@ Middleware type: IExceptionFiter type
 
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
+
+## UPDATE: Feature: Choose database at model level.
+
+To Use SQLServer:
+1. define constant: MODEL_CONNECTSQLSERVER
+2. In configuration, define connection string with key "SQLServer".
+3. At your model level, use model attribute with ConnectionKey = ConnectionKey.SQLServer
+
+To Use PostgreSQL:
+1. define constant: MODEL_CONNECTPOSTGRESQL
+2. In configuration, define connection string with key "PostgreSQL".
+3. At your model level, use model attribute with ConnectionKey = ConnectionKey.PostgreSQL
+
+To Use MySQL:
+1. define constant: MODEL_CONNECTMYSQL
+2. In configuration, define connection string with key "MySQL".
+3. At your model level, use model attribute with ConnectionKey = ConnectionKey.MySQL
+
+Please note that, regardless of any of these,
+1. if connectionstring is empty, InMemory SQLLite will be used as default.
+2. Don't worry about downloading relevant package from nuget.
+3. Defining constant will automatically download the relevant package for you.
+
+## UPDATE Controller class: 4th Type TInDTO included.
+
+# So now it is Controller<TOutDTO, TModel, TID, TInDTO>
+
+We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
+We can still use any DTO for the both IN and OUT though.
+
+## UPDATE Controller class: 4th Type TInDTO included.
+
+# So now it is Controller<TOutDTO, TModel, TID, TInDTO>
+
+We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
+We can still use any DTO for the both IN and OUT though.

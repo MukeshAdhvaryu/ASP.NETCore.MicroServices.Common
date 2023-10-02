@@ -21,21 +21,21 @@ namespace MicroService.Common.Services
     { }
     #endregion
 
-    #region IService<TModelDTO, TModel, TID>
+    #region IService<TOutDTO, TModel, TID>
     /// <summary>
     /// This interface represents repository object to be used in controller class.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IService<TModelDTO, TModel, TID> : IService,
-        IContract<TModelDTO, TModel, TID>
+    public interface IService<TOutDTO, TModel, TID> : IService,
+        IContract<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -44,19 +44,19 @@ namespace MicroService.Common.Services
     { }
     #endregion
 
-    #region Service<TModelDTO, TModel, TID>
+    #region Service<TOutDTO, TModel, TID>
     /// <summary>
     /// This class represents a repository to be used in controller class.
     /// </summary>
-    /// <typeparam name="TModelDTO">Model interface of your choice - must derived from IModel interface.</typeparam>
+    /// <typeparam name="TOutDTO">Model interface of your choice - must derived from IModel interface.</typeparam>
     /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
-    public partial class Service<TModelDTO, TModel, TID, TModelCollection> : IService<TModelDTO, TModel, TID>
+    public partial class Service<TOutDTO, TModel, TID, TModelCollection> : IService<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -69,7 +69,7 @@ namespace MicroService.Common.Services
         readonly static IExModel DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
-        static readonly Type DTOType = typeof(TModelDTO);
+        static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
@@ -96,7 +96,7 @@ namespace MicroService.Common.Services
         /// Gets a single model with the specified ID.
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
-        /// <returns>Instance of TModelImplementation represented through TModelDTO</returns>
+        /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
         /// <exception cref="Exception"></exception>
         protected virtual async Task<TModel> Get(TID id)
         {
@@ -105,7 +105,7 @@ namespace MicroService.Common.Services
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
-        async Task<TModelDTO> IReadable<TModelDTO, TModel, TID>.Get(TID id) =>
+        async Task<TOutDTO> IReadable<TOutDTO, TModel, TID>.Get(TID id) =>
            ToDTO(await Get(id));
 
 #else
@@ -143,7 +143,7 @@ namespace MicroService.Common.Services
                 return Task.FromResult(Context.Take(count));
             return Task.FromResult((IEnumerable<TModel>)Context);
         }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int count) =>
+        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.GetAll(int count) =>
             ToDTO(await GetAll(count));
 #endif
         //+:cnd:noEmit
@@ -176,7 +176,7 @@ namespace MicroService.Common.Services
             else
                 return Task.FromResult(Context.Skip(startIndex));
         }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.GetAll(int startIndex, int limitOfResult) =>
+        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.GetAll(int startIndex, int limitOfResult) =>
             ToDTO(await GetAll(startIndex, limitOfResult));
 #endif
         //+:cnd:noEmit
@@ -194,7 +194,7 @@ namespace MicroService.Common.Services
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
             return Context.FindAll(parameter);
         }
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
+        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
             ToDTO(await FindAll(parameter));
 #endif
         //+:cnd:noEmit
@@ -213,7 +213,7 @@ namespace MicroService.Common.Services
             return Context.FindAll(parameters, conditionJoin);
         }
 
-        async Task<IEnumerable<TModelDTO>> IReadable<TModelDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
+        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
             ToDTO(await FindAll(parameters, conditionJoin));
 #endif
         //+:cnd:noEmit
@@ -253,13 +253,13 @@ namespace MicroService.Common.Services
             }
             return result;
         }
-        async Task<TModelDTO> IAppendable<TModelDTO, TModel, TID>.Add(IModel model)
+        async Task<TOutDTO> IAppendable<TOutDTO, TModel, TID>.Add(IModel model)
         {
             var result = await Add(model);
 #if MODEL_USEDTO
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)result).ToDTO(DTOType);
-            return (TModelDTO)(object)result;
+                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
+            return (TOutDTO)(object)result;
 #else
             return result;
 #endif
@@ -294,13 +294,13 @@ namespace MicroService.Common.Services
             }
             throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString());
         }
-        async Task<TModelDTO> IDeleteable<TModelDTO, TModel, TID>.Delete(TID id)
+        async Task<TOutDTO> IDeleteable<TOutDTO, TModel, TID>.Delete(TID id)
         {
             var result = await Delete(id);
 #if MODEL_USEDTO
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)result).ToDTO(DTOType);
-            return (TModelDTO)(object)result;
+                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
+            return (TOutDTO)(object)result;
 #else
             return result;
 #endif
@@ -338,13 +338,13 @@ namespace MicroService.Common.Services
             }
             throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString());
         }
-        async Task<TModelDTO> IUpdateable<TModelDTO, TModel, TID>.Update(TID id, IModel entity)
+        async Task<TOutDTO> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel entity)
         {
             var result = await Update(id, entity);
 #if MODEL_USEDTO
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)result).ToDTO(DTOType);
-            return (TModelDTO)(object)result;
+                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
+            return (TOutDTO)(object)result;
 #else
             return result;
 #endif
@@ -379,34 +379,34 @@ namespace MicroService.Common.Services
 
         #region TO DTO
         /// <summary>
-        /// Converts model to an apporiate object of TModelDTO type.
+        /// Converts model to an apporiate object of TOutDTO type.
         /// </summary>
         /// <param name="model">Model to convert.</param>
-        /// <returns>Converted model ito an apporiate object of TModelDTO type.</returns>
+        /// <returns>Converted model ito an apporiate object of TOutDTO type.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TModelDTO? ToDTO(TModel? model)
+        protected TOutDTO? ToDTO(TModel? model)
         {
             if (model == null)
-                return default(TModelDTO);
+                return default(TOutDTO);
             //-:cnd:noEmit
 #if (MODEL_USEDTO)
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)model).ToDTO(DTOType);
+                return (TOutDTO)((IExModel)model).ToDTO(DTOType);
 #endif
             //+:cnd:noEmit
-            return (TModelDTO)(object)model;
+            return (TOutDTO)(object)model;
         }
 
         /// <summary>
-        /// Converts models to an apporiate objects of TModelDTO type.
+        /// Converts models to an apporiate objects of TOutDTO type.
         /// </summary>
         /// <param name="model">Models to convert.</param>
-        /// <returns>Converted models to an apporiate objects of TModelDTO type</returns>
+        /// <returns>Converted models to an apporiate objects of TOutDTO type</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected IEnumerable<TModelDTO> ToDTO(IEnumerable<TModel> models)
+        protected IEnumerable<TOutDTO> ToDTO(IEnumerable<TModel> models)
         {
             if (models == null)
-                return default(IEnumerable<TModelDTO>);
+                return default(IEnumerable<TOutDTO>);
             //-:cnd:noEmit
 #if (MODEL_USEDTO)
             if (NeedToUseDTO)
@@ -414,7 +414,7 @@ namespace MicroService.Common.Services
 #endif
             //+:cnd:noEmit
 
-            return (IEnumerable<TModelDTO>)models;
+            return (IEnumerable<TOutDTO>)models;
         }
         #endregion
     }

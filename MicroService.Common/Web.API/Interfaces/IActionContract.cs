@@ -23,7 +23,7 @@ namespace MicroService.Common.Web.API.Interfaces
   , IAppendable<TModel, TID>
 #endif
 #if MODEL_UPDATABLE
-  , IUpdateable<TModel, TID>
+  , IUpdatable<TModel, TID>
 #endif
     //+:cnd:noEmit
     #region TYPE CONSTRINTS
