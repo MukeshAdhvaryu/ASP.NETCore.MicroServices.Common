@@ -183,3 +183,10 @@ Please note that, regardless of any of these,
 
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
+
+## UPDATE Controller class: 4th Type TInDTO included.
+
+# So now it is Controller<TOutDTO, TModel, TID, TInDTO>
+
+We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
+We can still use any DTO for the both IN and OUT though.
