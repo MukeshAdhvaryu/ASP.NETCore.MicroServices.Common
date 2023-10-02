@@ -6,10 +6,12 @@
 #if !TDD
 //+:cnd:noEmit
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 using MicroService.Common.Attributes;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
+using MicroService.Common.Web.API.Middlewares;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -41,11 +43,16 @@ namespace MicroService.Common.Web.API
 
         #region CONFIGURE MVC
         /// <summary>
-        /// Creates MVCBuilder from the given WebApplication builder.
+        /// Creates MVCBuilder from service collection instance using the given action.
         /// </summary>
-        /// <param name="builder">Instance of web application builder which to build mvc builder for.</param>
+        /// <param name="services">Service collection to be used to create MvcBuilder.</param>
+        /// <param name="isProductionEnvironment">True indicates if the application in production environment, otherwise, in development environement.</param>
+        /// <param name="SwaggerDocTitle">Optional title to be used for swagger doc.
+        /// Only relevant if the conditional constant MODEL_USESWAGGER is defined.</param>
+        /// <param name="SwaggerDocDescription">Optional description to be used for swagger doc.
+        /// Only relevant if the conditional constant MODEL_USESWAGGER is defined.</param>
         /// <returns>IMvcBuilder instance.</returns>
-        public static IMvcBuilder AddMVC(this IServiceCollection services, bool isProductionEnvironment)
+        public static IMvcBuilder AddMVC(this IServiceCollection services, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
             IsProductionEnvironment = isProductionEnvironment;
             var mvcBuilder = MvcServiceCollectionExtensions.AddMvc(services);
@@ -64,17 +71,54 @@ namespace MicroService.Common.Web.API
             mvcBuilder.ConfigureApplicationPartManager(m => m.FeatureProviders.Add(new ControllerFeatureProvider()));
 #endif
             //+:cnd:noEmit
+
+            mvcBuilder = services.AddControllers(option =>
+            {
+                option.Filters.Add<HttpExceptionFilter>();
+            });
+
+            mvcBuilder.AddJsonOptions(option =>
+            {
+                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
+
+
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            services.AddEndpointsApiExplorer();
+
+            //-:cnd:noEmit
+#if MODEL_USESWAGGER
+            services.AddSwaggerGen(opt => {
+                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = SwaggerDocTitle,
+                    Description = SwaggerDocDescription
+                });
+
+
+                opt.SchemaFilter<EnumSchemaFilter>();
+            });
+#endif
+            //+:cnd:noEmit
+
             return mvcBuilder;
         }
 
         /// <summary>
-        /// Creates MVCBuilder from the given WebApplication builder.
+        /// Creates MVCBuilder from service collection instance using the given action.
         /// </summary>
-        /// <param name="builder">Instance of web application builder which to build mvc builder for.</param>
-        /// <param name="action">Mvc Options action to be executed on mvc builder.</param>
+        /// <param name="services">Service collection to be used to create MvcBuilder.</param>
+        /// <param name="action">Action with MvcOptions to be used while creating MvcBuilder.</param>
+        /// <param name="isProductionEnvironment">True indicates if the application in production environment, otherwise, in development environement.</param>
+        /// <param name="SwaggerDocTitle">Optional title to be used for swagger doc.
+        /// Only relevant if the conditional constant MODEL_USESWAGGER is defined.</param>
+        /// <param name="SwaggerDocDescription">Optional description to be used for swagger doc.
+        /// Only relevant if the conditional constant MODEL_USESWAGGER is defined.</param>
         /// <returns>IMvcBuilder instance.</returns>
-        public static IMvcBuilder AddMVC(this IServiceCollection services, Action<MvcOptions> action)
+        public static IMvcBuilder AddMVC(this IServiceCollection services, Action<MvcOptions> action, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
+            IsProductionEnvironment = isProductionEnvironment;
             var nativeAction = action;
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -103,6 +147,31 @@ namespace MicroService.Common.Web.API
             */
             OptionsServiceCollectionExtensions.Configure(mvcBuilder.Services, nativeAction);
             mvcBuilder.ConfigureApplicationPartManager(m => m.FeatureProviders.Add(new ControllerFeatureProvider()));
+#endif
+            //+:cnd:noEmit
+
+            mvcBuilder = services.AddControllers(option =>
+            {
+                option.Filters.Add<HttpExceptionFilter>();
+            });
+
+            mvcBuilder.AddJsonOptions(option =>
+            {
+                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
+            //-:cnd:noEmit
+#if MODEL_USESWAGGER
+            services.AddSwaggerGen(opt => {
+                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = SwaggerDocTitle,
+                    Description = SwaggerDocDescription
+                });
+
+
+                opt.SchemaFilter<EnumSchemaFilter>();
+            });
 #endif
             //+:cnd:noEmit
 
