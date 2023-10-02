@@ -123,8 +123,8 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TDBContext">DBContext<typeparamref name="TModel"/> of your choice.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
-        /// <param name="dbOptionBuilder">Acion providing DbContextOptionsBuilder.</param>
-        public static void AddModel<TModelDTO, TModel, TID, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, Action<DbContextOptionsBuilder>? dbOptionBuilder = null)
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddModel<TModelDTO, TModel, TID, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
             where TModel : Model<TID>,
             //-:cnd:noEmit
@@ -143,11 +143,13 @@ namespace MicroService.Common.Web.API
             ServiceScope scope = ServiceScope.Scoped;
             bool addController = true;
             var modelAttribute = type.GetCustomAttribute<ModelAttribute>();
+            ConnectionKey connectionKey  = ConnectionKey.InMemory;
 
             if (modelAttribute != null)
             {
                 scope = modelAttribute.Scope;
                 addController = modelAttribute.AutoController;
+                connectionKey = modelAttribute.ConnectionKey;
             }
 
             //-:cnd:noEmit
@@ -158,17 +160,47 @@ namespace MicroService.Common.Web.API
             //+:cnd:noEmit
             var dummyModel = (IExModel)new TModel();
 
-            if (dbOptionBuilder == null)
+            DbContextOptionsBuilder dbOptionBuilder;
+            if(dbContextOptions == null)
+                dbOptionBuilder = new DbContextOptionsBuilder();
+            else
+                dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
+
+            string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
+
+            Action<DbContextOptionsBuilder> action = (opt) =>
             {
-                string connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "";
-                dbOptionBuilder = (opt) =>
+                if (string.IsNullOrEmpty(connectionString))
                 {
+                    connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
                     _ = opt.UseInMemoryDatabase(connectionString);
-                };
-            }
+                    return;
+                }
+                switch (connectionKey)
+                {
+                    case ConnectionKey.InMemory:
+                    default:
+                        _ = opt.UseInMemoryDatabase(connectionString);
+                        break;
+                    //-:cnd:noEmit
+#if MODEL_CONNECTSQLSERVER
+                    case ConnectionKey.SQLServer:
+                        _= opt.UseSqlServer(connectionString);
+                        break;
+#elif MODEL_CONNECTPOSTGRESQL
+                    case ConnectionKey.PostgreSQL:
+                       _= opt.UseNpgsql(connectionString);
+                        break;
+#elif MODEL_CONNECTMYSQL
+                        case ConnectionKey.MySQL:
+                       _= opt.UseMySQL(connectionString);
+                        break;
+#endif
+                        //+:cnd:noEmit
+                }
+            };
 
-
-            services.AddDbContext<TDBContext>(dbOptionBuilder);
+            services.AddDbContext<TDBContext>(action);
             switch (scope)
             {
                 case ServiceScope.Scoped:
@@ -193,8 +225,8 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
-        /// <param name="dbOptionBuilder">Acion providing DbContextOptionsBuilder.</param>
-        public static void AddModel<TModelDTO, TModel, TID>(this IServiceCollection services, IConfiguration configuration, Action<DbContextOptionsBuilder>? dbOptionBuilder = null)
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddModel<TModelDTO, TModel, TID>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
             where TModel : Model<TID>,
             //-:cnd:noEmit
@@ -206,7 +238,7 @@ namespace MicroService.Common.Web.API
             where TModelDTO : IModel
             where TID : struct
             #endregion
-            => AddModel<TModelDTO, TModel, TID, Service<TModelDTO, TModel, TID, DBContext<TModel, TID>>, DBContext<TModel, TID>>(services, configuration, dbOptionBuilder);
+            => AddModel<TModelDTO, TModel, TID, Service<TModelDTO, TModel, TID, DBContext<TModel, TID>>, DBContext<TModel, TID>>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -217,8 +249,8 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TModel">Model implementation of your choice - must derived from Model with int id type.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
-        /// <param name="dbOptionBuilder">Acion providing DbContextOptionsBuilder.</param>
-        public static void AddModel<TModelDTO, TModel>(this IServiceCollection services, IConfiguration configuration, Action<DbContextOptionsBuilder>? dbOptionBuilder = null)
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddModel<TModelDTO, TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
             where TModel : Model<int>,
             //-:cnd:noEmit
@@ -229,7 +261,7 @@ namespace MicroService.Common.Web.API
             new()
             where TModelDTO : IModel
             #endregion
-            => AddModel<TModelDTO, TModel, int, Service<TModelDTO, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbOptionBuilder);
+            => AddModel<TModelDTO, TModel, int, Service<TModelDTO, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -241,14 +273,14 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TModel">Model implementation of your choice - must derived from Model with int id type.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
-        /// <param name="dbOptionBuilder">Acion providing DbContextOptionsBuilder.</param>
-        public static void AddModel<TModel>(this IServiceCollection services, IConfiguration configuration, Action<DbContextOptionsBuilder>? dbOptionBuilder = null)
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddModel<TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
             where TModel : Model<int>,
             new()
             #endregion
             =>
-            AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbOptionBuilder);
+            AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbContextOptions);
         #endregion
 
         #region GET MODEL NAME
