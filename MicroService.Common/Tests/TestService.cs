@@ -24,13 +24,13 @@ using Moq;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class ServiceTest<TModelDTO, TModel, TID>  
+    public abstract class ServiceTest<TOutDTO, TModel, TID>  
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>, IModel<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -38,13 +38,13 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        readonly IService<TModelDTO, TModel, TID> Contract;
+        readonly IService<TOutDTO, TModel, TID> Contract;
         protected readonly IFixture Fixture;
 
         static readonly IExModelExceptionSupplier DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
-        static readonly Type DTOType = typeof(TModelDTO);
+        static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
@@ -59,7 +59,7 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IService<TModelDTO, TModel, TID> CreateService();
+        protected abstract IService<TOutDTO, TModel, TID> CreateService();
         #endregion
 
         #region GET MODEL/S
@@ -268,20 +268,20 @@ namespace MicroService.Common.Tests
         #region TO DTO
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
-        protected TModelDTO? ToDTO(TModel? model)
+        protected TOutDTO? ToDTO(TModel? model)
         {
             if (model == null)
-                return default(TModelDTO);
+                return default(TOutDTO);
             if (NeedToUseDTO)
-                return (TModelDTO)((IExModel)model).ToDTO(DTOType);
-            return (TModelDTO)(object)model;
+                return (TOutDTO)((IExModel)model).ToDTO(DTOType);
+            return (TOutDTO)(object)model;
         }
 #else
-        protected TModelDTO? ToDTO(TModel? model)
+        protected TOutDTO? ToDTO(TModel? model)
         {
             if(model == null)
-                return default(TModelDTO);
-            return (TModelDTO)(object)model;
+                return default(TOutDTO);
+            return (TOutDTO)(object)model;
         }
 #endif
         //+:cnd:noEmit

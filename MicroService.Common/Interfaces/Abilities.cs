@@ -105,7 +105,7 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="type"></param>
         /// <returns>Compitible DTO.</returns>
-        IModel ToDTO(Type type);
+        IModel? ToDTO(Type type);
     }
 #endif
     //+:cnd:noEmit
@@ -135,22 +135,22 @@ namespace MicroService.Common.Interfaces
     }
     #endregion
 
-    #region IReadable<TModelDTO, TModel, TID>
+    #region IReadable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE
     /// <summary>
     /// This interface represents an object that allows reading a single model or multiple models.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TModelDTO, TModel, TID>
+    public interface IReadable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -162,7 +162,7 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
         /// <returns></returns>
-        Task<TModelDTO> Get(TID id);
+        Task<TOutDTO> Get(TID id);
 
         /// <summary>
         /// Gets all models contained in this object.
@@ -171,7 +171,7 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TModelDTO>> GetAll(int limitOfResult = 0);
+        Task<IEnumerable<TOutDTO>> GetAll(int limitOfResult = 0);
 
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -181,14 +181,14 @@ namespace MicroService.Common.Interfaces
         /// <param name="startIndex">Start index which to start picking records from.</param>
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TModelDTO>> GetAll(int startIndex, int limitOfResult);
+        Task<IEnumerable<TOutDTO>> GetAll(int startIndex, int limitOfResult);
 
         /// <summary>
         /// Finds all models matched based on given parameters.
         /// </summary>
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TModelDTO>> FindAll(ISearchParameter parameter);
+        Task<IEnumerable<TOutDTO>> FindAll(ISearchParameter parameter);
 
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -197,28 +197,28 @@ namespace MicroService.Common.Interfaces
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TModelDTO>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+        Task<IEnumerable<TOutDTO>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IDeletable<TModelDTO, TModel, TID>
+    #region IDeletable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
 #if MODEL_DELETABLE
     /// <summary>
     /// This interface represents an object that allows deleting a single model with a specified ID.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IDeleteable<TModelDTO, TModel, TID> 
+    public interface IDeleteable<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -230,29 +230,29 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to delete.</param>
         /// <returns></returns>
-        Task<TModelDTO> Delete(TID id);
+        Task<TOutDTO> Delete(TID id);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IAppendable<TModelDTO, TModel, TID>
+    #region IAppendable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
 #if MODEL_APPENDABLE
     /// <summary>
     /// This interface represents an object that has a list of models to which a new model can be appended.
     /// Any object that implements the IModel interface can be provided. This allows DTOs to be used instead of an actual model object.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IAppendable<TModelDTO, TModel, TID> 
+    public interface IAppendable<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -268,28 +268,28 @@ namespace MicroService.Common.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>Model that is added.</returns>
-        Task<TModelDTO> Add(IModel model);
+        Task<TOutDTO> Add(IModel model);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IUpdatable<TModelDTO, TModel, TID>
+    #region IUpdatable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
 #if MODEL_UPDATABLE
     /// <summary>
     /// This interface represents an object that has a list of models and allows a model with a specified ID to be updated with data from the given model parameter.
     /// </summary>
-    /// <typeparam name="TModelDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IUpdateable<TModelDTO, TModel, TID> 
+    public interface IUpdatable<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TModelDTO : IModel
+        where TOutDTO : IModel
         where TModel : Model<TID>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
-        TModelDTO,
+        TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
@@ -305,7 +305,7 @@ namespace MicroService.Common.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns></returns>
-        Task<TModelDTO> Update(TID id, IModel model);
+        Task<TOutDTO> Update(TID id, IModel model);
     }
 #endif
     //+:cnd:noEmit

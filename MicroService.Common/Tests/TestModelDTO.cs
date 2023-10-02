@@ -7,10 +7,6 @@ Author: Mukesh Adhvaryu.
 #if MODEL_ADDTEST && MODEL_USEDTO
 //+:cnd:noEmit
 
-using System.ComponentModel.DataAnnotations;
-
-using MicroService.Common.Attributes;
-using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
 namespace MicroService.Common.Tests

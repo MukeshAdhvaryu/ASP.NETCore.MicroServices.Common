@@ -139,7 +139,7 @@ namespace MicroService.Common.Web.API.Interfaces
     /// </summary>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IUpdateable<TModel, TID>
+    public interface IUpdatable<TModel, TID>
         #region TYPE CONSTRINTS
         where TModel : Model<TID>,
         new()

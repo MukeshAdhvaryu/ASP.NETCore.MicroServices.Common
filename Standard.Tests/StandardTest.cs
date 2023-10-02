@@ -15,48 +15,52 @@ using MicroService.Common.Web.API.Interfaces;
 //+:cnd:noEmit
 
 /*
- * Yo can choose your own model to test by changing the using statements given beolow:
- * For example:
- * using TModelDTO = UserDefined.Models.ISubject;
- * using TID = System.Int32;
- * using TModel = UserDefined.Models.Subject;
- * OR
- * using TModelDTO = UserDefined.DTOs.ISubjectDTO;
- * using TID = System.Int32;
- * using TModel = UserDefined.Models.Subject;
- * 
- * Please note that TModel must be a concrete class deriving from the base Model class.
+    * Yo can choose your own model to test by changing the using statements given beolow:
+    * For example:
+    * using TOutDTO = UserDefined.Models.ISubject;
+    * using TInDTO = UserDefined.Models.ISubject;
+    * using TID = System.Int32;
+    * using TModel = UserDefined.Models.Subject;
+    * OR
+    * using TOutDTO = UserDefined.DTOs.ISubjectOutDTO;
+    * using TInDTO = UserDefined.Models.ISubjectInDTO;
+    * using TID = System.Int32;
+    * using TModel = UserDefined.Models.Subject;
+    * 
+    * Please note that TModel must be a concrete class deriving from the base Model class.
 */
 
 //-:cnd:noEmit
 #if !MODEL_USEDTO
-using TModelDTO = MicroService.Common.Tests.TestModel;
+using TOutDTO = MicroService.Common.Tests.TestModel;
+using TInDTO = MicroService.Common.Tests.TestModel;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #else
-using TModelDTO = MicroService.Common.Tests.ITestModelDTO;
+using TOutDTO = MicroService.Common.Tests.ITestModelDTO;
+using TInDTO = MicroService.Common.Tests.ITestModelDTO;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #endif
 //+:cnd:noEmit
 
-
+ 
 namespace UserDefined.Tests
 {
     [Testable]
-    public class StandardTest: TestStandard<TModelDTO, TModel, TID>
+    public class StandardTest: TestStandard<TOutDTO, TModel, TID, TInDTO>
     {
         //-:cnd:noEmit
 #if MODEL_ADDTEST && (!MODEL_USEACTION || TDD)
 
-        protected override IContract<TModelDTO, TModel, TID> CreateContract(IService<TModelDTO, TModel, TID> service)
+        protected override IContract<TOutDTO, TModel, TID> CreateContract(IService<TOutDTO, TModel, TID> service)
         {
-            return new Controller<TModelDTO, TModel, TID>(service);
+            return new Controller<TOutDTO, TModel, TID, TInDTO>(service);
         }
 #else
-        protected override IActionContract<TModel, int> CreateContract(IService<TModelDTO, TModel, int> service)
+        protected override IActionContract<TModel, int> CreateContract(IService<TOutDTO, TModel, int> service)
         {
-            return new Controller<TModelDTO, TModel, TID>(service);
+            return new Controller<TOutDTO, TModel, TID, TInDTO>(service);
         }
 #endif
         //+:cnd:noEmit

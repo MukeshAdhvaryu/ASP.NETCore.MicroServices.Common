@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;MODEL_USEACTION;</DefineConstants>
+    <DefineConstants>$(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
