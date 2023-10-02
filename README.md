@@ -73,18 +73,18 @@ By default, DBContext\<TModel, TID\> uses InMemory SqlLite by using "InMemory" c
 
 That's it. 
 
-## UPDATE: A single test project is created.
+# UPDATE: A single test project is created.
 
 ### This project is with bare minimum code and can be used commonly for all frameworks i.e. xUnit, NUnit or MSTest.
 
 Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
 If neither of those constants defined then MSTest will be used.
 
-## UPDATE: Criteria based search feature for models added.
+# UPDATE: Criteria based search feature for models added.
 
 Try FindAll (ISearchParameter searchParameter) method.
   
-## UPDATE: Support for ClassData and MemberData attributes added.
+# UPDATE: Support for ClassData and MemberData attributes added.
 
 ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
 ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
@@ -142,20 +142,20 @@ To use class data, ArgSource\<source\> will suffice.
         }
     }
 
-## UPDATE: Feature to perform search for multiple models using multiple search parameters added.
+# UPDATE: Feature to perform search for multiple models using multiple search parameters added.
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
 
-## UPDATE: Added Exception Middleware.
+# UPDATE: Added Exception Middleware.
 
 Middleware type: IExceptionFiter type
 
-## UPDATE: Added Support for IActionResult for controller. 
+# UPDATE: Added Support for IActionResult for controller. 
 
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
 
-## UPDATE: Feature: Choose database at model level.
+# UPDATE: Feature: Choose database at model level.
 
 To Use SQLServer:
 1. define constant: MODEL_CONNECTSQLSERVER
@@ -177,14 +177,7 @@ Please note that, regardless of any of these,
 2. Don't worry about downloading relevant package from nuget.
 3. Defining constant will automatically download the relevant package for you.
 
-## UPDATE Controller class: 4th Type TInDTO included.
-
-# So now it is Controller<TOutDTO, TModel, TID, TInDTO>
-
-We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
-We can still use any DTO for the both IN and OUT though.
-
-## UPDATE Controller class: 4th Type TInDTO included.
+# UPDATE Controller class: 4th Type TInDTO included.
 
 # So now it is Controller<TOutDTO, TModel, TID, TInDTO>
 
