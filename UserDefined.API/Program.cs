@@ -32,7 +32,7 @@ namespace UserDefined.API
              * 
             */
 
-            builder.Services.AddModel<Subject>(builder.Configuration);
+            //builder.Services.AddModel<Subject>(builder.Configuration);
 
             //-:cnd:noEmit
 #if MODEL_USEDTO

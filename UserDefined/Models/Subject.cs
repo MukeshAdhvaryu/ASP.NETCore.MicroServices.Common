@@ -182,6 +182,13 @@ namespace UserDefined.Models
                 faculty = createSubjectDTO.Faculty;
                 return Task.FromResult(true);
             }
+            if (model is ISubjectInDTO)
+            {
+                var createSubjectDTO = (ISubjectInDTO)model;
+                Name = createSubjectDTO.Name;
+                faculty = createSubjectDTO.Faculty;
+                return Task.FromResult(true);
+            }
 #endif
             //+:cnd:noEmit
             return Task.FromResult(false);
