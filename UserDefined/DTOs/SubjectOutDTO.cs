@@ -1,24 +1,22 @@
 ﻿//-:cnd:noEmit
 #if MODEL_USEDTO
 //+:cnd:noEmit
-using MicroService.Common.Attributes;
 using MicroService.Common.Models;
 
 using UserDefined.Models;
 
 namespace UserDefined.DTOs
 {
-    //[Model(Scope = MicroService.Common.Services.ServiceScope.Singleton)]
-    [Model(Name = "SubjectOut")]
+    #region ISubjectOutDTO
     public interface ISubjectOutDTO : IModel
     {
         int ID { get; }
         string? Name { get; }
         Faculty Faculty { get; }
     }
+    #endregion
 
-    //[Model(Scope = MicroService.Common.Services.ServiceScope.Singleton)]
-    [Model(Name = "SubjectOut")]
+    #region SubjectOutDTO
     public class SubjectOutDTO : ISubjectOutDTO
     {
         public SubjectOutDTO(ISubject subject)
@@ -31,6 +29,7 @@ namespace UserDefined.DTOs
         public Faculty Faculty { get; }
         public int ID { get; }
     }
+    #endregion
 }
 
 //-:cnd:noEmit

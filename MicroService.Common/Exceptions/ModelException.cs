@@ -134,7 +134,6 @@ namespace MicroService.Common.Exceptions
                 return new ModelException(message, type);
             return new ModelException(message, type, exception);
         }
-
         #endregion
     }
     #endregion

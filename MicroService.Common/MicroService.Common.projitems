@@ -9,6 +9,7 @@
     <Import_RootNamespace>MicroService.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\ModelCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />

@@ -27,7 +27,6 @@ namespace UserDefined.Models
     }
 
     #region ISubject
-    [Model(Scope = ServiceScope.Scoped)]
     public interface ISubject : IModel<int>
     {
         [Required]
@@ -42,7 +41,9 @@ namespace UserDefined.Models
     #endregion
 
     #region Subject
-    [Model(Scope = ServiceScope.Scoped, ProvideSeedData = true)]
+    [Model(Scope = ServiceScope.Scoped, Name = "Subject")]
+    //[DBConnect(Database = "SubjectDB", ConnectionKey = ConnectionKey.SQLServer)]
+    [DBConnect(ProvideSeedData = true)]
     public class Subject : Model<int>, ISubject
     {
         #region VARIABLES

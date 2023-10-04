@@ -18,8 +18,6 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroService.Common.Web.API
 {
@@ -212,22 +210,29 @@ namespace MicroService.Common.Web.API
             #endregion
         {
             var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+
             ServiceScope scope = ServiceScope.Scoped;
             bool addController = true;
-            var modelAttribute = type.GetCustomAttribute<ModelAttribute>();
+            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
             ConnectionKey connectionKey = ConnectionKey.InMemory;
+            string? dbName = null;
 
             if (modelAttribute != null)
             {
                 scope = modelAttribute.Scope;
                 addController = modelAttribute.AutoController;
-                connectionKey = modelAttribute.ConnectionKey;
             }
-
+            var connectAttribute = modelType.GetCustomAttribute<DBConnectAttribute>();
+            if (connectAttribute != null)
+            {
+                connectionKey = connectAttribute.ConnectionKey;
+                dbName = connectAttribute.Database;
+            }
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
             if (addController)
-                ControllerTypes.Add(Tuple.Create(type, typeof(TModel), typeof(TID), typeof(TInDTO)));
+                ControllerTypes.Add(Tuple.Create(type, modelType, typeof(TID), typeof(TInDTO)));
 #endif
             //+:cnd:noEmit
             var dummyModel = (IExModel)new TModel();
@@ -239,15 +244,16 @@ namespace MicroService.Common.Web.API
                 dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
 
             string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
-
             Action<DbContextOptionsBuilder> action = (opt) =>
             {
-                if (string.IsNullOrEmpty(connectionString))
+                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(dbName))
                 {
                     connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
                     _ = opt.UseInMemoryDatabase(connectionString);
                     return;
                 }
+
+                connectionString = string.Format(connectionString, dbName);
                 switch (connectionKey)
                 {
                     case ConnectionKey.InMemory:
@@ -272,6 +278,7 @@ namespace MicroService.Common.Web.API
                 }
             };
 
+            ADD_DBCONTEXT:
             services.AddDbContext<TDBContext>(action);
             switch (scope)
             {

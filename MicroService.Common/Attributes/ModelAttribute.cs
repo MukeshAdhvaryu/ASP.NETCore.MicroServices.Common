@@ -2,7 +2,6 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using MicroService.Common.Models;
 using MicroService.Common.Services;
 
 namespace MicroService.Common.Attributes
@@ -11,30 +10,24 @@ namespace MicroService.Common.Attributes
     /// <summary>
     /// Provides various options for a model to represent itself through Web API. 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class ModelAttribute : Attribute
     {
         #region CONSTRUCTORS
         public ModelAttribute()
         {
             AutoController = true;
-            ProvideSeedData = false;
         }
-        public ModelAttribute(string? name, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0)
+        public ModelAttribute(string? name, bool autoController = true)
         {
             Name = name;
             AutoController = autoController;
-            ProvideSeedData = provideSeedData;
-            ConnectionKey = connectionKey;
         }
-        public ModelAttribute(string? name, ServiceScope scope, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0) :
-            this(name, autoController, provideSeedData, connectionKey)
+        public ModelAttribute(string? name, ServiceScope scope, bool autoController = true):
+            this(name, autoController)
         {
             Scope = scope;
         }
-        public ModelAttribute(ServiceScope scope, bool autoController = true, bool provideSeedData = false, ConnectionKey connectionKey = 0) :
-            this(null, scope, autoController, provideSeedData, connectionKey)
-        { }
         #endregion
 
         #region PROPERTIES
@@ -52,16 +45,6 @@ namespace MicroService.Common.Attributes
         /// Gets or sets a flag to choose whether to use a dynamic controller or not for a model which uses this attribute.
         /// </summary>
         public bool AutoController { get; set; }
-
-        /// <summary>
-        /// Gets or sets a flag to indicate whether or not to provide an initial collection of models when model collection is empty for a model which uses this attribute.
-        /// </summary>
-        public bool ProvideSeedData { get; set; }
-
-        /// <summary>
-        /// Gets or sets a connection key to use a connection with a particular database via DBContext for a model which uses this attribute.
-        /// </summary>
-        public ConnectionKey ConnectionKey { get; set; }
         #endregion
     }
     #endregion

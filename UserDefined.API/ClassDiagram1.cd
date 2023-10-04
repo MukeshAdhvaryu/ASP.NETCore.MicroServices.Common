@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MicroService.Common.Models.Model&lt;TID&gt;">
+    <Position X="26.5" Y="1" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>BAQiAEAgAAgEgCAEBCBAQAAAAAAAAAAACAACQCgAIgA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Models\Model.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Services.Service&lt;TOutDTO, TModel, TID, TModelCollection&gt;">
+    <Position X="22.25" Y="1" Width="4" />
+    <TypeIdentifier>
+      <HashCode>AAYAAAEAAgAAAABgAAEQQAAAAgEAAAAAAgwBAIBAggQ=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Services\Service.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Exceptions.ModelException">
+    <Position X="11.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAEAAAAAAAAAAAAAAAAAAAAAEAAAQAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Exceptions\ModelException.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.ModelBinder" Collapsed="true">
+    <Position X="1" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Binders\ModelBinder.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.ParamBinder" Collapsed="true">
+    <Position X="3.25" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Binders\ParamBinder.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Models.ModelCreator" Collapsed="true">
+    <Position X="2.25" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Binders\ModelCreator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MicroService.Common.Web.API.Controller&lt;TOutDTO, TModel, TID, TInDTO&gt;">
+    <Position X="25.25" Y="7.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAYAAAAAAAAAAABAAAAQQAAAAAEAAAAAAkQAAABAggA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Controllers\Controller.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Collections.ModelCollection&lt;TModel, TID&gt;">
+    <Position X="22.5" Y="7.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAYAAAAAAAAAABAAAAAQAAIAAAEIAAAkAAQAAAJMgAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Collections\ModelCollection.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.DBContext&lt;TModel, TID&gt;">
+    <Position X="18.5" Y="1" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAIAAAWAAAAIAAAAEAAAEAAwAAABYoAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\DBContext\DBContext.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.Middlewares.HttpExceptionMiddleWare">
+    <Position X="12.25" Y="9.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAACAAAAAAAAAAAAIAAAAAAAAAAACAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Middlewares\ExceptionMiddleWare.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.Middlewares.HttpExceptionFilter">
+    <Position X="9.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Middlewares\HttpExceptionFilter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MicroService.Common.Web.API.Configuration" Collapsed="true">
+    <Position X="18.75" Y="8" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQIAAAAAAAAAAAAAAAAQAAQAAAQAIAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Configurations\Configuration.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="MicroService.Common.Interfaces.IModelCount">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IMatch" Collapsed="true">
+    <Position X="8.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IModifiable" Collapsed="true">
+    <Position X="13" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IExCopyable" Collapsed="true">
+    <Position X="0.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IExParamParser" Collapsed="true">
+    <Position X="4" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IExModelToDTO" Collapsed="true">
+    <Position X="5.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IFirstModel" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IFirstModel&lt;TModel, TID&gt;" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IReadable&lt;TOutDTO, TModel, TID&gt;">
+    <Position X="6.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAAAAQAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IDeleteable&lt;TOutDTO, TModel, TID&gt;">
+    <Position X="4.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IAppendable&lt;TOutDTO, TModel, TID&gt;">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IUpdatable&lt;TOutDTO, TModel, TID&gt;">
+    <Position X="8.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IExModelExceptionSupplier" Collapsed="true">
+    <Position X="2.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Interfaces\Abilities.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IContract" Collapsed="true">
+    <Position X="2.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Contract\IContract.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Interfaces.IContract&lt;TOutDTO, TModel, TID&gt;">
+    <Position X="4.5" Y="2.75" Width="1.5" />
+    <InheritanceLine Type="MicroService.Common.Interfaces.IFirstModel&lt;TModel, TID&gt;" FixedToPoint="true">
+      <Path>
+        <Point X="1.25" Y="2.441" />
+        <Point X="1.25" Y="3.279" />
+        <Point X="4.5" Y="3.279" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Contract\IContract.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Models.IModel">
+    <Position X="4.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Models\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Models.IModel&lt;TID&gt;" Collapsed="true">
+    <Position X="8.5" Y="5" Width="1.5" />
+    <InheritanceLine Type="MicroService.Common.Interfaces.IMatch" FixedFromPoint="true">
+      <Path>
+        <Point X="9.25" Y="4.312" />
+        <Point X="9.25" Y="5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Models\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Models.IExModel&lt;TID&gt;">
+    <Position X="6.25" Y="7.5" Width="2.25" />
+    <InheritanceLine Type="MicroService.Common.Models.IModel&lt;TID&gt;" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8.75" Y="5.82" />
+        <Point X="8.75" Y="7.125" />
+        <Point X="7.75" Y="7.125" />
+        <Point X="7.75" Y="7.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Models\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Models.IExModel" Collapsed="true">
+    <Position X="2" Y="7.25" Width="1.5" />
+    <InheritanceLine Type="MicroService.Common.Models.IModel" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="4.25" Y="8.125" />
+        <Point X="3.5" Y="8.125" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Models\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Services.IService">
+    <Position X="8.75" Y="2.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Services\Service.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Services.IService&lt;TOutDTO, TModel, TID&gt;" Collapsed="true">
+    <Position X="6.5" Y="2.75" Width="1.5" />
+    <InheritanceLine Type="MicroService.Common.Interfaces.IContract&lt;TOutDTO, TModel, TID&gt;" FixedFromPoint="true">
+      <Path>
+        <Point X="6" Y="3.188" />
+        <Point X="6.5" Y="3.188" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Services\Service.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Exceptions.IModelException">
+    <Position X="9.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAUAAIAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Exceptions\ModelException.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Web.API.IExController">
+    <Position X="19.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Web.API\Controllers\Controller.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Collections.IModelCollection" HideInheritanceLine="true">
+    <Position X="10.75" Y="0.5" Width="1.75" />
+    <InheritanceLine Type="MicroService.Common.Interfaces.IFirstModel" IsHidden="true" />
+    <InheritanceLine Type="MicroService.Common.Interfaces.IModelCount" IsHidden="true" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Collections\ModelCollection.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Collections.IModelCollection&lt;TModel, TID&gt;" HideInheritanceLine="true">
+    <Position X="13" Y="2.25" Width="2.25" />
+    <InheritanceLine Type="MicroService.Common.Collections.IModelCollection" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="11.562" Y="1.885" />
+        <Point X="11.562" Y="3" />
+        <Point X="13" Y="3" />
+      </Path>
+    </InheritanceLine>
+    <InheritanceLine Type="MicroService.Common.Interfaces.IFirstModel&lt;TModel, TID&gt;" IsHidden="true" />
+    <TypeIdentifier>
+      <HashCode>AAYAAAAAAAAAAAAAAAAQAAAAAAEIAAAgAAAAAAIEAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Collections\ModelCollection.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MicroService.Common.Collections.IExModelCollection&lt;TModel, TID&gt;" Collapsed="true">
+    <Position X="15" Y="0.5" Width="1.5" />
+    <InheritanceLine Type="MicroService.Common.Collections.IModelCollection&lt;TModel, TID&gt;" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="15.25" Y="2.937" />
+        <Point X="15.688" Y="2.937" />
+        <Point X="15.688" Y="1.45" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\source\Repos\ASP.NETCore.MicroServices.Common\MicroService.Common\Collections\ModelCollection.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -206,7 +206,7 @@ namespace MicroService.Common.Collections
         public ModelCollection()
         {
             bool provideSeedData = false;
-            var attribute = typeof(TModel).GetCustomAttribute<ModelAttribute>();
+            var attribute = typeof(TModel).GetCustomAttribute<DBConnectAttribute>();
             if (attribute != null)
                 provideSeedData = attribute.ProvideSeedData;
             if (provideSeedData && !models.Any())

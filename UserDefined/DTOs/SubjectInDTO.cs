@@ -6,12 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using MicroService.Common.Models;
 
 using UserDefined.Models;
-using MicroService.Common.Attributes;
 
 namespace UserDefined.DTOs
 {
-    //[Model(Scope = MicroService.Common.Services.ServiceScope.Singleton)]
-    [Model(Name = "SubjectIn")]
     public interface ISubjectInDTO : IModel
     {
         [Required]
@@ -21,8 +18,6 @@ namespace UserDefined.DTOs
         Faculty Faculty { get; }
     }
 
-    //[Model(Scope = MicroService.Common.Services.ServiceScope.Singleton)]
-    [Model(Name = "SubjectIn")]
     public class SubjectInDTO : ISubjectInDTO
     {
         public SubjectInDTO(ISubject subject)
