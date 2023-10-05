@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Collections\ModelCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contexts\ModelContext.cs" />
