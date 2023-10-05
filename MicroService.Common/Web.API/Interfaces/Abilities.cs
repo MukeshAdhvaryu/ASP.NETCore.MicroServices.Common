@@ -23,6 +23,11 @@ namespace MicroService.Common.Web.API.Interfaces
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IReadable<TModel, TID>
+        //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
+        : IFind<TModel>
+#endif
+        //+:cnd:noEmit
         #region TYPE CONSTRINTS
         where TModel : ISelfModel<TID, TModel>,
         new()
@@ -35,48 +40,6 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <param name="id">ID of the model to read.</param>
         /// <returns>An instance of IActionResult.</returns>
         Task<IActionResult> Get(TID? id);
-
-        /// <summary>
-        /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> GetAll(int limitOfResult = 0);
-
-        /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> GetAll(int startIndex, int limitOfResult);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> FindAll(ISearchParameter? parameter);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameters">Parameters to be used to find the model.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit
@@ -164,6 +127,59 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
         Task<IActionResult> Update(TID id, IModel? model);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IFind<TModel>
+    //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
+    public interface IFind<TModel>
+        where TModel : ISelfModel<TModel>
+    {
+        /// <summary>
+        /// Gets all models contained in this object.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IActionResult> GetAll(int limitOfResult = 0);
+
+        /// <summary>
+        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="startIndex">Start index which to start picking records from.</param>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IActionResult> GetAll(int startIndex, int limitOfResult);
+
+        /// <summary>
+        /// Finds a model based on given paramters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IActionResult> Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds all models matched based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<IActionResult> FindAll(ISearchParameter parameter);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit

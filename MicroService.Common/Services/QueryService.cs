@@ -12,8 +12,7 @@ using System.Runtime.CompilerServices;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
-using System.Security.Cryptography;
-using MicroService.Common.Sets;
+using MicroService.Common.CQRS;
 
 namespace MicroService.Common.Services
 {
@@ -49,19 +48,18 @@ namespace MicroService.Common.Services
     public partial class QueryService<TOutDTO, TModel, TContext> : IQueryService<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : ISelfModel<TModel>,
+        where TModel : class, ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TContext : IQueryContext
+        where TContext : IModelContext
         #endregion
     {
         #region VARIABLES
-        readonly TContext? Context;
-        readonly IExQueryModels<TModel> Models;
+        readonly IExModelQuery<TModel> Models;
         readonly static IExModel DummyModel = (IExModel) new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -72,23 +70,21 @@ namespace MicroService.Common.Services
         #endregion
 
         #region CONSTRUCTORS
-        public QueryService(TContext _context):
+        public QueryService(TContext _context) :
             this(_context.Create<TModel>())
+        { }
+        public QueryService(IModelQuery<TModel>? models)
         {
-            Context = _context;
-        }
-        public QueryService(IQueryModels<TModel>? models)
-        {
-            if (!(models is IExQueryModels<TModel>))
+            if (!(models is IExModelQuery<TModel>))
             {
                 throw new NotSupportedException("Context supplied, is not compitible with this service!");
             }
-            Models = (IExQueryModels<TModel>)models;
+            Models = (IExModelQuery<TModel>)models;
         }
         #endregion
 
         #region PROPERTIES
-        protected IQueryModels<TModel> InnerList => Models;
+        protected IModelQuery<TModel> InnerList => Models;
         #endregion
 
         #region GET ALL (Optional: count)
@@ -104,7 +100,7 @@ namespace MicroService.Common.Services
         /// <exception cref="Exception"></exception>
         protected virtual Task<IEnumerable<TModel>?> GetAll(int count = 0)
         {
-            if (!Models.Any())
+            if (Models.GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             if (count < 0)
@@ -131,7 +127,7 @@ namespace MicroService.Common.Services
         /// <returns>IEnumerable of models.</returns>
         protected Task<IEnumerable<TModel>?> GetAll(int startIndex, int count)
         {
-            if (!Models.Any())
+            if (Models.GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             if (count < 0)
@@ -153,7 +149,7 @@ namespace MicroService.Common.Services
             if (parameters == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
 
-            if (!Models.Any())
+            if (Models.GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
             return Models.Find(parameters, conditionJoin);
         }
@@ -171,7 +167,7 @@ namespace MicroService.Common.Services
             if (parameter == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
 
-            if (!Models.Any())
+            if (Models.GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
             return Models.FindAll(parameter);
         }
@@ -188,7 +184,7 @@ namespace MicroService.Common.Services
         {
             if (parameters == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
-            if (!Models.Any())
+            if (Models.GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             return Models.FindAll(parameters, conditionJoin);

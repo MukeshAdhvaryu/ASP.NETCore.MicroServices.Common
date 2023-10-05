@@ -34,6 +34,8 @@ namespace MicroService.Common.Web.API
 #if !MODEL_USEMYOWNCONTROLLER
         static List<Tuple<Type, Type, Type, Type>> ControllerTypes = new List<Tuple<Type, Type, Type, Type>>(3);
         static volatile HashSet<string> ControllerNames = new HashSet<string>();
+
+        static List<Tuple<Type, Type>> QueryControllerTypes = new List<Tuple<Type, Type>>(3);
 #endif
         //+:cnd:noEmit
         #endregion
@@ -180,7 +182,7 @@ namespace MicroService.Common.Web.API
         }
         #endregion
 
-        #region ADD MODEL
+        #region ADD KEYED MODEL
         /// <summary>
         /// Adds a new model to model processing layer.
         /// Use this mehod if you are to provide your own implementation of service class, otherwise 
@@ -197,7 +199,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TInDTO, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<TID, TModel>,
+            where TModel : Model<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -206,7 +208,7 @@ namespace MicroService.Common.Web.API
             new()
             where TOutDTO : IModel
             where TInDTO: IModel
-            where TService : class, IService<TOutDTO, TModel, TID>
+            where TService : Service<TOutDTO, TModel, TID, TDBContext>
             where TID : struct
             where TDBContext : DBContext
             #endregion
@@ -280,7 +282,6 @@ namespace MicroService.Common.Web.API
                 }
             };
 
-            ADD_DBCONTEXT:
             services.AddDbContext<TDBContext>(action);
             switch (scope)
             {
@@ -312,7 +313,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<TID, TModel>,
+            where TModel : Model<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -320,7 +321,7 @@ namespace MicroService.Common.Web.API
             //+:cnd:noEmit
             new()
             where TOutDTO : IModel
-            where TService : class, IService<TOutDTO, TModel, TID>
+            where TService : Service<TOutDTO, TModel, TID, TDBContext>
             where TID : struct
             where TDBContext : DBContext
             #endregion
@@ -340,7 +341,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TInDTO>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<TID, TModel>,
+            where TModel : Model<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -366,7 +367,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TInDTO>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<int, TModel>,
+            where TModel : Model<int, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -390,7 +391,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<int, TModel>,
+            where TModel : Model<int, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -413,11 +414,164 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<int, TModel>,
+            where TModel : Model<int, TModel>,
             new()
             #endregion
             =>
             AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+        #endregion
+
+        #region ADD KEY LESS MODEL
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TService">Query Service implementation of your choice - must be inherited from Service class.</typeparam>
+        /// <typeparam name="TDBContext">DBContext mplementation of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddQueryModel<TOutDTO, TModel, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TService : QueryService<TOutDTO, TModel, TDBContext>
+            where TDBContext : DBContext
+            #endregion
+        {
+            var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+
+            ServiceScope scope = ServiceScope.Scoped;
+            bool addController = true;
+            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
+            ConnectionKey connectionKey = ConnectionKey.InMemory;
+            string? dbName = null;
+
+            if (modelAttribute != null)
+            {
+                scope = modelAttribute.Scope;
+                addController = modelAttribute.AutoController;
+            }
+            var connectAttribute = modelType.GetCustomAttribute<DBConnectAttribute>();
+            if (connectAttribute != null)
+            {
+                connectionKey = connectAttribute.ConnectionKey;
+                dbName = connectAttribute.Database;
+            }
+            //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+            if (addController)
+                QueryControllerTypes.Add(Tuple.Create(type, modelType));
+#endif
+            //+:cnd:noEmit
+            var dummyModel = (IExModel)new TModel();
+
+            DbContextOptionsBuilder dbOptionBuilder;
+            if (dbContextOptions == null)
+                dbOptionBuilder = new DbContextOptionsBuilder();
+            else
+                dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
+
+            string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
+            Action<DbContextOptionsBuilder> action = (opt) =>
+            {
+                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(dbName))
+                {
+                    connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
+                    _ = opt.UseInMemoryDatabase(connectionString);
+                    return;
+                }
+
+                connectionString = string.Format(connectionString, dbName);
+                switch (connectionKey)
+                {
+                    case ConnectionKey.InMemory:
+                    default:
+                        _ = opt.UseInMemoryDatabase(connectionString);
+                        break;
+                        //-:cnd:noEmit
+#if MODEL_CONNECTSQLSERVER
+                    case ConnectionKey.SQLServer:
+                        _= opt.UseSqlServer(connectionString);
+                        break;
+#elif MODEL_CONNECTPOSTGRESQL
+                    case ConnectionKey.PostgreSQL:
+                       _= opt.UseNpgsql(connectionString);
+                        break;
+#elif MODEL_CONNECTMYSQL
+                        case ConnectionKey.MySQL:
+                       _= opt.UseMySQL(connectionString);
+                        break;
+#endif
+                        //+:cnd:noEmit
+                }
+            };
+
+            services.AddDbContext<TDBContext>(action);
+            switch (scope)
+            {
+                case ServiceScope.Scoped:
+                default:
+                    services.AddScoped<IQueryService<TOutDTO, TModel>, TService>();
+                    break;
+                case ServiceScope.Transient:
+                    services.AddTransient<IQueryService<TOutDTO, TModel>, TService>();
+                    break;
+                case ServiceScope.Singleton:
+                    services.AddSingleton<IQueryService<TOutDTO, TModel>, TService>();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddQueryModel<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddQueryModel<TOutDTO, TModel, QueryService<TOutDTO, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
+
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddQueryModel<TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            new()
+            #endregion
+            =>
+            AddQueryModel<TModel, TModel, QueryService<TModel, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
         #endregion
 
         #region GET MODEL NAME
@@ -456,27 +610,30 @@ namespace MicroService.Common.Web.API
 #if !MODEL_USEMYOWNCONTROLLER
         class ControllerRouteConvention : IControllerModelConvention
         {
-            public void Apply(ControllerModel controller)
+            void IControllerModelConvention.Apply(ControllerModel controller)
             {
                 if (controller.ControllerType.IsGenericType)
                 {
                     string finalName;
-
-                    var type = controller.ControllerType.GenericTypeArguments[1];
+                    var controllerType = controller.ControllerType;
+                    var type = controllerType.GenericTypeArguments[1];
                     var modelAttr = type.GetCustomAttribute<ModelAttribute>();
                     finalName = type.GetModelName();
                     if (!string.IsNullOrEmpty(modelAttr?.Name) && !ControllerNames.Contains(modelAttr.Name))
                         finalName = modelAttr.Name;
 
+                    //bool IsQueryController = controllerType.GetGenericTypeDefinition() == (typeof(QueryController<,>));
                     int i = -1;
+                    int count = controllerType.GenericTypeArguments.Length;
+
                     while (ControllerNames.Contains(finalName))
                     {
                         ++i;
                         if (i == 2)
                             continue;
-                        if (i > 3)
+                        if (i >= count)
                             break;
-                        type = controller.ControllerType.GenericTypeArguments[i];
+                        type = controllerType.GenericTypeArguments[i];
                         modelAttr = type.GetCustomAttribute<ModelAttribute>();
                         finalName = type.GetModelName();
                         if (!string.IsNullOrEmpty(modelAttr?.Name) && !ControllerNames.Contains(modelAttr.Name))
@@ -489,12 +646,14 @@ namespace MicroService.Common.Web.API
         }
         class ControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
         {
-            public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+            void IApplicationFeatureProvider<ControllerFeature>.PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
             {
-                if (ControllerTypes.Count == 0)
-                    return;
+                Type controllerType;
 
-                var controllerType = typeof(Controller<,,,>);
+                if (ControllerTypes.Count == 0)
+                    goto HANDLE_QUERYCONTROLLER;
+
+                controllerType = typeof(Controller<,,,>);
                 foreach (var typeParam in ControllerTypes)
                 {
 
@@ -503,6 +662,23 @@ namespace MicroService.Common.Web.API
                     );
                 }
                 ControllerTypes.Clear();
+
+                HANDLE_QUERYCONTROLLER:
+                if (QueryControllerTypes.Count == 0)
+                    goto EXIT;
+
+                controllerType = typeof(QueryController<,>);
+                foreach (var typeParam in QueryControllerTypes)
+                {
+
+                    feature.Controllers.Add(
+                        controllerType.MakeGenericType(typeParam.Item1, typeParam.Item2).GetTypeInfo()
+                    );
+                }
+                QueryControllerTypes.Clear();
+
+                EXIT:
+                return;
             }
         }
 #endif

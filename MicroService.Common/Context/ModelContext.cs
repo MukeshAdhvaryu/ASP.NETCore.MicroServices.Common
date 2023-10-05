@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 
-using MicroService.Common.Interfaces;
+using MicroService.Common.CQRS;
 using MicroService.Common.Models;
 using MicroService.Common.Sets;
 
@@ -11,11 +11,6 @@ namespace MicroService.Common.Collections
 {
     #region IModelContext
     public interface IModelContext : IDisposable
-        //-:cnd:noEmit
-#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        , IModifiable
-#endif
-    //+:cnd:noEmit
     {
         /// <summary>
         /// Creates new instance of ModelSet<TModel, TID>.
@@ -26,6 +21,23 @@ namespace MicroService.Common.Collections
         IModels<TID, TModel> Create<TID, TModel>()
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct;
+
+        /// <summary>
+        /// Creates new instance of QuerySet<TModel>.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model></typeparam>
+        /// <returns>An instance of QuerySet<TModel, TID></returns>
+        IModelQuery<TModel> Create<TModel>()
+            where TModel : class, ISelfModel<TModel>, new();
+
+        /// <summary>
+        /// Creates new instance of QuerySet<TModel>.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model></typeparam>
+        /// <returns>An instance of QuerySet<TModel, TID></returns>
+        IModelQuery<TModel> Create<TModel, TItems>(TItems items)
+            where TModel : class, ISelfModel<TModel>, new()
+            where TItems : IEnumerable<TModel>;
     }
     #endregion
 
@@ -35,22 +47,26 @@ namespace MicroService.Common.Collections
     /// </summary>
     public sealed class ModelContext : IModelContext
     {
-        public IModels<TID, TModel> Create<TID, TModel>()
-        where TModel : class, ISelfModel<TID, TModel>, new()
-            where TID : struct
+        #region CREATE
+        IModels<TID, TModel> IModelContext.Create<TID, TModel>()
         {
             return new ModelList<TID, TModel>();
         }
-           
+
+        IModelQuery<TModel> IModelContext.Create<TModel>()
+        {
+            return new QueryList<TModel, List<TModel>>(new List<TModel>());
+        }
+
+        IModelQuery<TModel> IModelContext.Create<TModel, TItems>(TItems items)
+        {
+            return new QueryList<TModel, TItems>(items);
+        }
+        #endregion
+
         public void Dispose() { }
 
-        //-:cnd:noEmit
-#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        public Task<bool> SaveChanges() =>
-            Task.FromResult(true);
-#endif
-        //+:cnd:noEmit
-
+        #region Child Classes
         #region ModelCollection<TModel>
         /// <summary>
         /// Represents an object which holds a collection of models useful for TDD..
@@ -59,7 +75,7 @@ namespace MicroService.Common.Collections
         /// <typeparam name="TID">Type of TID</typeparam>
         class ModelList<TID, TModel> : Models<TID, TModel, List<TModel>>, IExModels<TID, TModel>
             #region TYPE CONSTRAINTS
-            where TModel : ISelfModel<TID, TModel>, new()
+            where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct
             #endregion
         {
@@ -102,6 +118,29 @@ namespace MicroService.Common.Collections
             //+:cnd:noEmit
             #endregion
         }
+        #endregion
+
+        #region QueryList<TModel, TItems>
+        /// <summary>
+        /// Represents an object which holds a collection of models useful for TDD..
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
+        /// <typeparam name="TID">Type of TID</typeparam>
+        class QueryList<TModel, TItems> : QueryModels<TModel, TItems>
+            #region TYPE CONSTRAINTS
+            where TModel : ISelfModel<TModel>, new()
+            where TItems : IEnumerable<TModel>
+            #endregion
+        {
+            public QueryList(TItems items) :
+                base(items, false)
+            { }
+
+            #region ADD MODELS
+            protected override void AddModels(IEnumerable<TModel> items) { }
+            #endregion
+        }
+        #endregion
         #endregion
     }
     #endregion

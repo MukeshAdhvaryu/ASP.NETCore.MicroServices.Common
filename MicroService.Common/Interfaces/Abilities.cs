@@ -230,10 +230,10 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TOutDTO, TModel, TID>
+    public interface IReadable<TOutDTO, TModel, TID>: IFindByID<TOutDTO, TModel, TID>
         //-:cnd:noEmit
 #if !MODEL_NONQUERYABLE
-        : IFind<TOutDTO, TModel>
+        , IFind<TOutDTO, TModel>
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
@@ -247,16 +247,10 @@ namespace MicroService.Common.Interfaces
         where TID : struct
         #endregion
     {
-        /// <summary>
-        /// Finds a model based on given id.
-        /// </summary>
-        /// <param name="id">ID to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<TOutDTO?> Get(TID? id);
     }
 #endif
     //+:cnd:noEmit
-    #endregion
+#endregion
 
     #region IDeletable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
@@ -366,35 +360,33 @@ namespace MicroService.Common.Interfaces
     //+:cnd:noEmit
     #endregion
 
-    #region IFind<TModel>
+    #region IFindByID<TOutDTO, TModel, TID>
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE
-    public interface IFind<TModel>
-        where TModel : IModel
+    /// <summary>
+    /// This interface represents an object that allows reading a single model or multiple models.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IFindByID<TOutDTO, TModel, TID>
+        #region TYPE CONSTRINTS
+        where TOutDTO : IModel
+        where TModel : ISelfModel<TID, TModel>
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        , TOutDTO
+#endif
+        //+:cnd:noEmit
+        where TID : struct
+        #endregion
     {
         /// <summary>
-        /// Finds a model based on given paramters.
+        /// Finds a model based on given id.
         /// </summary>
-        /// <param name="paramters">Parameters to be used to find the model.</param>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<TModel?> Find(IEnumerable<ISearchParameter> paramters, AndOr conditionJoin = 0);
-
-        /// <summary>
-        /// Finds all models matched based on given paramter.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <param name="id">ID to be used to find the model.</param>
         /// <returns>Task with result of type TModel.</returns>
-        Task<IEnumerable<TModel>?> FindAll(ISearchParameter parameter);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameters">Parameters to be used to find the model.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+        Task<TOutDTO?> Get(TID? id);
     }
 #endif
     //+:cnd:noEmit
@@ -467,26 +459,5 @@ namespace MicroService.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
-    #endregion
-
-    #region IWritable<TModel>
-    public interface IWritable<TModel>  : IModelCount      
-        //-:cnd:noEmit
-#if MODEL_DELETABLE
-  , IDelete<TModel>
-#endif
-#if MODEL_APPENDABLE
-  , IAdd<TModel>
-#endif
-#if MODEL_UPDATABLE
-  , IUpdate<TModel>
-#endif
-    //+:cnd:noEmit
-    #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        #endregion
-    {
-
-    }
     #endregion
 }

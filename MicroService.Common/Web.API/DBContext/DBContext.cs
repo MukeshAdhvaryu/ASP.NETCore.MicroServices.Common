@@ -5,11 +5,11 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
+
 using MicroService.Common.Collections;
-using MicroService.Common.Interfaces;
+using MicroService.Common.CQRS;
 using MicroService.Common.Models;
 using MicroService.Common.Sets;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace MicroService.Common.Web.API
@@ -20,15 +20,26 @@ namespace MicroService.Common.Web.API
         #region CONSTRUCTOR
         public DBContext(DbContextOptions<DBContext> options)
             : base(options)
-        {
-            
-        }
+        { }
         #endregion
 
         #region CREATE
         IModels<TID, TModel> IModelContext.Create<TID, TModel>()
         {
-            var list = new EntityList<TID, TModel>(Set<TModel>());
+            var list = new EntityList<TID, TModel>(this, Set<TModel>());
+            SaveChanges();
+            return list;
+        }
+        IModelQuery<TModel> IModelContext.Create<TModel>()
+        {
+            var list = new QueryList<TModel>(this, Set<TModel>());
+            SaveChanges();
+            return list;
+        }
+
+        IModelQuery<TModel> IModelContext.Create<TModel, TItems>(TItems items)
+        {
+            var list = new QueryList<TModel>(this, Set<TModel>());
             SaveChanges();
             return list;
         }
@@ -41,15 +52,31 @@ namespace MicroService.Common.Web.API
         }
         #endregion
 
-        #region SAVE CHANGES
-        //-:cnd:noEmit
-#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        async Task<bool> IModifiable.SaveChanges()
+        #region QUERY LIST
+        /// <summary>
+        /// Represents an object which holds a collection of models indirectly.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model></typeparam>
+        class QueryList<TModel> : QueryModels<TModel, DbSet<TModel>>
+            #region TYPE CONSTRAINTS
+            where TModel : class, ISelfModel<TModel>, new()
+            #endregion
         {
-            return await SaveChangesAsync() > 0;
-        }
-#endif
-        //+:cnd:noEmit
+            #region CONSTRUCTORS
+            public QueryList(DBContext context, DbSet<TModel> items) :
+                base(items)
+            {
+                context.SaveChanges();
+            }
+            #endregion
+
+            #region ADD MODELS
+            protected override void AddModels(IEnumerable<TModel> items)
+            {
+                Items.AddRange(items);
+            }
+            #endregion
+        } 
         #endregion
 
         #region ENTITY LIST
@@ -64,23 +91,34 @@ namespace MicroService.Common.Web.API
             where TID : struct
             #endregion
         {
+            #region VARIABLES
+            readonly DBContext Context;
+            #endregion
 
             #region CONSTRUCTORS
-            public EntityList(DbSet<TModel> items):
+            public EntityList(DBContext context, DbSet<TModel> items) :
                 base(items)
-            { }
+            {
+                Context = context;
+                Context.SaveChanges();
+            }
             #endregion
 
             #region ADD MODELS
-            protected override void AddModels(IEnumerable<TModel> items) =>
+            protected override void AddModels(IEnumerable<TModel> items)
+            {
                 Items.AddRange(items);
+            }
             #endregion
 
             #region ADD/ADD RANGE
             //-:cnd:noEmit
 #if MODEL_APPENDABLE
-            protected override void AddModel(TModel model) =>
+            protected override void AddModel(TModel model)
+            {
                 Items.Add(model);
+                Context.SaveChanges();
+            }
 #endif
             //+:cnd:noEmit
             #endregion
@@ -95,6 +133,7 @@ namespace MicroService.Common.Web.API
                 try
                 {
                     Items.RemoveRange(items);
+                    Context.SaveChanges();
                     return Task.FromResult(true);
                 }
                 catch (Exception)
@@ -106,6 +145,7 @@ namespace MicroService.Common.Web.API
             protected override bool RemoveModel(TModel model)
             {
                 Items.Remove(model);
+                Context.SaveChanges();
                 return (true);
             }
 #endif

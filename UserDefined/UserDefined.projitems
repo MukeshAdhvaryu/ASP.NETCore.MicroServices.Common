@@ -10,10 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\SubjectInDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\FacultyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Subject.cs" />
     <Compile Include="..\UserDefined\DTOs\SubjectOutDTO.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Models\" />
   </ItemGroup>
 </Project>

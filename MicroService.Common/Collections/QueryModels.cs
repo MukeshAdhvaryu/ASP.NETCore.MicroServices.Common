@@ -8,6 +8,7 @@
 //+:cnd:noEmit
 using System.Collections;
 
+using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
@@ -15,32 +16,12 @@ using MicroService.Common.Sets;
 
 namespace MicroService.Common.Collections
 {
-    #region IQueryModels<TModel>
-    /// <summary>
-    /// Represents an object which holds a enumerables of keyless models directly or indirectly.
-    /// </summary>
-    /// <typeparam name="TModel">Type of keyless Model></typeparam>
-    public partial interface IQueryModels<TModel> : IModelSet<TModel> , IFind<TModel, TModel>, IEnumerable<TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        #endregion
-    { }
-    #endregion
-
-    #region IQueryModels<TModel, TID>
-    internal partial interface IExQueryModels<TModel> : IQueryModels<TModel>, IExModelSet<TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        #endregion
-    { }
-    #endregion
-
-    #region QueryModels<TModel>
+    #region ModelQuery<TModel>
     /// <summary>
     /// Represents an object which holds a collection of keyless models.
     /// </summary>
     /// <typeparam name="TModel">Type of keyless Model/></typeparam>
-    public abstract class QueryModels<TModel, TItems> : ModelSet<TModel, TItems>, IExQueryModels<TModel>
+    public abstract class QueryModels<TModel, TItems> : ModelSet<TModel, TItems>, IExModelQuery<TModel>, IEnumerable<TModel>
         #region TYPE CONSTRAINTS
         where TModel : ISelfModel<TModel>, new()
         where TItems : IEnumerable<TModel>

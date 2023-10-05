@@ -1,6 +1,7 @@
 using UserDefined.Models;
 
 using MicroService.Common.Web.API;
+using UserDefined.Models.Models;
 
 //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -46,6 +47,8 @@ namespace UserDefined.API
              */
             builder.Services.AddModel<ISubject, Subject>(builder.Configuration);
 #endif
+            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+
             //+:cnd:noEmit
 
             //builder.Services.AddTransient<HttpExceptionMiddleWare>();

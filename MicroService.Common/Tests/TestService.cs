@@ -7,9 +7,13 @@ Author: Mukesh Adhvaryu.
 #if MODEL_ADDTEST
 //+:cnd:noEmit
 
+using System;
+using System.Linq.Expressions;
+
 using AutoFixture;
 using AutoFixture.AutoMoq;
 
+using MicroService.Common.Collections;
 using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
@@ -23,7 +27,7 @@ namespace MicroService.Common.Tests
     public abstract class ServiceTest<TOutDTO, TModel, TID>  
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>,
+        where TModel : Model<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -37,7 +41,7 @@ namespace MicroService.Common.Tests
         readonly IService<TOutDTO, TModel, TID> Contract;
         protected readonly IFixture Fixture;
 
-        static readonly IExModelExceptionSupplier DummyModel =(IExModelExceptionSupplier) new TModel();
+        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);
@@ -54,7 +58,7 @@ namespace MicroService.Common.Tests
         }
         #endregion
 
-        #region CREATE CONTROLLER
+        #region CREATE SERVICE
         protected abstract IService<TOutDTO, TModel, TID> CreateService();
         #endregion
 
@@ -65,7 +69,7 @@ namespace MicroService.Common.Tests
         public async Task Get_ByIDSuccess()
         {
             var model = Contract.GetFirstModel();
-            var result = await Contract.Get(model?.ID);
+            var result = await Contract.Get(model.ID);
             Verifier.NotNull(result);
         }
 
@@ -153,7 +157,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Add_Fail()
         {
-            var model = Contract.GetFirstModel();
+            var model = Fixture.Create<TModel>();
+            model.ID = Contract.GetFirstModel().ID;
 
             try
             { 

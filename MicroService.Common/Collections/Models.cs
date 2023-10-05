@@ -4,6 +4,7 @@
 */
 
 using MicroService.Common.Collections;
+using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
@@ -22,17 +23,19 @@ namespace MicroService.Common.Sets
     /// </summary>
     /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
     /// <typeparam name="TID">Type of TID</typeparam>
-    public partial interface IModels<TID, TModel> : IModelSet<TModel>, 
-        IFirstModel<TModel, TID>, IWritable<TModel>
+    public partial interface IModels<TID, TModel> : IFirstModel<TModel, TID>
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IReadable<TModel, TModel, TID>
+        , IFindByID<TModel, TModel, TID>
         , IEnumerable<TModel>
-        , IQueryModels<TModel>
+        , IModelQuery<TModel>
+#endif
+#if MODEL_DELETABLE ||MODEL_APPENDABLE ||MODEL_UPDATABLE
+        , IModelCommand<TID, TModel>
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TID, TModel>
+        where TModel : class, ISelfModel<TID, TModel>, new()
         where TID : struct
         #endregion
     { }
@@ -40,33 +43,38 @@ namespace MicroService.Common.Sets
 
     #region IExModels<TModel, TID>
     internal partial interface IExModels<TID, TModel> : IExModelSet<TModel>, IModels<TID, TModel>
+        //-:cnd:noEmit
 #if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IExQueryModels<TModel>
+        , IExModelQuery<TModel>
 #endif
+#if MODEL_DELETABLE || MODEL_APPENDABLE || MODEL_UPDATABLE
+        , IExModelCommand<TID, TModel>
+#endif
+        //+:cnd:noEmit
         #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TID, TModel> 
+        where TModel : class, ISelfModel<TID, TModel> , new()
         where TID : struct
         #endregion
     {
     }
     #endregion
 
-    #region Models<TID, TModel>
+    #region ModelCommand<TID, TModel>
     /// <summary>
     /// Represents an object which holds a collection of models useful for TDD..
     /// </summary>
     /// <typeparam name="TID">Type of TID</typeparam>
     /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
-    public abstract class Models<TID, TModel, TItems> : ModelSet<TModel, TItems>, IExModels<TID, TModel>
+    public abstract class Models<TID, TModel, TItems> : ModelSet<TModel, TItems>, IExModels<TID, TModel> 
         #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TID, TModel>, new()
+        where TModel : class, ISelfModel<TID, TModel>, new()
         where TID : struct
         where TItems : IEnumerable<TModel>
         #endregion
     {
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        IQueryModels<TModel> Query; 
+        IModelQuery<TModel> Query;
 #endif
         //+:cnd:noEmit
 
@@ -86,12 +94,11 @@ namespace MicroService.Common.Sets
         #region GET QUERY OBJECT
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        protected virtual IQueryModels<TModel> GetQueryObject(TItems models)
+        protected virtual IModelQuery<TModel> GetQueryObject(TItems models)
         {
-            using (var context = new ModelQueryContext())
+            using (IModelContext context = new ModelContext())
             {
-                var result =  context.Create<TModel, TItems>(models);
-                return result;
+                return context.Create<TModel, TItems>(models);
             }
         }
 #endif
@@ -121,6 +128,8 @@ namespace MicroService.Common.Sets
         }
         protected bool IsFound(TModel model, bool addOperation = false) =>
             IsFound(model, out _, addOperation);
+        bool IExModelCommand<TID, TModel>.IsFound(TModel model, out TModel? result, bool addOperation) =>
+            IsFound(model, out result, addOperation);
         #endregion
 
         #region GET FIRST MODEL
@@ -157,7 +166,7 @@ namespace MicroService.Common.Sets
         /// <returns>Task with result of type boolean.</returns>
         public Task<bool> Add(TModel? model)
         {
-            if(model == null)
+            if (model == null)
                 return Task.FromResult(false);
 
             if (IsFound(model, true))
@@ -329,7 +338,7 @@ namespace MicroService.Common.Sets
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        public Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin)=>
+        public Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin) =>
             Query.FindAll(parameters, conditionJoin);
 #endif
         //+:cnd:noEmit
@@ -352,13 +361,13 @@ namespace MicroService.Common.Sets
         #region ENUMERATORS
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        public IEnumerator<TModel> GetEnumerator()=>
-            Query.GetEnumerator();
+        public IEnumerator<TModel> GetEnumerator() =>
+            Items.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() =>
             GetEnumerator();
 #endif
         //+:cnd:noEmit
         #endregion
     }
-#endregion
+    #endregion
 }

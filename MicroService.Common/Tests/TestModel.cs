@@ -4,7 +4,7 @@ Author: Mukesh Adhvaryu.
 */
 
 //-:cnd:noEmit
-#if MODEL_ADDTEST 
+#if MODEL_ADDTEST
 //+:cnd:noEmit
 
 using System.ComponentModel.DataAnnotations;
@@ -17,7 +17,7 @@ namespace MicroService.Common.Tests
 {
     #region TestModel
     [DBConnect(ProvideSeedData = true)]
-    public sealed class TestModel: Model<int>, ISelfModel<int, TestModel>
+    public sealed class TestModel: Model<int, TestModel>
     {
         #region VARIABLES
         static int iid;

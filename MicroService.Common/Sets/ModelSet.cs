@@ -11,13 +11,8 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Sets
 {
-    #region IModelSet
-    public interface IModelSet : IFirstModel, IModelCount
-    { }
-    #endregion
-
     #region IModelSet<TModel>
-    public interface IModelSet<TModel> : IModelSet, IFirstModel<TModel>
+    public interface IModelSet<TModel> : IFirstModel, IModelCount, IFirstModel<TModel>
         #region TYPE CONSTRAINTS
         where TModel : ISelfModel<TModel>
         #endregion
@@ -30,10 +25,6 @@ namespace MicroService.Common.Sets
         where TModel : ISelfModel<TModel> 
         #endregion
     {
-        /// <summary>
-        /// Gets underlying collection of models.
-        /// </summary>
-        IEnumerable<TModel> Items { get; }
     }
     #endregion
 
@@ -75,10 +66,6 @@ namespace MicroService.Common.Sets
             }
             catch { }
         }
-        #endregion
-
-        #region PROPERTIES
-        IEnumerable<TModel> IExModelSet<TModel>.Items => Items;
         #endregion
 
         #region GET FIRST MODEL
