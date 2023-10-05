@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD && MODEL_USEACTION && !MODEL_NONQUERYABLE
+#if !TDD && MODEL_USEACTION 
 //+:cnd:noEmit
 
 using MicroService.Common.Interfaces;

@@ -7,20 +7,13 @@ Author: Mukesh Adhvaryu.
 #if MODEL_ADDTEST
 //+:cnd:noEmit
 
-using System;
-using System.Linq.Expressions;
-
 using AutoFixture;
 using AutoFixture.AutoMoq;
 
-using MicroService.Common.Collections;
 using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Services;
 using MicroService.Common.Tests.Attributes;
-
-using Moq;
 
 namespace MicroService.Common.Tests
 {
@@ -38,7 +31,7 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        readonly IService<TOutDTO, TModel, TID> Contract;
+        readonly IContract<TOutDTO, TModel, TID> Contract;
         protected readonly IFixture Fixture;
 
         static readonly IExModelExceptionSupplier DummyModel = new TModel();
@@ -59,17 +52,17 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE SERVICE
-        protected abstract IService<TOutDTO, TModel, TID> CreateService();
+        protected abstract IContract<TOutDTO, TModel, TID> CreateService();
         #endregion
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         [NoArgs]
         public async Task Get_ByIDSuccess()
         {
             var model = Contract.GetFirstModel();
-            var result = await Contract.Get(model.ID);
+            var result = await Contract.Get(model?.ID);
             Verifier.NotNull(result);
         }
 

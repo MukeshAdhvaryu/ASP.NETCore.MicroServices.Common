@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD && !MODEL_NONQUERYABLE
+#if !TDD 
 //+:cnd:noEmit
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
@@ -82,7 +82,7 @@ namespace MicroService.Common.Web.API
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets enumerable of model items.
@@ -128,7 +128,7 @@ namespace MicroService.Common.Web.API
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -178,7 +178,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
@@ -218,7 +218,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -266,7 +266,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Find the first model matched based on given parameters.

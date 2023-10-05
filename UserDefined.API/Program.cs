@@ -47,8 +47,13 @@ namespace UserDefined.API
              */
             builder.Services.AddModel<ISubject, Subject>(builder.Configuration);
 #endif
-            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
 
+#if !MODEL_NONQUERYABLE
+#if MODEL_NONREADABLE
+            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+#endif
+            builder.Services.AddQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
+#endif
             //+:cnd:noEmit
 
             //builder.Services.AddTransient<HttpExceptionMiddleWare>();

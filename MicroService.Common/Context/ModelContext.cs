@@ -22,6 +22,8 @@ namespace MicroService.Common.Collections
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct;
 
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Creates new instance of QuerySet<TModel>.
         /// </summary>
@@ -38,6 +40,9 @@ namespace MicroService.Common.Collections
         IModelQuery<TModel> Create<TModel, TItems>(TItems items)
             where TModel : class, ISelfModel<TModel>, new()
             where TItems : IEnumerable<TModel>;
+#endif
+        //+:cnd:noEmit
+
     }
     #endregion
 
@@ -52,7 +57,8 @@ namespace MicroService.Common.Collections
         {
             return new ModelList<TID, TModel>();
         }
-
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         IModelQuery<TModel> IModelContext.Create<TModel>()
         {
             return new QueryList<TModel, List<TModel>>(new List<TModel>());
@@ -62,6 +68,8 @@ namespace MicroService.Common.Collections
         {
             return new QueryList<TModel, TItems>(items);
         }
+#endif
+        //+:cnd:noEmit
         #endregion
 
         public void Dispose() { }
@@ -121,6 +129,8 @@ namespace MicroService.Common.Collections
         #endregion
 
         #region QueryList<TModel, TItems>
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Represents an object which holds a collection of models useful for TDD..
         /// </summary>
@@ -140,6 +150,8 @@ namespace MicroService.Common.Collections
             protected override void AddModels(IEnumerable<TModel> items) { }
             #endregion
         }
+#endif
+        //+:cnd:noEmit
         #endregion
         #endregion
     }

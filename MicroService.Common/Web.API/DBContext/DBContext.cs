@@ -23,13 +23,25 @@ namespace MicroService.Common.Web.API
         { }
         #endregion
 
-        #region CREATE
+        #region ON MODEL CREATION
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder = modelBuilder.ApplyConfigurationsFromAssembly(typeof(DBContext).Assembly);
+        }
+        #endregion
+
+        #region CREATE MODEL LIST
         IModels<TID, TModel> IModelContext.Create<TID, TModel>()
         {
             var list = new EntityList<TID, TModel>(this, Set<TModel>());
             SaveChanges();
             return list;
         }
+        #endregion
+
+        #region CREATE
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         IModelQuery<TModel> IModelContext.Create<TModel>()
         {
             var list = new QueryList<TModel>(this, Set<TModel>());
@@ -43,16 +55,13 @@ namespace MicroService.Common.Web.API
             SaveChanges();
             return list;
         }
-        #endregion
-
-        #region ON MODEL CREATION
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder = modelBuilder.ApplyConfigurationsFromAssembly(typeof(DBContext).Assembly);
-        }
+#endif
+        //+:cnd:noEmit
         #endregion
 
         #region QUERY LIST
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Represents an object which holds a collection of models indirectly.
         /// </summary>
@@ -77,6 +86,8 @@ namespace MicroService.Common.Web.API
             }
             #endregion
         } 
+#endif
+        //+:cnd:noEmit
         #endregion
 
         #region ENTITY LIST
@@ -154,7 +165,7 @@ namespace MicroService.Common.Web.API
         }
         #endregion
     }
-    #endregion
+#endregion
 }
 //-:cnd:noEmit
 #endif

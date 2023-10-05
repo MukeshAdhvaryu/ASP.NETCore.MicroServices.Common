@@ -3,14 +3,14 @@
  Author: Mukesh Adhvaryu.
 */
 
-using MicroService.Common.Collections;
 using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
 //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 using MicroService.Common.Parameters;
+using MicroService.Common.Collections;
 using System.Collections;
 #endif
 //+:cnd:noEmit
@@ -25,12 +25,12 @@ namespace MicroService.Common.Sets
     /// <typeparam name="TID">Type of TID</typeparam>
     public partial interface IModels<TID, TModel> : IFirstModel<TModel, TID>
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IFindByID<TModel, TModel, TID>
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+        , IModelQuery<TModel>   
         , IEnumerable<TModel>
-        , IModelQuery<TModel>
+        , IFindByID<TModel, TModel, TID>
 #endif
-#if MODEL_DELETABLE ||MODEL_APPENDABLE ||MODEL_UPDATABLE
+#if MODEL_DELETABLE || MODEL_APPENDABLE || MODEL_UPDATABLE
         , IModelCommand<TID, TModel>
 #endif
         //+:cnd:noEmit
@@ -44,7 +44,7 @@ namespace MicroService.Common.Sets
     #region IExModels<TModel, TID>
     internal partial interface IExModels<TID, TModel> : IExModelSet<TModel>, IModels<TID, TModel>
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         , IExModelQuery<TModel>
 #endif
 #if MODEL_DELETABLE || MODEL_APPENDABLE || MODEL_UPDATABLE
@@ -56,6 +56,16 @@ namespace MicroService.Common.Sets
         where TID : struct
         #endregion
     {
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+        /// <summary>
+        /// Finds a model based on given id.
+        /// </summary>
+        /// <param name="id">ID to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TModel?> Get(TID? id);
+#endif
+        //+:cnd:noEmit
     }
     #endregion
 
@@ -73,7 +83,7 @@ namespace MicroService.Common.Sets
         #endregion
     {
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         IModelQuery<TModel> Query;
 #endif
         //+:cnd:noEmit
@@ -83,7 +93,7 @@ namespace MicroService.Common.Sets
             base(models)
         {
             //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             Query = GetQueryObject(models);
 #endif
             //+:cnd:noEmit
@@ -93,7 +103,7 @@ namespace MicroService.Common.Sets
 
         #region GET QUERY OBJECT
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         protected virtual IModelQuery<TModel> GetQueryObject(TItems models)
         {
             using (IModelContext context = new ModelContext())
@@ -139,7 +149,7 @@ namespace MicroService.Common.Sets
 
         #region GET (id)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Finds a model based on given keys.
         /// </summary>
@@ -150,8 +160,8 @@ namespace MicroService.Common.Sets
             return Task.FromResult(Items.FirstOrDefault(m => Equals(m.ID, id)));
         }
 #else
-        Task<TModel?> IExModelSet<TModel, TID>.Get(TID? id) =>
-            Task.FromResult(Models.FirstOrDefault(m => Equals(m.ID, id)));
+        Task<TModel?> IExModels<TID, TModel>.Get(TID? id) =>
+            Task.FromResult(Items.FirstOrDefault(m => Equals(m.ID, id)));
 #endif
         //+:cnd:noEmit
         #endregion
@@ -282,7 +292,7 @@ namespace MicroService.Common.Sets
 
         #region GET ALL (count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -298,7 +308,7 @@ namespace MicroService.Common.Sets
 
         #region GET ALL (startIndex, count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -315,7 +325,7 @@ namespace MicroService.Common.Sets
 
         #region FIND (parameters, conditionJoin)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Finds a model based on given paramters.
         /// </summary>
@@ -330,7 +340,7 @@ namespace MicroService.Common.Sets
 
         #region FIND ALL (parameters, conditionJoin)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Finds all models matched based on given parameters.
         /// </summary>
@@ -346,7 +356,7 @@ namespace MicroService.Common.Sets
 
         #region FIND ALL (parameters, conditionJoin)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Finds all models matched based on given parameter.
         /// </summary>
@@ -360,7 +370,7 @@ namespace MicroService.Common.Sets
 
         #region ENUMERATORS
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         public IEnumerator<TModel> GetEnumerator() =>
             Items.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() =>

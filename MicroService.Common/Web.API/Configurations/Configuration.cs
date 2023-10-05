@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD
+#if !TDD 
 //+:cnd:noEmit
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -35,10 +35,12 @@ namespace MicroService.Common.Web.API
         static List<Tuple<Type, Type, Type, Type>> ControllerTypes = new List<Tuple<Type, Type, Type, Type>>(3);
         static volatile HashSet<string> ControllerNames = new HashSet<string>();
 
+#if !MODEL_NONQUERYABLE
         static List<Tuple<Type, Type>> QueryControllerTypes = new List<Tuple<Type, Type>>(3);
 #endif
+#endif
         //+:cnd:noEmit
-        #endregion
+#endregion
 
         #region PROPERTIES
         public static bool IsProductionEnvironment { get; private set; }
@@ -422,6 +424,8 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region ADD KEY LESS MODEL
+        //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
         /// <summary>
         /// Adds a new model to model query processing layer.
         /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
@@ -572,6 +576,8 @@ namespace MicroService.Common.Web.API
             #endregion
             =>
             AddQueryModel<TModel, TModel, QueryService<TModel, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
+#endif
+        //+:cnd:noEmit
         #endregion
 
         #region GET MODEL NAME
@@ -664,6 +670,8 @@ namespace MicroService.Common.Web.API
                 ControllerTypes.Clear();
 
                 HANDLE_QUERYCONTROLLER:
+                //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
                 if (QueryControllerTypes.Count == 0)
                     goto EXIT;
 
@@ -676,7 +684,8 @@ namespace MicroService.Common.Web.API
                     );
                 }
                 QueryControllerTypes.Clear();
-
+#endif
+                //+:cnd:noEmit
                 EXIT:
                 return;
             }

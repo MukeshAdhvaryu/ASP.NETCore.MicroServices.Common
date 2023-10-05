@@ -4,7 +4,7 @@
 */
 
 //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 //+:cnd:noEmit
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;

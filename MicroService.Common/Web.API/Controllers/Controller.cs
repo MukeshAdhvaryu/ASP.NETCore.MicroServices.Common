@@ -93,7 +93,7 @@ namespace MicroService.Common.Web.API
 
         #region GET MODEL BY ID
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets a single model with the specified ID.
@@ -129,6 +129,18 @@ namespace MicroService.Common.Web.API
             {
                 throw;
             }
+        }
+#endif
+#else
+#if MODEL_USEACTION
+        async Task<IActionResult> IFindByID<TModel, TID>.Get(TID? id)
+        {
+            return Ok(await service.Get(id));
+        }
+#else
+        async Task<TOutDTO?> IFindByID<TOutDTO, TModel, TID>.Get(TID? id)
+        {
+            return await service.Get(id);
         }
 #endif
 #endif

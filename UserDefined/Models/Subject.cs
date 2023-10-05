@@ -41,7 +41,7 @@ namespace UserDefined.Models
     #endregion
 
     #region Subject
-    [Model(Scope = ServiceScope.Scoped, Name = "Subject")]
+    [Model(Scope = ServiceScope.Scoped, Name = "SubjectCmd")]
     //[DBConnect(Database = "SubjectDB", ConnectionKey = ConnectionKey.SQLServer)]
     [DBConnect(ProvideSeedData = true)]
     public class Subject : Model<int, Subject>, ISubject

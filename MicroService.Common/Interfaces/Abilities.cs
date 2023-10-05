@@ -169,7 +169,7 @@ namespace MicroService.Common.Interfaces
 
     #region IFind<TModel, TOutDTO>
     //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
     public interface IFind<TOutDTO, TModel>
         where TOutDTO : IModel
         where TModel : IModel
@@ -223,7 +223,7 @@ namespace MicroService.Common.Interfaces
 
     #region IReadable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
     /// <summary>
     /// This interface represents an object that allows reading a single model or multiple models.
     /// </summary>
@@ -232,7 +232,7 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IReadable<TOutDTO, TModel, TID>: IFindByID<TOutDTO, TModel, TID>
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         , IFind<TOutDTO, TModel>
 #endif
         //+:cnd:noEmit
@@ -362,7 +362,7 @@ namespace MicroService.Common.Interfaces
 
     #region IFindByID<TOutDTO, TModel, TID>
     //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
     /// <summary>
     /// This interface represents an object that allows reading a single model or multiple models.
     /// </summary>

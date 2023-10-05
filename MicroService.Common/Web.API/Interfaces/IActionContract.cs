@@ -12,9 +12,9 @@ using MicroService.Common.Models;
 namespace MicroService.Common.Web.API.Interfaces
 {
     public interface IActionContract<TModel, TID>: IContract, IFirstModel<TModel, TID>, IModelCount
-    //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-   , IReadable<TModel, TID>
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+        , IReadable<TModel, TID>
 #endif
 #if MODEL_DELETABLE
   , IDeleteable<TModel, TID>

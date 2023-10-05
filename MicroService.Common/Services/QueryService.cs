@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 //+:cnd:noEmit
 using MicroService.Common.Collections;
 using MicroService.Common.Exceptions;
@@ -89,7 +89,7 @@ namespace MicroService.Common.Services
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -116,7 +116,7 @@ namespace MicroService.Common.Services
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -143,7 +143,7 @@ namespace MicroService.Common.Services
 
         #region FIND
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         protected virtual Task<TModel?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin)
         {
             if (parameters == null)
@@ -161,7 +161,7 @@ namespace MicroService.Common.Services
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         protected virtual Task<IEnumerable<TModel>?> FindAll(ISearchParameter? parameter)
         {
             if (parameter == null)
@@ -179,7 +179,7 @@ namespace MicroService.Common.Services
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         protected virtual Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin)
         {
             if (parameters == null)

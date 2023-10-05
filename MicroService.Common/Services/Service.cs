@@ -71,7 +71,7 @@ namespace MicroService.Common.Services
         readonly static IExModel DummyModel = (IExModel) new TModel();
 
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         IQueryService<TOutDTO, TModel> Query;
 #endif
         //+:cnd:noEmit
@@ -96,7 +96,7 @@ namespace MicroService.Common.Services
                 throw new NotSupportedException("Context supplied, is not compitible with this service!");
             }
             Models = (IExModels<TID, TModel>)models;
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             Query = GetQueryObject(Models);
 #endif
         }
@@ -108,7 +108,7 @@ namespace MicroService.Common.Services
 
         #region GET QUERY OBJECT
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         protected virtual IQueryService<TOutDTO, TModel> GetQueryObject(IModels<TID, TModel> models)
         {
             return new QueryService<TOutDTO, TModel, TContext>(models);
@@ -119,7 +119,7 @@ namespace MicroService.Common.Services
 
         #region GET MODEL BY ID
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets a single model with the specified ID.
         /// </summary>
@@ -133,11 +133,8 @@ namespace MicroService.Common.Services
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
-        async Task<TOutDTO?> IFindByID<TOutDTO, TModel, TID>.Get(TID? id) =>
-           ToDTO(await Get(id));
-
 #else
-        protected virtual async Task<TModel?> Get(TID id)
+        protected virtual async Task<TModel?> Get(TID? id)
         {
             var result = await Models.Get(id);
             if (result == null)
@@ -146,6 +143,9 @@ namespace MicroService.Common.Services
         }
 #endif
         //+:cnd:noEmit
+
+        async Task<TOutDTO?> IFindByID<TOutDTO, TModel, TID>.Get(TID? id) =>
+            ToDTO(await Get(id));
         #endregion
 
         #region ADD
@@ -157,7 +157,7 @@ namespace MicroService.Common.Services
         /// <param name="model">Model to add.</param>
         /// <returns>Task with type of Model as result.</returns>
         /// <exception cref="Exception"></exception>
-        protected virtual async Task<TModel?> Add(IModel model)
+        protected virtual async Task<TModel?> Add(IModel? model)
         {
             if (model == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelSuppliedException);
@@ -182,7 +182,7 @@ namespace MicroService.Common.Services
             }
             return result;
         }
-        async Task<TOutDTO?> IAppendable<TOutDTO, TModel, TID>.Add(IModel model) =>
+        async Task<TOutDTO?> IAppendable<TOutDTO, TModel, TID>.Add(IModel? model) =>
             ToDTO(await Add(model));
 #endif
         //+:cnd:noEmit

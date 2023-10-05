@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 //+:cnd:noEmit
 using MicroService.Common.Models;
 
@@ -15,12 +15,7 @@ namespace MicroService.Common.Interfaces
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    public interface IQueryContract<TOutDTO, TModel> : IContract, IFirstModel<TModel>
-    //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE
-    , IFind<TOutDTO, TModel>
-#endif
-        //+:cnd:noEmit
+    public interface IQueryContract<TOutDTO, TModel> : IContract, IFirstModel<TModel> , IFind<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : ISelfModel<TModel>,

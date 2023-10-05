@@ -1,6 +1,7 @@
 ﻿//-:cnd:noEmit
 #if MODEL_USEDTO
 //+:cnd:noEmit
+using MicroService.Common.Attributes;
 using MicroService.Common.Models;
 
 using UserDefined.Models;
@@ -8,6 +9,7 @@ using UserDefined.Models;
 namespace UserDefined.DTOs
 {
     #region ISubjectOutDTO
+    [Model(Name = "SubjectQry")]
     public interface ISubjectOutDTO : IModel
     {
         int ID { get; }

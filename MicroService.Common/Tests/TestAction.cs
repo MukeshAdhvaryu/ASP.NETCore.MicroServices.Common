@@ -60,6 +60,7 @@ namespace MicroService.Common.Tests
         {
             Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
             MockService = Fixture.Freeze<Mock<IService<TOutDTO, TModel, TID>>>();
+
             Contract = CreateContract(MockService.Object);
             var count = DummyModelCount;
             if (count < 5)
@@ -69,6 +70,8 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region PROPERTIES
+        //protected readonly Mock<IService<TOutDTO, TModel, TID>> MockService;
+
         //-:cnd:noEmit
 #if (MODEL_USEDTO)
         protected IEnumerable<TOutDTO> Items => Models.Select(x => ToDTO(x));
@@ -98,7 +101,7 @@ namespace MicroService.Common.Tests
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         [NoArgs]
         public async Task Get_ByIDSuccess()
         {
@@ -128,7 +131,13 @@ namespace MicroService.Common.Tests
                 Verifier.Equal(e.Message, ex?.Message);
             }
         }
+#endif
+        //+:cnd:noEmit
+        #endregion
 
+        #region GET ALL
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         [WithArgs]
         [Args(0)]
         [Args(3)]

@@ -93,7 +93,7 @@ namespace MicroService.Common.Tests
 
         #region GET MODEL/S
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         [NoArgs]
         public async Task Get_ByIDSuccess()
         {
