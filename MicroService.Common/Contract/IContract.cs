@@ -10,7 +10,7 @@ namespace MicroService.Common.Interfaces
     /// <summary>
     /// This interface represents a contract of operations.
     /// </summary>
-    public interface IContract
+    public interface IContract : IModelCount, IFirstModel, IDisposable
     { }
     #endregion
 
@@ -27,18 +27,18 @@ namespace MicroService.Common.Interfaces
         , IReadable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_DELETABLE
-  , IDeleteable<TOutDTO, TModel, TID>
+        , IDeleteable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_APPENDABLE
-  , IAppendable<TOutDTO, TModel, TID>
+        , IAppendable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_UPDATABLE
-  , IUpdatable<TOutDTO, TModel, TID>
+        , IUpdatable<TOutDTO, TModel, TID>
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,

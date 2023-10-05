@@ -21,7 +21,7 @@ namespace MicroService.Common.Web.API
 {
     public sealed class ParamBinder: ModelCreator, IModelBinder
     {
-        async Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
+        Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
         {
             var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
             var model = (IExModel)GetModel(descriptor.ControllerTypeInfo, out _);
@@ -90,15 +90,16 @@ namespace MicroService.Common.Web.API
             {
                 bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
 
-                return;
+                return Task.CompletedTask;
             }
             if (multiple)
             {
                 bindingContext.Result = ModelBindingResult.Success(list);
-                return;
+                return Task.CompletedTask;
             }
 
             bindingContext.Result = ModelBindingResult.Success(list[0]);
+            return Task.CompletedTask;
         }
     }
 }

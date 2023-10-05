@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Runtime.Serialization;
 
 using MicroService.Common;
 using MicroService.Common.Attributes;
@@ -8,7 +7,8 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -44,7 +44,7 @@ namespace UserDefined.Models
     [Model(Scope = ServiceScope.Scoped, Name = "Subject")]
     //[DBConnect(Database = "SubjectDB", ConnectionKey = ConnectionKey.SQLServer)]
     [DBConnect(ProvideSeedData = true)]
-    public class Subject : Model<int>, ISubject
+    public class Subject : Model<int>, ISubject, ISelfModel<int, Subject>, IEntityTypeConfiguration<Subject>
     {
         #region VARIABLES
         static int iid;
@@ -230,6 +230,11 @@ namespace UserDefined.Models
             int.TryParse(value.ToString(), out newID);
         #endregion
 
+        public void Configure(EntityTypeBuilder<Subject> builder)
+        {
+            //
+        }
+
         #region Model To DTO
         //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -241,6 +246,7 @@ namespace UserDefined.Models
                 return new SubjectInDTO(this);
             return base.ToDTO(type);
         }
+
 #endif
         //+:cnd:noEmit
         #endregion

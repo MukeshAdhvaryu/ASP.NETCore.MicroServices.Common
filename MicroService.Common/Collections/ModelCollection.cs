@@ -39,7 +39,7 @@ namespace MicroService.Common.Collections
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
-        where TModel : Model<TID>
+        where TModel : ISelfModel<TID, TModel> 
         where TID : struct
         #endregion
     {
@@ -158,7 +158,7 @@ namespace MicroService.Common.Collections
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
-        where TModel : Model<TID>
+        where TModel : ISelfModel<TID, TModel>
         where TID : struct
         #endregion
     {
@@ -177,7 +177,6 @@ namespace MicroService.Common.Collections
     }
     #endregion
 
-
     #region ModelCollection<TModel, TID>
     /// <summary>
     /// Represents an object which holds a collection of models directly or indirectly.
@@ -194,8 +193,8 @@ namespace MicroService.Common.Collections
 #endif
     //+:cnd:noEmit
         #region TYPE CONSTRAINTS
-    where TModel : Model<TID>, new()
-    where TID : struct
+        where TModel : class, ISelfModel<TID, TModel>, new()
+        where TID : struct
         #endregion
     {
         #region VARIABLES
@@ -496,6 +495,8 @@ namespace MicroService.Common.Collections
             models.FirstOrDefault();
         IModel? IFirstModel.GetFirstModel() => 
             models.FirstOrDefault();
+        TModel? IFirstModel<TModel>.GetFirstModel()  =>
+            models.FirstOrDefault(); 
         #endregion
 
         #region GET MODEL COUNT

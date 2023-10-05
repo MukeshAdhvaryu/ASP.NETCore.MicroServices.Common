@@ -5,236 +5,40 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
-using System.Collections;
-using System.Reflection;
-using System.Reflection.Metadata;
-
-using MicroService.Common.Attributes;
 using MicroService.Common.Collections;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Parameters;
+using MicroService.Common.Sets;
 
 using Microsoft.EntityFrameworkCore;
 
 namespace MicroService.Common.Web.API
 {
-    #region GENERIC DBCONTEXT
-    public partial class DBContext<TModel, TID> : DbContext, IExModelCollection<TModel, TID>
-        where TModel : Model<TID>, new()
-        where TID : struct
+    #region DBCONTEXT
+    public partial class DBContext : DbContext, IModelContext
     {
-        #region VARIABLES
-        DbSet<TModel> models;
-        #endregion
-
         #region CONSTRUCTOR
-        public DBContext(DbContextOptions<DBContext<TModel, TID>> options)
+        public DBContext(DbContextOptions<DBContext> options)
             : base(options)
         {
-            bool provideSeedData = false;
-            var attribute = typeof(TModel).GetCustomAttribute<DBConnectAttribute>();
-            if (attribute != null)
-                provideSeedData = attribute.ProvideSeedData;
-            if (provideSeedData && !models.Any())
-            {
-                var model = (IExModel)new TModel();
-                var items = model.GetInitialData();
-                if (items != null)
-                {
-                    models.AddRange(items.OfType<TModel>());
-                    SaveChanges();
-                }
-            }
+            
         }
         #endregion
 
-        #region MODELS
-        public DbSet<TModel> Models
+        #region CREATE
+        IModelSet<TID1, TModel1> IModelContext.Create<TID1, TModel1>()
         {
-            get => models;
-            set => models = value;
+            var list = new EntityList<TID1, TModel1>(Set<TModel1>());
+            SaveChanges();
+            return list;
         }
         #endregion
 
-        #region GET FIRST MODEL
-        TModel? IFirstModel<TModel, TID>.GetFirstModel() => 
-            models.FirstOrDefault();
-        IModel? IFirstModel.GetFirstModel() =>
-        models.FirstOrDefault();
-        #endregion
-
-        #region GET MODEL COUNT
-        int IModelCount.GetModelCount() => models.Count();
-        #endregion
-
-        #region FIND
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE
-        async Task<TModel?> IModelCollection<TModel, TID>.Find(TID id)
+        #region ON MODEL CREATION
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            return await models.FindAsync(id);
+            modelBuilder = modelBuilder.ApplyConfigurationsFromAssembly(typeof(DBContext).Assembly);
         }
-
-        Task<IEnumerable<TModel>> IModelCollection<TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
-        {
-            Predicate<TModel> predicate;
-
-            switch (conditionJoin)
-            {
-                case AndOr.AND:
-                default:
-                    predicate = (m) =>
-                    {
-                        IMatch match = m;
-
-                        foreach (var key in parameters)
-                        {
-                            if (key == null)
-                                continue;
-                            if (!match.IsMatch(key))
-                                return false;
-                        }
-                        return true;
-                    };
-                    break;
-                case AndOr.OR:
-                    predicate = (m) =>
-                    {
-                        IMatch match = m;
-                        bool result = false;    
-                        foreach (var key in parameters)
-                        {
-                            if (key == null)
-                                continue;
-                            if (match.IsMatch(key))
-                            {
-                                result = true;
-                            }
-                        }
-                        return result;
-                    };
-                    break;
-            }
-
-            return Task.FromResult(this.Where((m) => predicate(m)));
-        }
-
-        Task<TModel?> IModelCollection<TModel, TID>.Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
-        {
-            Predicate<TModel> predicate;
-
-            switch (conditionJoin)
-            {
-                case AndOr.AND:
-                default:
-                    predicate = (m) =>
-                    {
-                        IMatch match = m;
-
-                        foreach (var key in parameters)
-                        {
-                            if (key == null)
-                                continue;
-                            if (!match.IsMatch(key))
-                                return false;
-                        }
-                        return true;
-                    };
-                    break;
-                case AndOr.OR:
-                    predicate = (m) =>
-                    {
-                        IMatch match = m;
-                        bool result = false;
-                        foreach (var key in parameters)
-                        {
-                            if (key == null)
-                                continue;
-                            if (match.IsMatch(key))
-                            {
-                                result = true;
-                            }
-                        }
-                        return result;
-                    };
-                    break;
-            }
-            return Task.FromResult(models.FirstOrDefault((m) => predicate(m)));
-        }
-
-        Task<IEnumerable<TModel>> IModelCollection<TModel, TID>.FindAll(ISearchParameter key)
-        {
-            Predicate<TModel> func = (m) =>
-            {
-                return ((IMatch)m).IsMatch(key);
-            };
-            return Task.FromResult(this.Where(m => func(m)));
-        }
-#else
-        /// <summary>
-        /// Finds a model based on given keys.
-        /// </summary>
-        /// <param name="keys">Keys to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        async Task<TModel?> IExModelCollection<TModel, TID>.Find(TID id)
-        {
-            return await models.FindAsync(id);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region ADD
-        //-:cnd:noEmit
-#if MODEL_APPENDABLE
-        async Task<bool> IModelCollection<TModel, TID>.Add(TModel model)
-        {
-            await models.AddAsync(model);
-            return await SaveChangesAsync() > 0;
-        }
-
-        async Task<bool> IModelCollection<TModel, TID>.AddRange(IEnumerable<TModel> models)
-        {
-            await this.models.AddRangeAsync(models);
-            return await SaveChangesAsync() > 0;
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region DELETE
-        //-:cnd:noEmit
-#if MODEL_DELETABLE
-        async Task<bool> IModelCollection<TModel, TID>.Delete(TModel model)
-        {
-            models.Remove(model);
-            return await SaveChangesAsync() > 0;
-        }
-        async Task<bool> IModelCollection<TModel, TID>.DeleteRange(IEnumerable<TModel> models)
-        {
-            this.models.RemoveRange(models);
-            return await SaveChangesAsync() > 0;
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region UPDATE
-        //-:cnd:noEmit
-#if MODEL_UPDATABLE
-        async Task<bool> IModelCollection<TModel, TID>.Update(TModel model)
-        {
-            models.Update(model);
-            return await SaveChangesAsync() > 0;
-        }
-        async Task<bool> IModelCollection<TModel, TID>.UpdateRange(IEnumerable<TModel> models)
-        {
-            this.models.UpdateRange(models);
-            return await SaveChangesAsync() > 0;
-        }
-#endif
-        //+:cnd:noEmit
         #endregion
 
         #region SAVE CHANGES
@@ -248,19 +52,61 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region ENUMERATOR
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE
-        IEnumerator<TModel> IEnumerable<TModel>.GetEnumerator()
+        #region ENTITY LIST
+        /// <summary>
+        /// Represents an object which holds a collection of models indirectly.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
+        /// <typeparam name="TID">Type of TID</typeparam>
+        class EntityList<TID, TModel> : ModelSet<TID, TModel, DbSet<TModel>>
+            #region TYPE CONSTRAINTS
+            where TModel : class, ISelfModel<TID, TModel>, new()
+            where TID : struct
+            #endregion
         {
-            foreach (var item in models)
-                yield return item;
-        }
 
-        IEnumerator IEnumerable.GetEnumerator() =>
-            ((IEnumerable<TModel>)this).GetEnumerator();
+            #region CONSTRUCTORS
+            public EntityList(DbSet<TModel> items):
+                base(items)
+            { }
+            #endregion
+
+            #region ADD/ADD RANGE
+            //-:cnd:noEmit
+#if MODEL_APPENDABLE
+            protected override void AddModel(TModel model) =>
+                Items.Add(model);
+            protected override void AddModels(IEnumerable<TModel> items) =>
+                Items.AddRange(items);
 #endif
-        //+:cnd:noEmit
+            //+:cnd:noEmit
+            #endregion
+
+            #region DELETE/ DELETE RANGE
+            //-:cnd:noEmit
+#if MODEL_DELETABLE
+            public override Task<bool> DeleteRange(IEnumerable<TModel> items)
+            {
+                try
+                {
+                    Items.RemoveRange(items);
+                    return Task.FromResult(true);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            protected override bool RemoveModel(TModel model)
+            {
+                Items.Remove(model);
+                return (true);
+            }
+#endif
+            //+:cnd:noEmit
+            #endregion
+        }
         #endregion
     }
     #endregion

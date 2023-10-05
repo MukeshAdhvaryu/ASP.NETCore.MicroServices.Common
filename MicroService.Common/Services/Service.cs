@@ -10,6 +10,7 @@ using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
+using MicroService.Common.Sets;
 
 namespace MicroService.Common.Services
 {
@@ -17,7 +18,7 @@ namespace MicroService.Common.Services
     /// <summary>
     /// This interface represents repository object to be used in controller class.
     /// </summary>
-    public interface IService
+    public interface IService: IContract
     { }
     #endregion
 
@@ -32,7 +33,7 @@ namespace MicroService.Common.Services
         IContract<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -44,16 +45,18 @@ namespace MicroService.Common.Services
     { }
     #endregion
 
-    #region Service<TOutDTO, TModel, TID>
+    #region Service<TOutDTO, TModel, TID, TContext>
     /// <summary>
-    /// This class represents a repository to be used in controller class.
+    /// This interface represents repository object to be used in controller class.
     /// </summary>
-    /// <typeparam name="TOutDTO">Model interface of your choice - must derived from IModel interface.</typeparam>
-    /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
-    public partial class Service<TOutDTO, TModel, TID, TModelCollection> : IService<TOutDTO, TModel, TID>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    /// <typeparam name="TContext">Instance of DBContext or ModelCollection creator.</typeparam>
+    public partial class Service<TOutDTO, TModel, TID, TContext> : IService<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -61,12 +64,13 @@ namespace MicroService.Common.Services
         //+:cnd:noEmit
         new()
         where TID : struct
-        where TModelCollection : IModelCollection<TModel, TID>
+        where TContext : IModelContext
         #endregion
     {
         #region VARIABLES
-        readonly IExModelCollection<TModel, TID> Context;
-        readonly static IExModel DummyModel = new TModel();
+        readonly TContext Context;
+        readonly IExModelSet<TID, TModel> Models;
+        readonly static IExModel DummyModel = (IExModel) new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);
@@ -76,42 +80,45 @@ namespace MicroService.Common.Services
         #endregion
 
         #region CONSTRUCTORS
-        public Service(TModelCollection _context)
+        public Service(TContext _context)
         {
-            if (!(_context is IExModelCollection<TModel, TID>))
-                throw new NotSupportedException("Supplied model collection is not compitible with this service repository!");
-            Context = (IExModelCollection < TModel, TID >)_context;
-            Models = _context;
+            Context = _context;
+            var models = Context.Create<TID, TModel>();
+            if(!(models is IExModelSet<TID, TModel>))
+            {
+                throw new NotSupportedException("Context supplied, is not compitible with this service!");
+            }
+            Models = (IExModelSet<TID, TModel>)models;
         }
         #endregion
 
         #region PROPERTIES
-        protected TModelCollection Models { get; private set; }
+        protected IModelSet<TID, TModel> InnerList => Models;
         #endregion
 
         #region GET MODEL BY ID
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets a single model with the specified ID.
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
         /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
         /// <exception cref="Exception"></exception>
-        protected virtual async Task<TModel> Get(TID id)
+        protected virtual async Task<TModel?> Get(TID? id)
         {
-            var result = await Context.Find(id);
+            var result = await Models.Get(id);
             if (result == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
         }
-        async Task<TOutDTO> IReadable<TOutDTO, TModel, TID>.Get(TID id) =>
+        async Task<TOutDTO?> IReadable<TOutDTO, TModel, TID>.Get(TID? id) =>
            ToDTO(await Get(id));
 
 #else
-        protected virtual async Task<TModel> Get(TID id)
+        protected virtual async Task<TModel?> Get(TID id)
         {
-            var result = await Context.Find(id);
+            var result = await Models.Get(id);
             if (result == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             return result;
@@ -122,7 +129,7 @@ namespace MicroService.Common.Services
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -131,19 +138,17 @@ namespace MicroService.Common.Services
         /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of Instance of TModelImplementations represented through TModelInterfaces.</returns>
         /// <exception cref="Exception"></exception>
-        protected virtual Task<IEnumerable<TModel>> GetAll(int count = 0)
+        protected virtual Task<IEnumerable<TModel>?> GetAll(int count = 0)
         {
-            if (!Context.Any())
+            if (!Models.Any())
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             if (count < 0)
                 throw DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, count.ToString());
 
-            if (count > 0)
-                return Task.FromResult(Context.Take(count));
-            return Task.FromResult((IEnumerable<TModel>)Context);
+            return Models.GetAll(count);
         }
-        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.GetAll(int count) =>
+        async Task<IEnumerable<TOutDTO>?> IFind<TOutDTO, TModel>.GetAll(int count) =>
             ToDTO(await GetAll(count));
 #endif
         //+:cnd:noEmit
@@ -151,7 +156,7 @@ namespace MicroService.Common.Services
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -160,41 +165,53 @@ namespace MicroService.Common.Services
         /// <param name="startIndex">Start index which to start picking records from.</param>
         /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        protected Task<IEnumerable<TModel>> GetAll(int startIndex, int count)
+        protected Task<IEnumerable<TModel>?> GetAll(int startIndex, int count)
         {
-            if (!Context.Any())
+            if (!Models.Any())
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
             if (count < 0)
                 throw DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, count.ToString());
 
-            if(startIndex < 0)
-                startIndex = 0;
-
-            if (count > 0)
-                return Task.FromResult(Context.Skip(startIndex).Take(count));
-            else
-                return Task.FromResult(Context.Skip(startIndex));
+            return Models.GetAll(startIndex, count);
         }
-        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.GetAll(int startIndex, int limitOfResult) =>
-            ToDTO(await GetAll(startIndex, limitOfResult));
+        async Task<IEnumerable<TOutDTO>?> IFind<TOutDTO, TModel>.GetAll(int startIndex, int count) =>
+            ToDTO(await GetAll(startIndex, count));
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region FIND
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+        protected virtual Task<TModel?> Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+        {
+            if (parameters == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
+
+            if (!Models.Any())
+                throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
+            return Models.Find(parameters, conditionJoin);
+        }
+        async Task<TOutDTO?> IFind<TOutDTO, TModel>.Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
+            ToDTO(await Find(parameters, conditionJoin));
 #endif
         //+:cnd:noEmit
         #endregion
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
-        protected virtual Task<IEnumerable<TModel>> FindAll(ISearchParameter parameter)
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+        protected virtual Task<IEnumerable<TModel>?> FindAll(ISearchParameter parameter)
         {
-            if(parameter == null)
+            if (parameter == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
 
-            if (!Context.Any())
+            if (!Models.Any())
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
-            return Context.FindAll(parameter);
+            return Models.FindAll(parameter);
         }
-        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.FindAll(ISearchParameter parameter) =>
+        async Task<IEnumerable<TOutDTO>?> IFind<TOutDTO, TModel>.FindAll(ISearchParameter parameter) =>
             ToDTO(await FindAll(parameter));
 #endif
         //+:cnd:noEmit
@@ -202,23 +219,23 @@ namespace MicroService.Common.Services
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
-        protected virtual Task<IEnumerable<TModel>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+        protected virtual Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin)
         {
             if (parameters == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSuppliedException);
-            if (!Context.Any())
+            if (!Models.Any())
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFoundException);
 
-            return Context.FindAll(parameters, conditionJoin);
+            return Models.FindAll(parameters, conditionJoin);
         }
 
-        async Task<IEnumerable<TOutDTO>> IReadable<TOutDTO, TModel, TID>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
+        async Task<IEnumerable<TOutDTO>?> IFind<TOutDTO, TModel>.FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin) =>
             ToDTO(await FindAll(parameters, conditionJoin));
 #endif
         //+:cnd:noEmit
         #endregion
-         
+
         #region ADD
         //-:cnd:noEmit
 #if (MODEL_APPENDABLE)
@@ -228,7 +245,7 @@ namespace MicroService.Common.Services
         /// <param name="model">Model to add.</param>
         /// <returns>Task with type of Model as result.</returns>
         /// <exception cref="Exception"></exception>
-        protected virtual async Task<TModel> Add(IModel model)
+        protected virtual async Task<TModel?> Add(IModel model)
         {
             if (model == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelSuppliedException);
@@ -244,7 +261,8 @@ namespace MicroService.Common.Services
             }
             try
             {
-                await Context.Add(result);
+                await Models.Add(result);
+                await Context.SaveChanges();
             }
             catch (Exception e)
             {
@@ -253,18 +271,9 @@ namespace MicroService.Common.Services
             }
             return result;
         }
-        async Task<TOutDTO> IAppendable<TOutDTO, TModel, TID>.Add(IModel model)
-        {
-            var result = await Add(model);
-#if MODEL_USEDTO
-            if (NeedToUseDTO)
-                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
-            return (TOutDTO)(object)result;
-#else
-            return result;
-#endif
-        }
-#endif
+        async Task<TOutDTO?> IAppendable<TOutDTO, TModel, TID>.Add(IModel model) =>
+            ToDTO(await Add(model));
+ #endif
         //+:cnd:noEmit
         #endregion
 
@@ -277,16 +286,19 @@ namespace MicroService.Common.Services
         /// <param name="modelInterface">Model to delete.</param>
         /// <returns>Task with type of Model as result.</returns>
         /// <exception cref="Exception"></exception>
-        protected async Task<TModel> Delete(TID id)
+        protected async Task<TModel?> Delete(TID id)
         {
-            var model = await Context.Find(id);
+            var model = await Models.Get(id);
             if (model == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
             try
             {
-                var result = await Context.Delete(model);
+                var result = await Models.Delete(model);
                 if (result)
+                {
+                    await Context.SaveChanges();
                     return model;
+                }
             }
             catch (Exception e)
             {
@@ -294,17 +306,8 @@ namespace MicroService.Common.Services
             }
             throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString());
         }
-        async Task<TOutDTO> IDeleteable<TOutDTO, TModel, TID>.Delete(TID id)
-        {
-            var result = await Delete(id);
-#if MODEL_USEDTO
-            if (NeedToUseDTO)
-                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
-            return (TOutDTO)(object)result;
-#else
-            return result;
-#endif
-        }
+        async Task<TOutDTO?> IDeleteable<TOutDTO, TModel, TID>.Delete(TID id) =>
+            ToDTO(await Delete(id));
 #endif
         //+:cnd:noEmit
         #endregion
@@ -318,9 +321,9 @@ namespace MicroService.Common.Services
         /// <param name="modelInterface">Model to update.</param>
         /// <returns>Task with type of Model as result.</returns>
         /// <exception cref="Exception"></exception>
-        protected async Task<TModel> Update(TID id, IModel model)
+        protected async Task<TModel?> Update(TID id, IModel model)
         {
-            var result = await Context.Find(id);
+            var result = await Models.Get(id);
             if (result == null)
                 throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
 
@@ -338,31 +341,24 @@ namespace MicroService.Common.Services
             }
             throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString());
         }
-        async Task<TOutDTO> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel entity)
-        {
-            var result = await Update(id, entity);
-#if MODEL_USEDTO
-            if (NeedToUseDTO)
-                return (TOutDTO)((IExModel)result).ToDTO(DTOType);
-            return (TOutDTO)(object)result;
-#else
-            return result;
-#endif
-        }
+        async Task<TOutDTO?> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel entity) =>
+           ToDTO(await Update(id, entity));
 #endif
         //+:cnd:noEmit
         #endregion
 
         #region GET FIRST MODEL
         TModel? IFirstModel<TModel, TID>.GetFirstModel() =>
-            Context.GetFirstModel();
+            Models.GetFirstModel();
         IModel? IFirstModel.GetFirstModel() =>
-            Context.GetFirstModel();
+            Models.GetFirstModel();
+        TModel? IFirstModel<TModel>.GetFirstModel() =>
+            Models.GetFirstModel();
         #endregion
 
         #region GET MODEL COUNT
         int IModelCount.GetModelCount() =>
-            Context.GetModelCount();
+            Models.GetModelCount();
         #endregion
 
         #region GET MODEL EXCEPTION
@@ -373,7 +369,7 @@ namespace MicroService.Common.Services
         /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
         /// <param name="innerException">Inner exception which is already thrown.</param>
         /// <returns>Instance of SpecialException class.</returns>
-        protected ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null)=>
+        protected ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null) =>
             DummyModel.GetModelException(exceptionType, additionalInfo, innerException);
         #endregion
 
@@ -391,10 +387,15 @@ namespace MicroService.Common.Services
             //-:cnd:noEmit
 #if (MODEL_USEDTO)
             if (NeedToUseDTO)
-                return (TOutDTO)((IExModel)model).ToDTO(DTOType);
+            {
+                var result = ((IExModel)model).ToDTO(DTOType);
+                if (result == null)
+                    return default(TOutDTO);
+                return (TOutDTO?)((IExModel)model).ToDTO(DTOType);
+            }
 #endif
             //+:cnd:noEmit
-            return (TOutDTO)(object)model;
+            return (TOutDTO?)(object)model;
         }
 
         /// <summary>
@@ -403,18 +404,25 @@ namespace MicroService.Common.Services
         /// <param name="model">Models to convert.</param>
         /// <returns>Converted models to an apporiate objects of TOutDTO type</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected IEnumerable<TOutDTO> ToDTO(IEnumerable<TModel> models)
+        protected IEnumerable<TOutDTO>? ToDTO(IEnumerable<TModel>? models)
         {
             if (models == null)
-                return default(IEnumerable<TOutDTO>);
+                return Enumerable.Empty<TOutDTO>();
             //-:cnd:noEmit
 #if (MODEL_USEDTO)
             if (NeedToUseDTO)
-                return models.Select(m => ToDTO(m));
+                return (IEnumerable<TOutDTO>?)models.Select(m => ToDTO(m));
 #endif
             //+:cnd:noEmit
 
-            return (IEnumerable<TOutDTO>)models;
+            return (IEnumerable<TOutDTO>?)models;
+        }
+        #endregion
+
+        #region DISPOSE
+        void IDisposable.Dispose()
+        {
+            Context?.Dispose();
         }
         #endregion
     }

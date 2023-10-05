@@ -16,8 +16,8 @@ using MicroService.Common.Models;
 namespace MicroService.Common.Tests
 {
     #region TestModel
-    [Model(ProvideSeedData = true)]
-    public sealed class TestModel: Model<int>
+    [DBConnect(ProvideSeedData = true)]
+    public sealed class TestModel: Model<int>, ISelfModel<int, TestModel>
     {
         #region VARIABLES
         static int iid;

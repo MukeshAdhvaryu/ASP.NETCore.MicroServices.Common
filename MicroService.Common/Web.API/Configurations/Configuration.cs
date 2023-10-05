@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroService.Common.Web.API
 {
@@ -195,7 +197,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TInDTO, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<TID>,
+            where TModel : class, ISelfModel<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -206,7 +208,7 @@ namespace MicroService.Common.Web.API
             where TInDTO: IModel
             where TService : class, IService<TOutDTO, TModel, TID>
             where TID : struct
-            where TDBContext : DBContext<TModel, TID>
+            where TDBContext : DBContext
             #endregion
         {
             var type = typeof(TOutDTO);
@@ -310,7 +312,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<TID>,
+            where TModel : class, ISelfModel<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -320,7 +322,7 @@ namespace MicroService.Common.Web.API
             where TOutDTO : IModel
             where TService : class, IService<TOutDTO, TModel, TID>
             where TID : struct
-            where TDBContext : DBContext<TModel, TID>
+            where TDBContext : DBContext
             #endregion
             => AddModel<TOutDTO, TModel, TID, TOutDTO, TService, TDBContext>(services, configuration, dbContextOptions);
 
@@ -338,7 +340,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TID, TInDTO>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<TID>,
+            where TModel : class, ISelfModel<TID, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -349,7 +351,7 @@ namespace MicroService.Common.Web.API
             where TInDTO : IModel
             where TID : struct
             #endregion
-            => AddModel<TOutDTO, TModel, TID, TInDTO, Service<TOutDTO, TModel, TID, DBContext<TModel, TID>>, DBContext<TModel, TID>>(services, configuration, dbContextOptions);
+            => AddModel<TOutDTO, TModel, TID, TInDTO, Service<TOutDTO, TModel, TID, DBContext>, DBContext>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -364,7 +366,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel, TInDTO>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<int>,
+            where TModel : class, ISelfModel<int, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -374,7 +376,7 @@ namespace MicroService.Common.Web.API
             where TOutDTO : IModel
             where TInDTO : IModel
             #endregion
-            => AddModel<TOutDTO, TModel, int, TInDTO, Service<TOutDTO, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbContextOptions);
+            => AddModel<TOutDTO, TModel, int, TInDTO, Service<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -388,7 +390,7 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<int>,
+            where TModel : class, ISelfModel<int, TModel>,
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             TOutDTO,
@@ -397,7 +399,7 @@ namespace MicroService.Common.Web.API
             new()
             where TOutDTO : IModel
             #endregion
-            => AddModel<TOutDTO, TModel, int, Service<TOutDTO, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbContextOptions);
+            => AddModel<TOutDTO, TModel, int, Service<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -411,11 +413,11 @@ namespace MicroService.Common.Web.API
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
         public static void AddModel<TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
             #region TYPE CONSTRAINTS
-            where TModel : Model<int>,
+            where TModel : class, ISelfModel<int, TModel>,
             new()
             #endregion
             =>
-            AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext<TModel, int>>, DBContext<TModel, int>>(services, configuration, dbContextOptions);
+            AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
         #endregion
 
         #region GET MODEL NAME

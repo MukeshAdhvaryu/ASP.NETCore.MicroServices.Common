@@ -39,7 +39,7 @@ namespace UserDefined.Tests
     {
         protected override IService<TOutDTO, TModel, TID> CreateService()
         {
-            return new Service<TOutDTO, TModel, TID, ModelCollection<TModel, TID>>(new ModelCollection<TModel, TID>());
+            return new Service<TOutDTO, TModel, TID, ModelContext>(new ModelContext());
         }
     }
 }

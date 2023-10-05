@@ -109,9 +109,26 @@ namespace MicroService.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
+    #endregion    
+    
+    #region IExModelExceptionSupplier
+    /// <summary>
+    /// This interface represents an object which supplies an appropriate exception for a failure in a specified method.
+    /// </summary>
+    internal interface IExModelExceptionSupplier
+    {
+        /// <summary>
+        /// Supplies an appropriate exception for a failure in a specified method.
+        /// </summary>
+        /// <param name="exceptionType">Type of exception to get.</param>
+        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
+        /// <param name="innerException">Inner exception which is already thrown.</param>
+        /// <returns>Instance of SpecialException class.</returns>
+        ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+    }
     #endregion
 
-    #region IFirstModel<TModel, TID> 
+    #region IFirstModel 
     /// <summary>
     /// Represents an object which offers the first model with in its internal collection.
     /// </summary>
@@ -121,18 +138,85 @@ namespace MicroService.Common.Interfaces
     }
     #endregion
 
+    #region IFirstModel<TModel> 
+    /// <summary>
+    /// Represents an object which offers the first model with in its internal collection.
+    /// </summary>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IFirstModel<TModel> : IFirstModel
+        where TModel : ISelfModel<TModel>
+    {
+        new TModel? GetFirstModel();
+    }
+    #endregion
+
     #region IFirstModel<TModel, TID> 
     /// <summary>
     /// Represents an object which offers the first model with in its internal collection.
     /// </summary>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IFirstModel<TModel, TID> : IFirstModel
-        where TModel : Model<TID>
+    public interface IFirstModel<TModel, TID> : IFirstModel<TModel>
+        where TModel : ISelfModel<TID, TModel>
         where TID : struct
     {
         new TModel? GetFirstModel();
     }
+    #endregion
+
+    #region IFind<TModel, TOutDTO>
+    //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
+    public interface IFind<TOutDTO, TModel>
+        where TOutDTO : IModel
+        where TModel : IModel
+    {
+        /// <summary>
+        /// Gets all models contained in this object.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IEnumerable<TOutDTO>?> GetAll(int limitOfResult = 0);
+
+        /// <summary>
+        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
+        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// If the parameter value is zero, then all models are returned.
+        /// </summary>
+        /// <param name="startIndex">Start index which to start picking records from.</param>
+        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <returns>IEnumerable of models.</returns>
+        Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int limitOfResult);
+
+        /// <summary>
+        /// Finds a model based on given paramters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<TOutDTO?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds all models matched based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<IEnumerable<TOutDTO>?> FindAll(ISearchParameter? parameter);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IEnumerable<TOutDTO>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
+    }
+#endif
+    //+:cnd:noEmit
     #endregion
 
     #region IReadable<TOutDTO, TModel, TID>
@@ -145,59 +229,28 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IReadable<TOutDTO, TModel, TID>
-        #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TModel : Model<TID>,
         //-:cnd:noEmit
-#if (!MODEL_USEDTO)
-        TOutDTO,
+#if !MODEL_NONQUERYABLE
+        : IFind<TOutDTO, TModel>
 #endif
         //+:cnd:noEmit
-        new()
+        #region TYPE CONSTRINTS
+        where TOutDTO : IModel
+        where TModel : ISelfModel<TID, TModel>
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        , TOutDTO
+#endif
+        //+:cnd:noEmit
         where TID : struct
         #endregion
     {
         /// <summary>
-        /// Gets a single model with the specified ID.
+        /// Finds a model based on given id.
         /// </summary>
-        /// <param name="id">ID of the model to read.</param>
-        /// <returns></returns>
-        Task<TOutDTO> Get(TID id);
-
-        /// <summary>
-        /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TOutDTO>> GetAll(int limitOfResult = 0);
-
-        /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TOutDTO>> GetAll(int startIndex, int limitOfResult);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TOutDTO>> FindAll(ISearchParameter parameter);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameters">Parameters to be used to find the model.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TOutDTO>> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+        /// <param name="id">ID to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TOutDTO?> Get(TID? id);
     }
 #endif
     //+:cnd:noEmit
@@ -212,10 +265,10 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IDeleteable<TOutDTO, TModel, TID> 
+    public interface IDeleteable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -230,7 +283,7 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to delete.</param>
         /// <returns></returns>
-        Task<TOutDTO> Delete(TID id);
+        Task<TOutDTO?> Delete(TID id);
     }
 #endif
     //+:cnd:noEmit
@@ -246,10 +299,10 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IAppendable<TOutDTO, TModel, TID> 
+    public interface IAppendable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -268,7 +321,7 @@ namespace MicroService.Common.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>Model that is added.</returns>
-        Task<TOutDTO> Add(IModel model);
+        Task<TOutDTO?> Add(IModel? model);
     }
 #endif
     //+:cnd:noEmit
@@ -283,10 +336,10 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IUpdatable<TOutDTO, TModel, TID> 
+    public interface IUpdatable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -305,26 +358,112 @@ namespace MicroService.Common.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns></returns>
-        Task<TOutDTO> Update(TID id, IModel model);
+        Task<TOutDTO?> Update(TID id, IModel? model);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IExModelExceptionSupplier
-    /// <summary>
-    /// This interface represents an object which supplies an appropriate exception for a failure in a specified method.
-    /// </summary>
-    internal interface IExModelExceptionSupplier
+    #region IFind<TModel>
+    //-:cnd:noEmit
+#if !MODEL_NONREADABLE
+    public interface IFind<TModel>
+        where TModel : IModel
     {
         /// <summary>
-        /// Supplies an appropriate exception for a failure in a specified method.
+        /// Finds a model based on given paramters.
         /// </summary>
-        /// <param name="exceptionType">Type of exception to get.</param>
-        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
-        /// <param name="innerException">Inner exception which is already thrown.</param>
-        /// <returns>Instance of SpecialException class.</returns>
-        ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+        /// <param name="paramters">Parameters to be used to find the model.</param>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<TModel?> Find(IEnumerable<ISearchParameter> paramters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds all models matched based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<IEnumerable<TModel>?> FindAll(ISearchParameter parameter);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameters">Parameters to be used to find the model.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
+        /// <returns>Task with result of collection of type TModel.</returns>
+        Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
     }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IAdd<TModel>
+    //-:cnd:noEmit
+#if MODEL_APPENDABLE
+    public interface IAdd<TModel> where TModel : IModel
+    {
+        /// <summary>
+        /// Adds a specified model.
+        /// </summary>
+        /// <param name="model">Model to add.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> Add(TModel? model);
+
+        /// <summary>
+        /// Adds a range of specified models.
+        /// </summary>
+        /// <param name="models">Models to add.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> AddRange(IEnumerable<TModel>? models);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IDelete<TModel>
+    //-:cnd:noEmit
+#if MODEL_DELETABLE
+    public interface IDelete<TModel> where TModel : IModel
+    {
+        /// <summary>
+        /// Adds a specified model.
+        /// </summary>
+        /// <param name="model">Model to delete.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> Delete(TModel? model);
+
+        /// <summary>
+        /// Deletes a range of specified models.
+        /// </summary>
+        /// <param name="models">Models to delete.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> DeleteRange(IEnumerable<TModel>? models);
+#endif
+    }
+    //+:cnd:noEmit
+    #endregion
+
+    #region IUpdate<TModel>
+    //-:cnd:noEmit
+#if MODEL_UPDATABLE
+    public interface IUpdate<TModel> where TModel : IModel
+    {
+        /// <summary>
+        /// Updates a specified model.
+        /// </summary>
+        /// <param name="model">Model to update.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> Update(TModel? model);
+
+        /// <summary>
+        /// Updates a range of specified models.
+        /// </summary>
+        /// <param name="models">Models to update.</param>
+        /// <returns>Task with result of type boolean.</returns>
+        Task<bool> UpdateRange(IEnumerable<TModel>? models);
+    }
+#endif
+    //+:cnd:noEmit
     #endregion
 }

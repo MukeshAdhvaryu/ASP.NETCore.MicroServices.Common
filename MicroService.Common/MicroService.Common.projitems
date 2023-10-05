@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Collections\ModelCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contexts\ModelContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contract\IContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
@@ -26,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sets\ModelSet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\ArgSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestService.cs" />
@@ -50,5 +52,6 @@
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Web.API\Controllers\" />
     <Folder Include="$(MSBuildThisFileDirectory)Web.API\DBContext\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\Models\" />
   </ItemGroup>
 </Project>

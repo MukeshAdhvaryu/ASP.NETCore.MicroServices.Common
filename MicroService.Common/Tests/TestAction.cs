@@ -30,7 +30,7 @@ namespace MicroService.Common.Tests
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TInDTO : IModel
-        where TModel : Model<TID>, IModel<TID>,
+        where TModel : ISelfModel<TID, TModel>, 
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -46,7 +46,7 @@ namespace MicroService.Common.Tests
         protected readonly List<TModel> Models;
         protected readonly IFixture Fixture;
 
-        static readonly IExModelExceptionSupplier DummyModel = new TModel();
+        static readonly IExModelExceptionSupplier DummyModel =(IExModelExceptionSupplier) new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);

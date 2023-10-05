@@ -106,4 +106,27 @@ namespace MicroService.Common.Models
         IEnumerable<IModel> GetInitialData();
     }
     #endregion
+
+    #region ISelfModel<TModel>
+    /// <summary>
+    /// This 
+    /// </summary>
+    /// <typeparam name="TModel"></typeparam>
+    public partial interface ISelfModel<TModel> : IModel, IMatch
+        where TModel : ISelfModel<TModel>
+    {
+    }
+    #endregion
+
+    #region ISelfModel<TModel>
+    /// <summary>
+    /// This 
+    /// </summary>
+    /// <typeparam name="TModel"></typeparam>
+    public partial interface ISelfModel<TID, TModel> : ISelfModel<TModel>, IModel<TID>
+        where TModel : ISelfModel<TID, TModel>, IModel<TID>
+        where TID : struct
+    {
+    }
+    #endregion
 }

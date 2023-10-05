@@ -8,6 +8,7 @@
 
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
+using MicroService.Common.Services;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,7 @@ namespace MicroService.Common.Web.API.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IReadable<TModel, TID>
         #region TYPE CONSTRINTS
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         new()
         where TID : struct
         #endregion
@@ -33,7 +34,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </summary>
         /// <param name="id">ID of the model to read.</param>
         /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Get(TID id);
+        Task<IActionResult> Get(TID? id);
 
         /// <summary>
         /// Gets all models contained in this object.
@@ -59,7 +60,14 @@ namespace MicroService.Common.Web.API.Interfaces
         /// </summary>
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> FindAll(ISearchParameter parameter);
+        Task<IActionResult> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>An instance of IActionResult.</returns>
+        Task<IActionResult> FindAll(ISearchParameter? parameter);
 
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -68,7 +76,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+        Task<IActionResult> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
     }
 #endif
     //+:cnd:noEmit
@@ -84,7 +92,7 @@ namespace MicroService.Common.Web.API.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IDeleteable<TModel, TID>
         #region TYPE CONSTRINTS
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         new()
         where TID : struct
         #endregion
@@ -111,7 +119,7 @@ namespace MicroService.Common.Web.API.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IAppendable<TModel, TID>
         #region TYPE CONSTRINTS
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         new()
         where TID : struct
         #endregion
@@ -125,7 +133,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Add(IModel model);
+        Task<IActionResult> Add(IModel? model);
     }
 #endif
     //+:cnd:noEmit
@@ -141,7 +149,7 @@ namespace MicroService.Common.Web.API.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IUpdatable<TModel, TID>
         #region TYPE CONSTRINTS
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         new()
         where TID : struct
         #endregion
@@ -155,7 +163,7 @@ namespace MicroService.Common.Web.API.Interfaces
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Update(TID id, IModel model);
+        Task<IActionResult> Update(TID id, IModel? model);
     }
 #endif
     //+:cnd:noEmit

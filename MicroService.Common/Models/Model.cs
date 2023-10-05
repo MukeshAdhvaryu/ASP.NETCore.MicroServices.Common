@@ -22,7 +22,7 @@ namespace MicroService.Common.Models
     /// MODEL_UPDATABLE;
     /// MODEL_USEMYOWNCONTROLLER
     /// </summary>
-    public abstract partial class Model<TID> : IExModel<TID>, IExModel
+    public abstract partial class Model<TID> : IExModel<TID>, IExModel, ISelfModel<TID, Model<TID>>
         where TID : struct
     {
         #region VARIABLES
@@ -156,7 +156,7 @@ namespace MicroService.Common.Models
                         case Criteria.NotStringLessThan:
                             value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
                             parsedValue = value.ToString();
-                            currentValue = value;
+                            Parse(parameter, out currentValue, out _, updateValueIfParsed);
                             return Message.Sucess(name);
                         default:
                             break;
@@ -260,7 +260,7 @@ namespace MicroService.Common.Models
         }
         bool IMatch.IsMatch(ISearchParameter parameter)
         {
-            var result = Parse(parameter, out var currentValue, out var newValue);
+            var result = ((IExParamParser)this).Parse(parameter, out var currentValue, out var newValue, false, parameter.Criteria);
             switch (result.Status)
             {
                 case ResultStatus.Sucess:

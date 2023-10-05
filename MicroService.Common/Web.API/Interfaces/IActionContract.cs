@@ -27,7 +27,7 @@ namespace MicroService.Common.Web.API.Interfaces
 #endif
     //+:cnd:noEmit
     #region TYPE CONSTRINTS
-        where TModel : Model<TID>,
+        where TModel : ISelfModel<TID, TModel>,
         new()
         where TID : struct
         #endregion
