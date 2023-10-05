@@ -2,49 +2,43 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using System.Runtime.CompilerServices;
-
+//-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
+//+:cnd:noEmit
 using MicroService.Common.Collections;
 using MicroService.Common.Exceptions;
+using System.Runtime.CompilerServices;
+
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
+using System.Security.Cryptography;
 using MicroService.Common.Sets;
 
 namespace MicroService.Common.Services
 {
-    #region IService
-    /// <summary>
-    /// This interface represents repository object to be used in controller class.
-    /// </summary>
-    public interface IService: IContract
-    { }
-    #endregion
-
-    #region IService<TOutDTO, TModel, TID>
+    #region IQueryService<TOutDTO, TModel>
     /// <summary>
     /// This interface represents repository object to be used in controller class.
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IService<TOutDTO, TModel, TID> : IService,
-        IContract<TOutDTO, TModel, TID>
+    public interface IQueryService<TOutDTO, TModel> : IService,
+        IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>,
+        where TModel : ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TID : struct
         #endregion
     { }
     #endregion
 
-    #region Service<TOutDTO, TModel, TID, TContext>
+    #region QueryService<TOutDTO, TModel, TID, TContext>
     /// <summary>
     /// This interface represents repository object to be used in controller class.
     /// </summary>
@@ -52,23 +46,22 @@ namespace MicroService.Common.Services
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     /// <typeparam name="TContext">Instance of DBContext or ModelCollection creator.</typeparam>
-    public partial class Service<TOutDTO, TModel, TID, TContext> : IService<TOutDTO, TModel, TID>
+    public partial class QueryService<TOutDTO, TModel, TContext> : IQueryService<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : class, ISelfModel<TID, TModel>,
+        where TModel : ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
 #endif
         //+:cnd:noEmit
         new()
-        where TID : struct
-        where TContext : IModelContext
+        where TContext : IQueryContext
         #endregion
     {
         #region VARIABLES
-        readonly TContext Context;
-        readonly IExModels<TID, TModel> Models;
+        readonly TContext? Context;
+        readonly IExQueryModels<TModel> Models;
         readonly static IExModel DummyModel = (IExModel) new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -79,167 +72,28 @@ namespace MicroService.Common.Services
         #endregion
 
         #region CONSTRUCTORS
-        public Service(TContext _context)
+        public QueryService(TContext _context):
+            this(_context.Create<TModel>())
         {
             Context = _context;
-            var models = Context.Create<TID, TModel>();
-            if(!(models is IExModels<TID, TModel>))
+        }
+        public QueryService(IQueryModels<TModel>? models)
+        {
+            if (!(models is IExQueryModels<TModel>))
             {
                 throw new NotSupportedException("Context supplied, is not compitible with this service!");
             }
-            Models = (IExModels<TID, TModel>)models;
+            Models = (IExQueryModels<TModel>)models;
         }
         #endregion
 
         #region PROPERTIES
-        protected IModels<TID, TModel> InnerList => Models;
-        #endregion
-
-        #region GET MODEL BY ID
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        /// <summary>
-        /// Gets a single model with the specified ID.
-        /// </summary>
-        /// <param name="id">ID of the model to read.</param>
-        /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
-        /// <exception cref="Exception"></exception>
-        protected virtual async Task<TModel?> Get(TID? id)
-        {
-            var result = await Models.Get(id);
-            if (result == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
-            return result;
-        }
-        async Task<TOutDTO?> IReadable<TOutDTO, TModel, TID>.Get(TID? id) =>
-           ToDTO(await Get(id));
-
-#else
-        protected virtual async Task<TModel?> Get(TID id)
-        {
-            var result = await Models.Get(id);
-            if (result == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
-            return result;
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region ADD
-        //-:cnd:noEmit
-#if (MODEL_APPENDABLE)
-        /// <summary>
-        /// Adds a specified model.
-        /// </summary>
-        /// <param name="model">Model to add.</param>
-        /// <returns>Task with type of Model as result.</returns>
-        /// <exception cref="Exception"></exception>
-        protected virtual async Task<TModel?> Add(IModel model)
-        {
-            if (model == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelSuppliedException);
-            TModel result;
-            if (model is TModel)
-                result = (TModel)model;
-            else
-            {
-                result = new TModel();
-                bool ok = await ((IExCopyable)result).CopyFrom(model);
-                if (!ok)
-                    throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
-            }
-            try
-            {
-                await Models.Add(result);
-                await Context.SaveChanges();
-            }
-            catch (Exception e)
-            {
-                throw DummyModel.GetModelException(ExceptionType.AddOperationFailedException, null, e);
-
-            }
-            return result;
-        }
-        async Task<TOutDTO?> IAppendable<TOutDTO, TModel, TID>.Add(IModel model) =>
-            ToDTO(await Add(model));
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region DELETE
-        //-:cnd:noEmit
-#if (MODEL_DELETABLE)
-        /// <summary>
-        /// Deltes a specified model.
-        /// </summary>
-        /// <param name="modelInterface">Model to delete.</param>
-        /// <returns>Task with type of Model as result.</returns>
-        /// <exception cref="Exception"></exception>
-        protected async Task<TModel?> Delete(TID id)
-        {
-            var model = await Models.Get(id);
-            if (model == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
-            try
-            {
-                var result = await Models.Delete(model);
-                if (result)
-                {
-                    await Context.SaveChanges();
-                    return model;
-                }
-            }
-            catch (Exception e)
-            {
-                throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString(), e);
-            }
-            throw DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, id.ToString());
-        }
-        async Task<TOutDTO?> IDeleteable<TOutDTO, TModel, TID>.Delete(TID id) =>
-            ToDTO(await Delete(id));
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region UPDATE
-        //-:cnd:noEmit
-#if (MODEL_UPDATABLE)
-        /// <summary>
-        /// Updates a specified model.
-        /// </summary>
-        /// <param name="modelInterface">Model to update.</param>
-        /// <returns>Task with type of Model as result.</returns>
-        /// <exception cref="Exception"></exception>
-        protected async Task<TModel?> Update(TID id, IModel model)
-        {
-            var result = await Models.Get(id);
-            if (result == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
-
-            bool ok = await ((IExCopyable)result).CopyFrom(model);
-            if (!ok)
-                throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
-            try
-            {
-                await Context.SaveChanges();
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString(), e);
-            }
-            throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, id.ToString());
-        }
-        async Task<TOutDTO?> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel entity) =>
-           ToDTO(await Update(id, entity));
-#endif
-        //+:cnd:noEmit
+        protected IQueryModels<TModel> InnerList => Models;
         #endregion
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -266,7 +120,7 @@ namespace MicroService.Common.Services
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONQUERYABLE
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
         /// The count of models returned can be limited by the limitOfResult parameter.
@@ -293,7 +147,7 @@ namespace MicroService.Common.Services
 
         #region FIND
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONQUERYABLE
         protected virtual Task<TModel?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin)
         {
             if (parameters == null)
@@ -311,7 +165,7 @@ namespace MicroService.Common.Services
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONQUERYABLE
         protected virtual Task<IEnumerable<TModel>?> FindAll(ISearchParameter? parameter)
         {
             if (parameter == null)
@@ -329,7 +183,7 @@ namespace MicroService.Common.Services
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if !MODEL_NONQUERYABLE
         protected virtual Task<IEnumerable<TModel>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin)
         {
             if (parameters == null)
@@ -347,8 +201,6 @@ namespace MicroService.Common.Services
         #endregion
 
         #region GET FIRST MODEL
-        TModel? IFirstModel<TModel, TID>.GetFirstModel() =>
-            Models.GetFirstModel();
         IModel? IFirstModel.GetFirstModel() =>
             Models.GetFirstModel();
         TModel? IFirstModel<TModel>.GetFirstModel() =>
@@ -420,3 +272,6 @@ namespace MicroService.Common.Services
     }
     #endregion
 }
+//-:cnd:noEmit
+#endif
+//+:cnd:noEmit

@@ -44,7 +44,7 @@ namespace UserDefined.Models
     [Model(Scope = ServiceScope.Scoped, Name = "Subject")]
     //[DBConnect(Database = "SubjectDB", ConnectionKey = ConnectionKey.SQLServer)]
     [DBConnect(ProvideSeedData = true)]
-    public class Subject : Model<int>, ISubject, ISelfModel<int, Subject>, IEntityTypeConfiguration<Subject>
+    public class Subject : Model<int, Subject>, ISubject
     {
         #region VARIABLES
         static int iid;
@@ -229,11 +229,6 @@ namespace UserDefined.Models
         protected override bool TryParseID(object value, out int newID) =>
             int.TryParse(value.ToString(), out newID);
         #endregion
-
-        public void Configure(EntityTypeBuilder<Subject> builder)
-        {
-            //
-        }
 
         #region Model To DTO
         //-:cnd:noEmit

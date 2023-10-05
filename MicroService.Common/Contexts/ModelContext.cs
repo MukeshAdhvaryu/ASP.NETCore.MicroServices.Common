@@ -23,7 +23,7 @@ namespace MicroService.Common.Collections
         /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
         /// <typeparam name="TID">Type of TID</typeparam>
         /// <returns>An instance of ModelSet<TModel, TID></returns>
-        IModelSet<TID, TModel> Create<TID, TModel>()
+        IModels<TID, TModel> Create<TID, TModel>()
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct;
     }
@@ -35,7 +35,7 @@ namespace MicroService.Common.Collections
     /// </summary>
     public sealed class ModelContext : IModelContext
     {
-        public IModelSet<TID, TModel> Create<TID, TModel>()
+        public IModels<TID, TModel> Create<TID, TModel>()
         where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct
         {
@@ -57,7 +57,7 @@ namespace MicroService.Common.Collections
         /// </summary>
         /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
         /// <typeparam name="TID">Type of TID</typeparam>
-        class ModelList<TID, TModel> : ModelSet<TID, TModel, List<TModel>>, IExModelSet<TID, TModel>
+        class ModelList<TID, TModel> : Models<TID, TModel, List<TModel>>, IExModels<TID, TModel>
             #region TYPE CONSTRAINTS
             where TModel : ISelfModel<TID, TModel>, new()
             where TID : struct
@@ -67,13 +67,16 @@ namespace MicroService.Common.Collections
                 base(new List<TModel>())
             { }
 
+            #region ADD MODELS
+            protected override void AddModels(IEnumerable<TModel> items) =>
+                Items.AddRange(items);
+            #endregion
+
             #region ADD/ADD RANGE
             //-:cnd:noEmit
 #if MODEL_APPENDABLE
             protected override void AddModel(TModel model) =>
                 Items.Add(model);
-            protected override void AddModels(IEnumerable<TModel> models) =>
-                Items.AddRange(models);
 #endif
             //+:cnd:noEmit
             #endregion
@@ -81,8 +84,11 @@ namespace MicroService.Common.Collections
             #region DELETE/ DELETE RANGE
             //-:cnd:noEmit
 #if MODEL_DELETABLE
-            public override Task<bool> DeleteRange(IEnumerable<TModel> models)
+            public override Task<bool> DeleteRange(IEnumerable<TModel>? models)
             {
+                if (models == null)
+                    return Task.FromResult(false);
+
                 var list = models.Except(models).ToList();
                 Items.Clear();
                 Items.AddRange(list);

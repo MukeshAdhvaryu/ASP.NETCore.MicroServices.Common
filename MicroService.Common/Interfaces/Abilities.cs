@@ -2,6 +2,8 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+using System.Security.Cryptography;
+
 using MicroService.Common.Exceptions;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
@@ -33,7 +35,7 @@ namespace MicroService.Common.Interfaces
         /// </summary>
         /// <param name="searchParameter">Search parameter to use to match records in this object.</param>
         /// <returns>True if values match, otherwise false.</returns>
-        bool IsMatch(ISearchParameter searchParameter);
+        bool IsMatch(ISearchParameter? searchParameter);
     }
     #endregion
 
@@ -465,5 +467,26 @@ namespace MicroService.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
+    #endregion
+
+    #region IWritable<TModel>
+    public interface IWritable<TModel>  : IModelCount      
+        //-:cnd:noEmit
+#if MODEL_DELETABLE
+  , IDelete<TModel>
+#endif
+#if MODEL_APPENDABLE
+  , IAdd<TModel>
+#endif
+#if MODEL_UPDATABLE
+  , IUpdate<TModel>
+#endif
+    //+:cnd:noEmit
+    #region TYPE CONSTRAINTS
+        where TModel : ISelfModel<TModel>
+        #endregion
+    {
+
+    }
     #endregion
 }

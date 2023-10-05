@@ -26,9 +26,9 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region CREATE
-        IModelSet<TID1, TModel1> IModelContext.Create<TID1, TModel1>()
+        IModels<TID, TModel> IModelContext.Create<TID, TModel>()
         {
-            var list = new EntityList<TID1, TModel1>(Set<TModel1>());
+            var list = new EntityList<TID, TModel>(Set<TModel>());
             SaveChanges();
             return list;
         }
@@ -58,7 +58,7 @@ namespace MicroService.Common.Web.API
         /// </summary>
         /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
         /// <typeparam name="TID">Type of TID</typeparam>
-        class EntityList<TID, TModel> : ModelSet<TID, TModel, DbSet<TModel>>
+        class EntityList<TID, TModel> : Models<TID, TModel, DbSet<TModel>>
             #region TYPE CONSTRAINTS
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct
@@ -71,13 +71,16 @@ namespace MicroService.Common.Web.API
             { }
             #endregion
 
+            #region ADD MODELS
+            protected override void AddModels(IEnumerable<TModel> items) =>
+                Items.AddRange(items);
+            #endregion
+
             #region ADD/ADD RANGE
             //-:cnd:noEmit
 #if MODEL_APPENDABLE
             protected override void AddModel(TModel model) =>
                 Items.Add(model);
-            protected override void AddModels(IEnumerable<TModel> items) =>
-                Items.AddRange(items);
 #endif
             //+:cnd:noEmit
             #endregion
@@ -85,8 +88,10 @@ namespace MicroService.Common.Web.API
             #region DELETE/ DELETE RANGE
             //-:cnd:noEmit
 #if MODEL_DELETABLE
-            public override Task<bool> DeleteRange(IEnumerable<TModel> items)
+            public override Task<bool> DeleteRange(IEnumerable<TModel>? items)
             {
+                if(items == null) 
+                    return Task.FromResult(false);
                 try
                 {
                     Items.RemoveRange(items);
@@ -110,7 +115,6 @@ namespace MicroService.Common.Web.API
         #endregion
     }
     #endregion
-
 }
 //-:cnd:noEmit
 #endif

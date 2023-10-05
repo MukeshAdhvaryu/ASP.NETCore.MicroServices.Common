@@ -93,7 +93,7 @@ namespace MicroService.Common.Web.API
 
         #region GET MODEL BY ID
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets a single model with the specified ID.
@@ -137,7 +137,7 @@ namespace MicroService.Common.Web.API
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets enumerable of model items.
@@ -183,7 +183,7 @@ namespace MicroService.Common.Web.API
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -233,7 +233,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND (parameter, conditionJoin)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         [HttpGet("Find/{conditionJoin}")]
         public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0)
@@ -272,7 +272,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
@@ -312,7 +312,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -358,7 +358,7 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region ADD ENTITY
+        #region ADD
         //-:cnd:noEmit
 #if (MODEL_APPENDABLE)
 #if !MODEL_USEACTION
@@ -432,7 +432,7 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region DELETE ENTITY
+        #region DELETE
         //-:cnd:noEmit
 #if (MODEL_DELETABLE)
 #if !MODEL_USEACTION
@@ -476,7 +476,7 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region UPDATE ENTITY
+        #region UPDATE
         //-:cnd:noEmit
 #if (MODEL_UPDATABLE)
 #if !MODEL_USEACTION
@@ -550,13 +550,6 @@ namespace MicroService.Common.Web.API
 #endif
 #endif
         //+:cnd:noEmit
-        #endregion
-
-        #region DISPOSE
-        void IDisposable.Dispose()
-        {
-            service.Dispose();
-        }
         #endregion
     }
     #endregion

@@ -10,7 +10,7 @@ namespace MicroService.Common.Interfaces
     /// <summary>
     /// This interface represents a contract of operations.
     /// </summary>
-    public interface IContract : IModelCount, IFirstModel, IDisposable
+    public interface IContract : IModelCount, IFirstModel
     { }
     #endregion
 
@@ -23,7 +23,7 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel, TID>, IModelCount
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
         , IReadable<TOutDTO, TModel, TID>
 #endif
 #if MODEL_DELETABLE
