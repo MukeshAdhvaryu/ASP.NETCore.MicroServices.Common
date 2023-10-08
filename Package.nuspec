@@ -9,6 +9,8 @@
     <description>ASP.NETCore WebAPI template to create a microservice faster.</description>
     <copyright>"Copyright (c) Mukesh Adhvaryu 2023"</copyright>
     <tags>dotnet-core webapi csharp template</tags>
+    <projectUrl>https://github.com/MukeshAdhvaryu/ASP.NETCore.MicroServices.Common</projectUrl>
+    <repository type="git" url="https://github.com/MukeshAdhvaryu/ASP.NETCore.MicroServices.Common" branch="master" />
     <packageTypes>
       <packageType name="Template" />
     </packageTypes>

@@ -231,7 +231,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.GetAll(count));
+                return Ok(await service.GetAll(startIndex, count));
             }
             catch
             {

@@ -67,7 +67,8 @@ namespace MicroService.Common.Collections
         /// <returns>IEnumerable of models.</returns>
         public virtual Task<IEnumerable<TModel>?> GetAll(int startIndex, int count)
         {
-            if (startIndex > 0)
+            --startIndex;
+            if (startIndex < 0)
                 startIndex = 0;
 
             if (count == 0 && startIndex == 0)
