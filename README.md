@@ -183,3 +183,15 @@ Please note that, regardless of any of these,
 
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
+
+# UPDATE Converted DBContext to non-generic
+
+This is to allow single DBContext to hold multiple model sets..
+
+# UPDATE Support for Query-Only-Controllers and Keyless models is added.
+
+It is now possible to create separate controller for command and query purposes.
+
+Use constant MODEL_NONREADABLE: this will create Command-only controller.
+Then for the same model, call AddQueryModel() method, this will create Query-only controller.
+
