@@ -195,3 +195,6 @@ It is now possible to create separate controller for command and query purposes.
 Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, this will create Query-only controller.
 
+# Abstract Models for common primary key type: int, long, Guid, enum are added.
+
+

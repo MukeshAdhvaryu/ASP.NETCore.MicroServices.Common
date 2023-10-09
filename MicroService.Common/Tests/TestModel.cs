@@ -17,12 +17,8 @@ namespace MicroService.Common.Tests
 {
     #region TestModel
     [DBConnect(ProvideSeedData = true)]
-    public sealed class TestModel: Model<int, TestModel>
+    public sealed class TestModel: ModelInt32<TestModel>
     {
-        #region VARIABLES
-        static int iid;
-        #endregion
-
         #region CONSTRUCTORS
         public TestModel(string name) :
             base(true)
@@ -70,18 +66,6 @@ namespace MicroService.Common.Tests
         }
         #endregion
 
-        #region GET NEW ID
-        protected override int GetNewID()
-        {
-            return (++iid);
-        }
-        #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out int newID) =>
-            int.TryParse(value.ToString(), out newID);
-        #endregion
-
         #region PARSE
         protected override Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
         {
@@ -111,7 +95,7 @@ namespace MicroService.Common.Tests
         //-:cnd:noEmit
 #if MODEL_USEDTO
         #region IModelToDTO
-        protected override IModel ToDTO(Type type)
+        protected override IModel? ToDTO(Type type)
         {
             if (type == typeof(ITestModelDTO))
                 return new TestModelDTO(this);

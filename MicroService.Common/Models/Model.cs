@@ -73,7 +73,7 @@ namespace MicroService.Common.Models
             var name = parameter.Name;
             parsedValue = null;
             object? value;
-
+            
             switch (name)
             {
                 default:
@@ -100,7 +100,7 @@ namespace MicroService.Common.Models
                         case Criteria.NotStringGreaterThan:
                         case Criteria.NotStringLessThan:
                             value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                            parsedValue = value.ToString();
+                            parsedValue = value?.ToString();
                             Parse(parameter, out currentValue, out _, updateValueIfParsed);
                             return Message.Sucess(name);
                         default:
@@ -145,10 +145,19 @@ namespace MicroService.Common.Models
         /// <returns>True if values match, otherwise false.</returns>
         protected virtual bool IsMatch(string propertyName, Criteria criteria, object? currentValue, object? parsedValue)
         {
+            if (parsedValue == null)
+            {
+                if (currentValue == null && criteria == Criteria.Equal)
+                    return true;
+                    
+                return false;
+            }
             return Operations.Compare(currentValue, criteria, parsedValue);
         }
-        bool IMatch.IsMatch(ISearchParameter parameter)
+        bool IMatch.IsMatch(ISearchParameter? parameter)
         {
+            if(parameter == null) 
+                return false; 
             var result = ((IExParamParser)this).Parse(parameter, out var currentValue, out var newValue, false, parameter.Criteria);
             switch (result.Status)
             {
@@ -261,7 +270,7 @@ namespace MicroService.Common.Models
         where TModel : Model<TID, TModel>
     {
         #region VARIABLES
-        protected TID id;
+        TID id;
         #endregion
 
         #region CONSTRUCTOR
@@ -275,7 +284,7 @@ namespace MicroService.Common.Models
         #region PROPERTIES
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public TID ID { get => id; set => id = value; }
+        public TID ID { get => id; protected set => id = value; }
         TID IExModel<TID>.ID { get => id; set => id = value; }
         #endregion
 
@@ -284,13 +293,13 @@ namespace MicroService.Common.Models
         {
             var name = parameter.Name;
             parsedValue = null;
-            object? value;
+            object? valueFromParameter;
 
             switch (name)
             {
                 case nameof(ID):
                     currentValue = id;
-                    value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
+                    valueFromParameter = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
                     switch (criteria)
                     {
                         case Criteria.Occurs:
@@ -313,12 +322,14 @@ namespace MicroService.Common.Models
                         case Criteria.NotStrEqualNoCase:
                         case Criteria.NotStringGreaterThan:
                         case Criteria.NotStringLessThan:
-                            parsedValue = value.ToString();
+                            parsedValue = valueFromParameter?.ToString();
                             return Message.Sucess(name);
                         default:
                             break;
                     }
-                    if (((IExModel<TID>)this).TryParseID(value, out TID newID))
+                    if (valueFromParameter == null)
+                        goto EXIT_ID;
+                    if (((IExModel<TID>)this).TryParseID(valueFromParameter, out TID newID))
                     {
                         parsedValue = newID;
                         if (updateValueIfParsed && Equals(id, default(TID)))
@@ -326,6 +337,7 @@ namespace MicroService.Common.Models
 
                         return Message.Sucess(name);
                     }
+                    EXIT_ID:
                     return Message.Ignored(name);
                 default:
                     switch (criteria)
@@ -350,8 +362,8 @@ namespace MicroService.Common.Models
                         case Criteria.NotStrEqualNoCase:
                         case Criteria.NotStringGreaterThan:
                         case Criteria.NotStringLessThan:
-                            value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                            parsedValue = value.ToString();
+                            valueFromParameter = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
+                            parsedValue = valueFromParameter?.ToString();
                             Parse(parameter, out currentValue, out _, updateValueIfParsed);
                             return Message.Sucess(name);
                         default:
@@ -390,10 +402,8 @@ namespace MicroService.Common.Models
 
         #region GET NEW ID
         protected abstract TID GetNewID();
-        TID IExModel<TID>.GetNewID()
-        {
-            return GetNewID();
-        }
+        TID IExModel<TID>.GetNewID() =>
+            GetNewID();
         #endregion
 
         #region TRY PARSE ID
@@ -407,16 +417,16 @@ namespace MicroService.Common.Models
         protected abstract bool TryParseID(object value, out TID newID);
         bool IExModel<TID>.TryParseID(object value, out TID newID)
         {
-            if (value == null)
-            {
-                newID = default(TID);
-                return false;
-            }
             if (value is TID)
             {
                 newID = (TID)value;
                 return true;
             }
+            if (value == null)
+            {
+                newID = default(TID);
+                return false;
+            }            
             return TryParseID(value, out newID);
         }
         #endregion

@@ -26,6 +26,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelGuid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt64.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />

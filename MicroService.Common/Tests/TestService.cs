@@ -150,8 +150,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Add_Fail()
         {
-            var model = Fixture.Create<TModel>();
-            model.ID = Contract.GetFirstModel().ID;
+            var model = (IExModel<TID>)Fixture.Create<TModel>();
+            model.ID = Contract.GetFirstModel()?.ID?? default(TID);
 
             try
             { 
@@ -184,7 +184,7 @@ namespace MicroService.Common.Tests
         public async Task Delete_Success()
         {
             TModel? model = Contract.GetFirstModel();
-            var expected = await Contract.Delete(model.ID);
+            var expected = await Contract.Delete(model?.ID?? default(TID));
             Verifier.NotNull(expected);
         }
 
@@ -223,7 +223,7 @@ namespace MicroService.Common.Tests
         public async Task Update_Success()
         {
             var model = Fixture.Create<TModel>();
-            var ID = Contract.GetFirstModel().ID;
+            var ID = Contract.GetFirstModel()?.ID ?? default(TID);
             var expected = await Contract.Update(ID, model);
             Verifier.NotNull(expected);
         }

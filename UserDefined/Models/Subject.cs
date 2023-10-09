@@ -7,9 +7,6 @@ using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 //-:cnd:noEmit
 #if MODEL_USEDTO
 using UserDefined.DTOs;
@@ -44,12 +41,10 @@ namespace UserDefined.Models
     [Model(Scope = ServiceScope.Scoped, Name = "SubjectCmd")]
     //[DBConnect(Database = "SubjectDB", ConnectionKey = ConnectionKey.SQLServer)]
     [DBConnect(ProvideSeedData = true)]
-    public class Subject : Model<int, Subject>, ISubject
+    public class Subject : ModelInt32<Subject>, ISubject
     {
         #region VARIABLES
-        static int iid;
         Faculty faculty;
-
         #endregion
 
         #region CONSTRUCTORS
@@ -65,7 +60,7 @@ namespace UserDefined.Models
         public Subject(int id, string name, Faculty stream) :
             base(false)
         {
-            this.id = id;
+            this.ID = id;
             Name = name;
             faculty = stream;
         }
@@ -92,9 +87,9 @@ namespace UserDefined.Models
         #endregion
 
         #region PARSE
-        protected override Message Parse(IParameter parameter, out object currentValue, out object parsedValue, bool updateValueIfParsed = false)
+        protected override Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
         {
-            var value = parameter is IModelParameter? ((IModelParameter)parameter).FirstValue: parameter.Value;            
+            var valueFromParameter = parameter is IModelParameter? ((IModelParameter)parameter).FirstValue: parameter.Value;            
             currentValue =  null;
             parsedValue = null;
             var name = parameter.Name;
@@ -103,59 +98,40 @@ namespace UserDefined.Models
             {
                 case nameof(Name):
                     currentValue = Name;
-                    if (value is string)
+                    if (valueFromParameter is string)
                     {
-                        var result = (string)value;
+                        var result = (string)valueFromParameter;
                         parsedValue = result;
                         if (updateValueIfParsed)
                             Name = result;
                         return Message.Sucess(name);
                     }
-                    if (value == null)
+                    if (valueFromParameter == null)
                         return Message.MissingRequiredValue(name);
 
                     break;
                 case nameof(Faculty):
                     currentValue = faculty;
                     Faculty f;
-                    if (value is Faculty)
+                    if (valueFromParameter is Faculty)
                     {
-                        var result = (Faculty)value;
+                        var result = (Faculty)valueFromParameter;
                         parsedValue = result;
                         if (updateValueIfParsed)
                             faculty = result;
                         return Message.Sucess(name);
                     }
-                    if (value is string && (Enum.TryParse((string)value, out f)) ||
-                        value != null && (Enum.TryParse(value.ToString(), out f)))
+                    if (valueFromParameter is string && (Enum.TryParse((string)valueFromParameter, out f)) ||
+                        valueFromParameter != null && (Enum.TryParse(valueFromParameter.ToString(), out f)))
                     {
                         parsedValue = f;
                         if (updateValueIfParsed)
                             faculty = f;
                         return Message.Sucess(name);
                     }
-                    if (value == null)
+                    if (valueFromParameter == null)
                         return Message.MissingValue(name);
                     break;
-                case nameof(ID):
-                    currentValue = ID;
-                    
-                    if (value is int)
-                    {
-                        parsedValue = parameter.Value;
-                        if (updateValueIfParsed && id == 0)
-                            id = (int)parsedValue;
-                        return Message.Sucess(name);
-                    }
-                    else if (int.TryParse(value.ToString(), out int i))
-                    {
-                        currentValue = id;
-                        parsedValue = i;
-                        if (updateValueIfParsed && id == 0)
-                            id = i;
-                        return Message.Sucess(name);
-                    }
-                    return Message.Ignored(name);
                 default:
                     break;
             }
@@ -216,18 +192,6 @@ namespace UserDefined.Models
                     new Subject("Historty", Faculty.Arts),
                 };
         }
-        #endregion
-
-        #region GET NEW ID
-        protected override int GetNewID()
-        {
-            return ++iid;
-        }
-        #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out int newID) =>
-            int.TryParse(value.ToString(), out newID);
         #endregion
 
         #region Model To DTO

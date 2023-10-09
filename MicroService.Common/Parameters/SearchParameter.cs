@@ -25,14 +25,14 @@ namespace MicroService.Common.Parameters
     public readonly struct SearchParameter: ISearchParameter
     {
         public static readonly SearchParameter Empty = new SearchParameter();
-        public SearchParameter(string name, object value, Criteria criteria = Criteria.Equal)
+        public SearchParameter(string name, object? value, Criteria criteria = Criteria.Equal)
         {
             Name = name;
             Value = value;
             Criteria = criteria;
         }
         public string Name { get; }
-        public object Value { get; }
+        public object? Value { get; }
         public Criteria Criteria { get; }
     }
 }

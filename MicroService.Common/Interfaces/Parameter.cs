@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using MicroService.Common.Models;
-
+﻿/* Licensed under the MIT/X11 license.
+* This notice may not be removed from any source distribution.
+ Author: Mukesh Adhvaryu.
+*/
 namespace MicroService.Common.Interfaces
 {
     /// <summary>
@@ -19,6 +17,6 @@ namespace MicroService.Common.Interfaces
         /// <summary>
         /// Gets value of this object.
         /// </summary>
-        object Value { get; }
+        object? Value { get; }
     }
 }

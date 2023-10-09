@@ -8,12 +8,12 @@ namespace MicroService.Common.Parameters
 {
     public readonly struct ObjParameter: IParameter
     {
-        public ObjParameter(object value, string name)
+        public ObjParameter(object? value, string name)
         {
             Name = name;
             Value = value;
         }
         public string Name { get; }
-        public object Value { get; }
+        public object? Value { get; }
     }
 }

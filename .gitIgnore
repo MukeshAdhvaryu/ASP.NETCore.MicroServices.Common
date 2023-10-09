@@ -1,5 +1,5 @@
 # Visual Studio 2015/2017 cache/options bin AND obj directories
-**/.template.config/
+/.template.config/
 /*.nuspec
 /*.nupkg
 
@@ -50,3 +50,4 @@ bld/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
+/Package.nuspec

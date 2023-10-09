@@ -51,17 +51,14 @@ namespace MicroService.Common.Web.API
                             {
                                 var pvalue = result["value"]?.GetValue<object>();
                                 var parameter = new ObjParameter(pvalue, name);
-                                Enum.TryParse(result["criteria"]?.GetValue<string>(), out Criteria criteria);
+                                Enum.TryParse(result["criteria"]?.GetValue<string>(), true, out Criteria criteria);
 
-                                var message = model.Parse(parameter, out _, out object value, false, criteria);
+                                var message = model.Parse(parameter, out _, out object? value, false, criteria);
                                 if (message.Status == ResultStatus.Sucess)
-                                {
                                     list.Add(new SearchParameter(name, value, criteria));
-                                }
                                 break;
                             }
                         }
-
                     }
                 }
             }
@@ -74,14 +71,11 @@ namespace MicroService.Common.Web.API
                     if (Name == name.ToLower())
                     {
                         var parameter = new ModelParameter(Query["value"], name);
-                        var message = model.Parse(parameter, out _, out object value, false);
-                        Enum.TryParse(Query["criteria"], out Criteria criteria);
+                        Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+                        var message = model.Parse(parameter, out _, out object? value, false, criteria);
 
                         if (message.Status == ResultStatus.Sucess)
-                        {
                             list.Add(new SearchParameter(name, value, criteria));
-
-                        }
                         break;
                     }
                 }

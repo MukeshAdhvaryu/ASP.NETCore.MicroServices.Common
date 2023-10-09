@@ -49,7 +49,6 @@ namespace MicroService.Common.Web.API
                 }
                 messages.Add(message);
             }            
-
             if (!failed)
             {
                 //-:cnd:noEmit
