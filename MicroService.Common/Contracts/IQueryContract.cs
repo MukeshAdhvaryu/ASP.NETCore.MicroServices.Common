@@ -3,8 +3,11 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+using MicroService.Common.CQRS;
+#endif
 //+:cnd:noEmit
+
 using MicroService.Common.Models;
 
 namespace MicroService.Common.Interfaces
@@ -15,7 +18,12 @@ namespace MicroService.Common.Interfaces
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    public interface IQueryContract<TOutDTO, TModel> : IContract, IFirstModel<TModel> , IFind<TOutDTO, TModel>
+    public interface IQueryContract<TOutDTO, TModel> : IContract
+    //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        , IQuery<TOutDTO, TModel>
+#endif
+        //+:cnd:noEmit
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : ISelfModel<TModel>,
@@ -29,6 +37,3 @@ namespace MicroService.Common.Interfaces
     { }
     #endregion
 }
-//-:cnd:noEmit
-#endif
-//+:cnd:noEmit

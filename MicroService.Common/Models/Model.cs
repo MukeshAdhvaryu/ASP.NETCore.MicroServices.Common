@@ -186,42 +186,45 @@ namespace MicroService.Common.Models
 
             switch (exceptionType)
             {
-                case ExceptionType.NoModelFoundException:
-                case ExceptionType.NoModelFoundForIDException:
+                case ExceptionType.NoModelFound:
+                case ExceptionType.NoModelFoundForID:
                     return ModelException.Create(string.Format("No {0} is found additional info: {1}", modelName, noAdditionalInfo ? "None" : "ID = " + additionalInfo), exceptionType, innerException);
 
-                case ExceptionType.NoModelsFoundException:
+                case ExceptionType.NoModelsFound:
                     return ModelException.Create(string.Format("No {0} are found additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.NoModelSuppliedException:
+                case ExceptionType.NoModelSupplied:
                     return ModelException.Create(string.Format("Null {0} can not be supplied additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.NegativeFetchCountException:
+                case ExceptionType.NegativeFetchCount:
                     return ModelException.Create(string.Format("{0} fetch count must be > 0; provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
                 case ExceptionType.ModelCopyOperationFailed:
                     return ModelException.Create(string.Format("Copy operation of {0} is failed; model provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.NoParameterSuppliedException:
+                case ExceptionType.NoParameterSupplied:
                     return ModelException.Create(string.Format("Null parameter for searching a {0} is not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.NoParametersSuppliedException:
+                case ExceptionType.NoParametersSupplied:
                     return ModelException.Create(string.Format("Null parameters for searching  {0}s are not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.AddOperationFailedException:
+                case ExceptionType.AddOperationFailed:
                     return ModelException.Create(string.Format("Add operation for adding new {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.UpdateOperationFailedException:
+                case ExceptionType.UpdateOperationFailed:
                     return ModelException.Create(string.Format("Update operation for updating the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.DeleteOperationFailedException:
+                case ExceptionType.DeleteOperationFailed:
                     return ModelException.Create(string.Format("Delete operation for deleting the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.InternalServerErrorException:
+                case ExceptionType.InternalServerError:
                     return ModelException.Create(string.Format("Model {0}: internal server error; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
 
-                case ExceptionType.ExpectationFailedException:
+                case ExceptionType.ExpectationFailed:
                     return ModelException.Create(string.Format("Model {0}: expectation failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
+
+                case ExceptionType.InvalidContext:
+                    return ModelException.Create(string.Format("The supplied model context is not valid or compitible with the {0}", additionalInfo ?? " None"), exceptionType, innerException);
 
                 default:
                     return ModelException.Create("Need to supply your message", ExceptionType.Unknown);

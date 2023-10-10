@@ -2,7 +2,6 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using System.Security.Cryptography;
 
 using MicroService.Common.Exceptions;
 using MicroService.Common.Models;
@@ -153,20 +152,6 @@ namespace MicroService.Common.Interfaces
     }
     #endregion
 
-    #region IFirstModel<TModel, TID> 
-    /// <summary>
-    /// Represents an object which offers the first model with in its internal collection.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IFirstModel<TModel, TID> : IFirstModel<TModel>
-        where TModel : ISelfModel<TID, TModel>
-        where TID : struct
-    {
-        new TModel? GetFirstModel();
-    }
-    #endregion
-
     #region IFind<TModel, TOutDTO>
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
@@ -202,6 +187,13 @@ namespace MicroService.Common.Interfaces
         Task<TOutDTO?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
 
         /// <summary>
+        /// Finds a model based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TOutDTO?> Find(ISearchParameter? parameter);
+
+        /// <summary>
         /// Finds all models matched based on given paramter.
         /// </summary>
         /// <param name="parameter">Parameter to be used to find the model.</param>
@@ -220,37 +212,6 @@ namespace MicroService.Common.Interfaces
 #endif
     //+:cnd:noEmit
     #endregion
-
-    #region IReadable<TOutDTO, TModel, TID>
-    //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TOutDTO, TModel, TID>: IFindByID<TOutDTO, TModel, TID>
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IFind<TOutDTO, TModel>
-#endif
-        //+:cnd:noEmit
-        #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>
-        //-:cnd:noEmit
-#if (!MODEL_USEDTO)
-        , TOutDTO
-#endif
-        //+:cnd:noEmit
-        where TID : struct
-        #endregion
-    {
-    }
-#endif
-    //+:cnd:noEmit
-#endregion
 
     #region IDeletable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
@@ -433,8 +394,8 @@ namespace MicroService.Common.Interfaces
         /// <param name="models">Models to delete.</param>
         /// <returns>Task with result of type boolean.</returns>
         Task<bool> DeleteRange(IEnumerable<TModel>? models);
-#endif
     }
+    #endif
     //+:cnd:noEmit
     #endregion
 

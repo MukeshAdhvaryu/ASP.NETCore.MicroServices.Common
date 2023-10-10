@@ -2,38 +2,61 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-
 //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 //+:cnd:noEmit
-using System.Collections;
 
+using System.Collections;
+using System.Reflection;
+
+using MicroService.Common.Attributes;
 using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
-using MicroService.Common.Sets;
 
-namespace MicroService.Common.Collections
+namespace MicroService.Common.Sets
 {
-    #region ModelQuery<TModel>
-    /// <summary>
-    /// Represents an object which holds a collection of keyless models.
-    /// </summary>
-    /// <typeparam name="TModel">Type of keyless Model/></typeparam>
-    public abstract class QueryModels<TModel, TItems> : ModelSet<TModel, TItems>, IExModelQuery<TModel>, IEnumerable<TModel>
+    #region Query<TModel, TItems>
+    class QuerySet<TModel, TItems> : IExQuery<TModel>, IEnumerable<TModel>
         #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>, new()
+        where TModel : class, ISelfModel<TModel>, new()
         where TItems : IEnumerable<TModel>
         #endregion
     {
+        #region VARIABLES
+        protected readonly TItems Items;
+        #endregion
+
         #region CONSTRUCTORS
-        public QueryModels(TItems models) :
-            base(models)
-        { }
-        public QueryModels(TItems models, bool initializeData = true) :
-            base(models, initializeData)
-        { }
+        public QuerySet(TItems models, Action<IEnumerable<TModel>>? addRange = null) :
+            this(models, true, addRange)
+        {
+        }
+        public QuerySet(TItems models, bool initializeData = true, Action<IEnumerable<TModel>>? addRange = null)
+        {
+            Items = models;
+            if (!initializeData)
+                return;
+
+            IEnumerable<TModel>? items = null;
+            bool provideSeedData = false;
+            var attribute = typeof(TModel).GetCustomAttribute<DBConnectAttribute>();
+            if (attribute != null)
+                provideSeedData = attribute.ProvideSeedData;
+            if (provideSeedData && !Items.Any())
+            {
+                var model = (IExModel)new TModel();
+                items = model.GetInitialData()?.OfType<TModel>();
+            }
+            if (items == null || addRange == null)
+                return;
+            try
+            {
+                addRange(items);
+            }
+            catch { }
+        }
         #endregion
 
         #region GET ALL (count)
@@ -207,6 +230,28 @@ namespace MicroService.Common.Collections
             };
             return Task.FromResult((IEnumerable<TModel>?)Items.Where(m => func(m)));
         }
+        #endregion
+
+        #region FIND (parameter)
+        public Task<TModel?> Find(ISearchParameter? parameter)
+        {
+            if (parameter == null)
+                return Task.FromResult(default(TModel?));
+
+            return Task.FromResult((Items.FirstOrDefault(m => ((IMatch)m).IsMatch(parameter))));
+        }
+        #endregion
+
+        #region GET FIRST MODEL
+        TModel? IFirstModel<TModel>.GetFirstModel() =>
+            Items.FirstOrDefault();
+        IModel? IFirstModel.GetFirstModel() =>
+            Items.FirstOrDefault();
+        #endregion
+
+        #region GET MODEL COUNT
+        int IModelCount.GetModelCount() =>
+            Items.Count();
         #endregion
 
         #region ENUMERATORS

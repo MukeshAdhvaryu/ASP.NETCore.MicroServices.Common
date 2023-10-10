@@ -3,70 +3,52 @@
  Author: Mukesh Adhvaryu.
 */
 
+//-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 using MicroService.Common.CQRS;
-using MicroService.Common.Models;
 using MicroService.Common.Sets;
-
-namespace MicroService.Common.Collections
-{
-    #region IModelContext
-    public interface IModelContext : IDisposable
-    {
-        /// <summary>
-        /// Creates new instance of ModelSet<TModel, TID>.
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
-        /// <typeparam name="TID">Type of TID</typeparam>
-        /// <returns>An instance of ModelSet<TModel, TID></returns>
-        IModels<TID, TModel> Create<TID, TModel>()
-            where TModel : class, ISelfModel<TID, TModel>, new()
-            where TID : struct;
-
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        /// <summary>
-        /// Creates new instance of QuerySet<TModel>.
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model></typeparam>
-        /// <returns>An instance of QuerySet<TModel, TID></returns>
-        IModelQuery<TModel> Create<TModel>()
-            where TModel : class, ISelfModel<TModel>, new();
-
-        /// <summary>
-        /// Creates new instance of QuerySet<TModel>.
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model></typeparam>
-        /// <returns>An instance of QuerySet<TModel, TID></returns>
-        IModelQuery<TModel> Create<TModel, TItems>(TItems items)
-            where TModel : class, ISelfModel<TModel>, new()
-            where TItems : IEnumerable<TModel>;
 #endif
-        //+:cnd:noEmit
+//+:cnd:noEmit
 
-    }
-    #endregion
+using MicroService.Common.Models;
 
+namespace MicroService.Common.Contexts
+{
     #region ModelContext
     /// <summary>
     /// Represents an object which creates list based model context useful for TDD.
     /// </summary>
     public sealed class ModelContext : IModelContext
     {
-        #region CREATE
-        IModels<TID, TModel> IModelContext.Create<TID, TModel>()
+        #region CREATE COMMAND
+        //-:cnd:noEmit
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        /// <summary>
+        /// Creates new instance of ModelSet<TModel, TID>.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
+        /// <typeparam name="TID">Type of TID</typeparam>
+        /// <returns>An instance of ModelSet<TModel, TID></returns>
+        ICommand<TID, TModel> IModelContext.CreateCommand<TID, TModel>() 
         {
             return new ModelList<TID, TModel>();
         }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region CREATE QUERY
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        IModelQuery<TModel> IModelContext.Create<TModel>()
+        /// <summary>
+        /// Creates new instance of QuerySet<TModel>.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model></typeparam>
+        /// <returns>An instance of QuerySet<TModel, TID></returns>
+        IQuery<TModel> IModelContext.CreateQuery<TModel>()
         {
-            return new QueryList<TModel, List<TModel>>(new List<TModel>());
-        }
-
-        IModelQuery<TModel> IModelContext.Create<TModel, TItems>(TItems items)
-        {
-            return new QueryList<TModel, TItems>(items);
+            var list = new List<TModel>();
+            return new QuerySet<TModel, List<TModel>>(list, list.AddRange);
         }
 #endif
         //+:cnd:noEmit
@@ -74,14 +56,15 @@ namespace MicroService.Common.Collections
 
         public void Dispose() { }
 
-        #region Child Classes
         #region ModelCollection<TModel>
+        //-:cnd:noEmit
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         /// <summary>
         /// Represents an object which holds a collection of models useful for TDD..
         /// </summary>
         /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
         /// <typeparam name="TID">Type of TID</typeparam>
-        class ModelList<TID, TModel> : Models<TID, TModel, List<TModel>>, IExModels<TID, TModel>
+        class ModelList<TID, TModel> : ModelSet<TID, TModel, List<TModel>> 
             #region TYPE CONSTRAINTS
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct
@@ -126,34 +109,9 @@ namespace MicroService.Common.Collections
             //+:cnd:noEmit
             #endregion
         }
-        #endregion
-
-        #region QueryList<TModel, TItems>
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        /// <summary>
-        /// Represents an object which holds a collection of models useful for TDD..
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
-        /// <typeparam name="TID">Type of TID</typeparam>
-        class QueryList<TModel, TItems> : QueryModels<TModel, TItems>
-            #region TYPE CONSTRAINTS
-            where TModel : ISelfModel<TModel>, new()
-            where TItems : IEnumerable<TModel>
-            #endregion
-        {
-            public QueryList(TItems items) :
-                base(items, false)
-            { }
-
-            #region ADD MODELS
-            protected override void AddModels(IEnumerable<TModel> items) { }
-            #endregion
-        }
 #endif
         //+:cnd:noEmit
         #endregion
-        #endregion
     }
-    #endregion
+#endregion
 }

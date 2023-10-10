@@ -47,7 +47,7 @@ namespace MicroService.Common.Web.API
 
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>,
+        where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -55,7 +55,7 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         new()
         where TID : struct
-        where TInDTO: IModel
+        where TInDTO : IModel
         #endregion
     {
         #region VARIABLES
@@ -78,22 +78,24 @@ namespace MicroService.Common.Web.API
         #endregion
 
         #region GET FIRST MODEL
-        TModel? IFirstModel<TModel, TID>.GetFirstModel() => 
-            service.GetFirstModel();
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
         IModel? IFirstModel.GetFirstModel() => 
             service.GetFirstModel();
         TModel? IFirstModel<TModel>.GetFirstModel() =>
             service.GetFirstModel();
+#endif     
+        //+:cnd:noEmit
         #endregion
 
         #region GET MODEL COUNT
-        int IModelCount.GetModelCount() => 
+        int IModelCount.GetModelCount() =>
             service.GetModelCount();
         #endregion
 
         #region GET MODEL BY ID
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets a single model with the specified ID.
@@ -131,25 +133,13 @@ namespace MicroService.Common.Web.API
             }
         }
 #endif
-#else
-#if MODEL_USEACTION
-        async Task<IActionResult> IFindByID<TModel, TID>.Get(TID? id)
-        {
-            return Ok(await service.Get(id));
-        }
-#else
-        async Task<TOutDTO?> IFindByID<TOutDTO, TModel, TID>.Get(TID? id)
-        {
-            return await service.Get(id);
-        }
-#endif
 #endif
         //+:cnd:noEmit
         #endregion
 
         #region GET ALL (Optional: count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets enumerable of model items.
@@ -195,7 +185,7 @@ namespace MicroService.Common.Web.API
 
         #region GET ALL (start, count)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
         /// <summary>
         /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
@@ -243,9 +233,9 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
-        #region FIND (parameter, conditionJoin)
+        #region FIND (parameters, conditionJoin)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
         [HttpGet("Find/{conditionJoin}")]
         public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0)
@@ -284,7 +274,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
@@ -324,7 +314,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
 #if !MODEL_USEACTION
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -344,7 +334,7 @@ namespace MicroService.Common.Web.API
             {
                 throw;
             }
-        }        
+        }
 #else
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -359,6 +349,46 @@ namespace MicroService.Common.Web.API
             try
             {
                 return Ok(await service.FindAll(parameters, conditionJoin));
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#endif
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region FIND (parameter)
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+#if !MODEL_USEACTION
+
+        [HttpGet("Find/parameter")]
+        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return await service.Find(parameter);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#else
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>An instance of IActionResult.</returns>
+        [HttpGet("Find/parameter")]
+        public async Task<IActionResult> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return Ok(await service.Find(parameter));
             }
             catch
             {

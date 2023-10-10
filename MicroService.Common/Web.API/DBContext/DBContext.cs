@@ -3,13 +3,18 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD
+#if !TDD  
 //+:cnd:noEmit
 
-using MicroService.Common.Collections;
+using MicroService.Common.Contexts;
+//-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 using MicroService.Common.CQRS;
-using MicroService.Common.Models;
 using MicroService.Common.Sets;
+#endif
+//+:cnd:noEmit
+using MicroService.Common.Models;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace MicroService.Common.Web.API
@@ -30,73 +35,51 @@ namespace MicroService.Common.Web.API
         }
         #endregion
 
-        #region CREATE MODEL LIST
-        IModels<TID, TModel> IModelContext.Create<TID, TModel>()
-        {
-            var list = new EntityList<TID, TModel>(this, Set<TModel>());
-            SaveChanges();
-            return list;
-        }
-        #endregion
-
-        #region CREATE
+        #region CREATE COMMAND
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        IModelQuery<TModel> IModelContext.Create<TModel>()
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+        /// <summary>
+        /// Creates new instance of ModelSet<TModel, TID>.
+        /// </summary>
+        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
+        /// <typeparam name="TID">Type of TID</typeparam>
+        /// <returns>An instance of ModelSet<TModel, TID></returns>
+        ICommand<TID, TModel> IModelContext.CreateCommand<TID, TModel>()
         {
-            var list = new QueryList<TModel>(this, Set<TModel>());
-            SaveChanges();
-            return list;
-        }
-
-        IModelQuery<TModel> IModelContext.Create<TModel, TItems>(TItems items)
-        {
-            var list = new QueryList<TModel>(this, Set<TModel>());
-            SaveChanges();
-            return list;
+            return new ModelList<TID, TModel>(this, Set<TModel>());
         }
 #endif
         //+:cnd:noEmit
         #endregion
 
-        #region QUERY LIST
+        #region CREATE QUERY
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
-        /// Represents an object which holds a collection of models indirectly.
+        /// Creates new instance of QuerySet<TModel>.
         /// </summary>
         /// <typeparam name="TModel">Type of Model></typeparam>
-        class QueryList<TModel> : QueryModels<TModel, DbSet<TModel>>
-            #region TYPE CONSTRAINTS
-            where TModel : class, ISelfModel<TModel>, new()
-            #endregion
+        /// <returns>An instance of QuerySet<TModel, TID></returns>
+        IQuery<TModel> IModelContext.CreateQuery<TModel>()
         {
-            #region CONSTRUCTORS
-            public QueryList(DBContext context, DbSet<TModel> items) :
-                base(items)
-            {
-                context.SaveChanges();
-            }
-            #endregion
-
-            #region ADD MODELS
-            protected override void AddModels(IEnumerable<TModel> items)
-            {
-                Items.AddRange(items);
-            }
-            #endregion
-        } 
+            var list = Set<TModel>();
+            var set = new QuerySet<TModel, DbSet<TModel>>(list, list.AddRange);
+            SaveChanges();
+            return set;
+        }
 #endif
         //+:cnd:noEmit
         #endregion
 
         #region ENTITY LIST
+        //-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
         /// <summary>
         /// Represents an object which holds a collection of models indirectly.
         /// </summary>
         /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
         /// <typeparam name="TID">Type of TID</typeparam>
-        class EntityList<TID, TModel> : Models<TID, TModel, DbSet<TModel>>
+        class ModelList<TID, TModel> : ModelSet<TID, TModel, DbSet<TModel>>
             #region TYPE CONSTRAINTS
             where TModel : class, ISelfModel<TID, TModel>, new()
             where TID : struct
@@ -107,7 +90,7 @@ namespace MicroService.Common.Web.API
             #endregion
 
             #region CONSTRUCTORS
-            public EntityList(DBContext context, DbSet<TModel> items) :
+            public ModelList(DBContext context, DbSet<TModel> items) :
                 base(items)
             {
                 Context = context;
@@ -163,9 +146,11 @@ namespace MicroService.Common.Web.API
             //+:cnd:noEmit
             #endregion
         }
+#endif
+        //+:cnd:noEmit
         #endregion
     }
-#endregion
+    #endregion
 }
 //-:cnd:noEmit
 #endif

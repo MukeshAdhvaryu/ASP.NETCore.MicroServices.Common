@@ -78,20 +78,20 @@ namespace MicroService.Common.Exceptions
                 switch (Type)
                 {
                     case ExceptionType.Unknown:
-                    case ExceptionType.NoModelFoundException:
-                    case ExceptionType.NoModelFoundForIDException:
-                    case ExceptionType.NoModelsFoundException:
+                    case ExceptionType.NoModelFound:
+                    case ExceptionType.NoModelFoundForID:
+                    case ExceptionType.NoModelsFound:
                         return 404;
-                    case Models.ExceptionType.NoModelSuppliedException:
-                    case ExceptionType.NegativeFetchCountException:
+                    case Models.ExceptionType.NoModelSupplied:
+                    case ExceptionType.NegativeFetchCount:
                     case ExceptionType.ModelCopyOperationFailed:
-                    case ExceptionType.NoParameterSuppliedException:
-                    case ExceptionType.NoParametersSuppliedException:
-                    case ExceptionType.AddOperationFailedException:
-                    case ExceptionType.UpdateOperationFailedException:
-                    case ExceptionType.DeleteOperationFailedException:
+                    case ExceptionType.NoParameterSupplied:
+                    case ExceptionType.NoParametersSupplied:
+                    case ExceptionType.AddOperationFailed:
+                    case ExceptionType.UpdateOperationFailed:
+                    case ExceptionType.DeleteOperationFailed:
                         return 400;
-                    case ExceptionType.InternalServerErrorException:
+                    case ExceptionType.InternalServerError:
                         return 500;
                     default:
                         return 400;

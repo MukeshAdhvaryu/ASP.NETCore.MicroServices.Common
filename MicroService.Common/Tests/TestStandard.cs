@@ -108,7 +108,7 @@ namespace MicroService.Common.Tests
         public async Task Get_ByIDFail()
         {
             var id = Fixture.Create<TID>();
-            var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
             Setup((m) => m.Get(id), e);
             try
             {
@@ -147,7 +147,7 @@ namespace MicroService.Common.Tests
         [Args(-1)]
         public async Task GetAll_Fail(int limitOfResult = 0)
         {
-            var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, limitOfResult.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCount, limitOfResult.ToString());
             Setup((m) => m.GetAll(limitOfResult), e);
             try
             {
@@ -180,7 +180,7 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Add_Fail()
         {
-            var e = DummyModel.GetModelException(ExceptionType.AddOperationFailedException);
+            var e = DummyModel.GetModelException(ExceptionType.AddOperationFailed);
             var inModel = Fixture.Create<TInDTO>();
             Setup((m) => m.Add(inModel), e);
             try
@@ -214,7 +214,7 @@ namespace MicroService.Common.Tests
         public async Task Delete_Fail()
         {
             var ID = default(TID);
-            var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, ID.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailed, ID.ToString());
             Setup((m) => m.Delete(ID), e);
             try
             {
@@ -248,7 +248,7 @@ namespace MicroService.Common.Tests
         public async Task Update_Fail()
         {
             var ID = default(TID);
-            var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, ID.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, ID.ToString());
             var model = Fixture.Create<TModel>();
             var inModel = Fixture.Create<TInDTO>();
             Setup((m) => m.Update(ID, inModel), e);

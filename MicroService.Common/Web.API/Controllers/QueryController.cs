@@ -3,7 +3,7 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD 
+#if !TDD && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 //+:cnd:noEmit
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
@@ -90,7 +90,7 @@ namespace MicroService.Common.Web.API
         /// <param name="count">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
         /// <returns>IEnumerable of TModel</returns>
         [HttpGet("GetAll/{count}")]
-        public async Task<IEnumerable<TOutDTO>> GetAll(int count = 0)
+        public async Task<IEnumerable<TOutDTO>?> GetAll(int count = 0)
         {
             try
             {
@@ -139,7 +139,7 @@ namespace MicroService.Common.Web.API
         /// <param name="limitOfResult">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
-        public async Task<IEnumerable<TOutDTO>> GetAll(int startIndex, int count)
+        public async Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count)
         {
             try
             {
@@ -176,13 +176,53 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
+        #region FIND (parameter)
+        //-:cnd:noEmit
+#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if !MODEL_USEACTION
+
+        [HttpGet("Find/parameter")]
+        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return await service.Find(parameter);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#else
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>An instance of IActionResult.</returns>
+        [HttpGet("Find/parameter")]
+        public async Task<IActionResult> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return Ok(await service.Find(parameter));
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#endif
+#endif
+        //+:cnd:noEmit
+        #endregion
+
         #region FIND ALL (parameter)
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
-        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IEnumerable<TOutDTO>?> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter? parameter)
         {
             try
             {
@@ -200,7 +240,7 @@ namespace MicroService.Common.Web.API
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/parameter")]
-        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
         {
             try
             {
@@ -228,7 +268,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IEnumerable<TOutDTO>?> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -248,7 +288,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -276,7 +316,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("Find/{conditionJoin}")]
-        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {

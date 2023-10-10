@@ -8,11 +8,22 @@
 
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+//-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) || (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+using MicroService.Common.Web.API.CQRS;
+#endif
+//+:cnd:noEmit
 
 namespace MicroService.Common.Web.API.Interfaces
 {
     #region IQUERY CONTRACT
-    public interface IQueryContract<TModel> : IContract, IFirstModel<TModel>, IFind<TModel>
+    public interface IQueryContract<TModel> : IContract
+    //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        , IActionQuery<TModel>
+#endif
+        //+:cnd:noEmit
+
         #region TYPE CONSTRINTS
         where TModel : ISelfModel<TModel>,
         new()

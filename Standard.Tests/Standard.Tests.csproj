@@ -11,7 +11,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>
-      $(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;MODEL_USEXUNIT;MODEL_USEACTION;
+      $(DefineConstants);MODEL_ADDTEST;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;MODEL_USEACTION;MODEL_USEXUNIT;
     </DefineConstants>
   </PropertyGroup>
 

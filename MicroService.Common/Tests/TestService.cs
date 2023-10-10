@@ -80,8 +80,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NoModelFoundException:
-                    case ExceptionType.NoModelFoundForIDException:
+                    case ExceptionType.NoModelFound:
+                    case ExceptionType.NoModelFoundForID:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -123,7 +123,7 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NegativeFetchCountException:
+                    case ExceptionType.NegativeFetchCount:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -163,8 +163,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.AddOperationFailedException:
-                    case ExceptionType.NoModelSuppliedException:
+                    case ExceptionType.AddOperationFailed:
+                    case ExceptionType.NoModelSupplied:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -202,8 +202,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NoModelFoundForIDException:
-                    case ExceptionType.DeleteOperationFailedException:
+                    case ExceptionType.NoModelFoundForID:
+                    case ExceptionType.DeleteOperationFailed:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -243,8 +243,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.UpdateOperationFailedException:
-                    case ExceptionType.NoModelSuppliedException:
+                    case ExceptionType.UpdateOperationFailed:
+                    case ExceptionType.NoModelSupplied:
                     case ExceptionType.ModelCopyOperationFailed:
                         Verifier.Equal(true, true);
                         return;

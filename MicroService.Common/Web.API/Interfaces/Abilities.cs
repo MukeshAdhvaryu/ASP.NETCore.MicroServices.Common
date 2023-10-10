@@ -13,31 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MicroService.Common.Web.API.Interfaces
 {
-    #region IReadable<TModel, TID>
-    //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE || !MODEL_NONREADABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TModel, TID>: IFindByID<TModel, TID>
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IFind<TModel>
-#endif
-        //+:cnd:noEmit
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
-
     #region IDeletable<TModel, TID>
     //-:cnd:noEmit
 #if MODEL_DELETABLE
@@ -127,7 +102,7 @@ namespace MicroService.Common.Web.API.Interfaces
 
     #region IFind<TModel>
     //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
     public interface IFind<TModel>
         where TModel : ISelfModel<TModel>
     {
@@ -173,13 +148,19 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds a model based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<IActionResult> Find(ISearchParameter? parameter);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IReadable<TModel, TID>
-    //-:cnd:noEmit
+    #region IFindByID<TModel, TID>
 #if !MODEL_NONQUERYABLE || !MODEL_NONREADABLE
 
     /// <summary>
@@ -202,8 +183,7 @@ namespace MicroService.Common.Web.API.Interfaces
         Task<IActionResult> Get(TID? id);
     }
 #endif
-    //+:cnd:noEmit
-    #endregion
+#endregion
 }
 //-:cnd:noEmit
 #endif

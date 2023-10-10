@@ -11,14 +11,16 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Collections\QueryModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Context\ModelContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contexts\IModelContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contexts\ModelContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IQueryContract.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CQRS\IModelCommand.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CQRS\IModelQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\Command.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\ICommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\IQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\Query.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
@@ -35,8 +37,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\QueryService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Collections\Models.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sets\ModelSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sets\QuerySet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\ArgSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestService.cs" />
@@ -51,11 +53,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Configurations\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controllers\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Controllers\QueryController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\CQRS\IActionCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\CQRS\IActionQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\DBContext\DBContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Enums\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\Abilities.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\IActionContract.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Interfaces\IQueryContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Contracts\IActionContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Web.API\Contracts\IQueryContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Middlewares\ExceptionMiddleWare.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Middlewares\HttpExceptionFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web.API\Models\KeylessModel.cs" />
@@ -64,5 +68,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Web.API\DBContext\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Web.API\Contracts\" />
   </ItemGroup>
 </Project>
