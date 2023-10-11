@@ -12,9 +12,37 @@ Using WebAPI template for creating microservices is a faster and more efficient 
 Creating a microservice by choosing from .NET templates is a standard way to get started. 
 
 ## Index
-[WHY](#WHY)
-[WHAT](#WHAT)
-[HOW](#HOW)
+[WHY?](#WHY)
+
+[WHAT?](#WHAT)
+
+[HOW?](#HOW)
+
+[UPDATE1: Common test project for all three frameworks i.e. xUnit, NUnit or MSTest.](#UPDATE1)
+
+[UPDATE2: Criteria based search feature for models added.](#UPDATE2)
+
+[UPDATE3: Support for ClassData and MemberData test attributes added.](#UPDATE3)
+
+[UPDATE4: Feature to perform search for multiple models using multiple search parameters added.](#UPDATE4)
+
+[UPDATE5: Added Exception Middleware.](#UPDATE5)
+
+[UPDATE6: Added Support for IActionResult for controller. ](#UPDATE6)
+
+[UPDATE7: Feature: Choose database at model level.](#UPDATE7)
+
+[UPDATE8: Controller class: 4th Type def TInDTO included (input for POST/PUT calls).](#UPDATE8)
+
+[UPDATE9: Converted DBContext from generic to non-generic class.](#UPDATE9)
+
+[UPDATE10: Support for Query-Only-Controllers and Keyless models is added.](#UPDATE10)
+
+[UPDATE11: Abstract Models for common primary key type: int, long, Guid, enum are added.](#UPDATE11)
+
+[UPDATE12: Adopted Command and Query Segregation pattern.](#UPDATE12)
+
+
 
 ## WHY?
 We already know that a controller can have standard HTTP calls such as HttpGet, HttpPost, etc.
@@ -122,18 +150,21 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
 
 That's it. 
 
-# UPDATE: A single test project is created.
+## UPDATE1 
+A single test project is created.
 
 ### This project is with bare minimum code and can be used commonly for all frameworks i.e. xUnit, NUnit or MSTest.
 
 Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
 If neither of those constants defined then MSTest will be used.
 
-# UPDATE: Criteria based search feature for models added.
+## UPDATE2
+Criteria based search feature for models added.
 
 Try FindAll (ISearchParameter searchParameter) method.
   
-# UPDATE: Support for ClassData and MemberData attributes added.
+## UPDATE3
+Support for ClassData and MemberData test attributes added.
 
 ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
 ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
@@ -191,20 +222,24 @@ To use class data, ArgSource\<source\> will suffice.
         }
     }
 
-# UPDATE: Feature to perform search for multiple models using multiple search parameters added.
+## UPDATE4
+Feature to perform search for multiple models using multiple search parameters added.
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
 
-# UPDATE: Added Exception Middleware.
+## UPDATE5
+Added Exception Middleware.
 
 Middleware type: IExceptionFiter type
 
-# UPDATE: Added Support for IActionResult for controller. 
+## UPDATE6
+Added Support for IActionResult for controller. 
 
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
 
-# UPDATE: Feature: Choose database at model level.
+## UPDATE7
+Feature: Choose database at model level.
 
 To Use SQLServer:
 1. define constant: MODEL_CONNECTSQLSERVER
@@ -226,26 +261,40 @@ Please note that, regardless of any of these,
 2. Don't worry about downloading relevant package from nuget.
 3. Defining constant will automatically download the relevant package for you.
 
-# UPDATE Controller class: 4th Type TInDTO included.
+## UPDATE8
+Controller class: 4th Type TInDTO included.
 
  So now it is Controller<TOutDTO, TModel, TID, TInDTO>
 
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
 
-# UPDATE Converted DBContext to non-generic
+## UPDATE9 
+Converted DBContext from generic to non-generic class.
 
 This is to allow single DBContext to hold multiple model sets..
 
-# UPDATE Support for Query-Only-Controllers and Keyless models is added.
+## UPDATE10 
+Support for Query-Only-Controllers and Keyless models is added.
 
 It is now possible to create separate controller for command and query purposes.
 
 Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, this will create Query-only controller.
 
-# UPDATE Abstract Models for common primary key type: int, long, Guid, enum are added.
+## UPDATE11 
+Abstract Models for common primary key type: int, long, Guid, enum are added.
 
-# UPDATE Adopted: CQRS pattern.
+## UPDATE12 
+Adopted: CQRS pattern.
+Adopted Command and Query Segregation pattern.
+The follwing interfaces were created and the solution was re-designed
+around them.
+For Query Part:
+IQuery\<TModel\>
+IQuery\<TOutDTO, TModel, TID\>
 
+For Command Part:
+ICommand\<TID, TModel\>
+ICommand\<TOutDTO, TModel, TID\>
 
