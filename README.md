@@ -1702,31 +1702,22 @@ This is to allow single DBContext to hold multiple model sets..
         }
         #endregion
 
-        #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
-        /// <summary>
-        /// Creates new instance of ModelSet<TModel, TID>.
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
-        /// <typeparam name="TID">Type of TID</typeparam>
-        /// <returns>An instance of ModelSet<TModel, TID></returns>
-        ICommand<TID, TModel> IModelContext.CreateCommand<TID, TModel>()
+        #region CREATE COMMAND
+        #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData)
         {
-            return new ModelList<TID, TModel>(this, Set<TModel>());
+            return new CommandObject<TOutDTO, TModel, TID>(this, initialzeData);
         }
         #endif
         
         #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        /// <summary>
-        /// Creates new instance of QuerySet<TModel>.
-        /// </summary>
-        /// <typeparam name="TModel">Type of Model></typeparam>
-        /// <returns>An instance of QuerySet<TModel, TID></returns>
-        IQuery<TModel> IModelContext.CreateQuery<TModel>()
+        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData)
         {
-            var list = Set<TModel>();
-            var set = new QuerySet<TModel, DbSet<TModel>>(list, list.AddRange);
-            SaveChanges();
-            return set;
+            return new QueryObject<TOutDTO, TModel>(this, null, initialzeData);
+        }
+        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData)
+        {
+            return new QueryObject<TOutDTO, TModel, TID>(this, null, initialzeData);
         }
         #endif
     }
@@ -1827,7 +1818,7 @@ Abstract Models for common primary key type: int, long, Guid, enum are added.
             }
             while (index < Available.Count)
             {
-                newID = Available[++index];
+                newID = Available[index++];
 
                 if (!Used.Contains(newID))
                 {
@@ -1892,101 +1883,41 @@ For Query Part:
 IQuery\<TModel\>
 IQuery\<TOutDTO, TModel, TID\>
 
-    /// <summary>
+     /// <summary>
     /// Represents an object which holds a enumerables of keyless models directly or indirectly.
     /// </summary>
     /// <typeparam name="TModel">Type of keyless Model></typeparam>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    public partial interface IQuery<TOutDTO, TModel> : IModelCount, IFind<TOutDTO, TModel>, IFirstModel<TModel>
+    public partial interface IQuery<TOutDTO, TModel> : IModelCount, IFirstModel<TModel>, 
+        IFetch<TOutDTO, TModel>
+    #if MODEL_SEARCHABLE
+        , ISearch<TOutDTO, TModel>
+    #endif
         where TModel : ISelfModel<TModel>
         where TOutDTO : IModel
-    { }
-
-    #region IExQuery<TOutDTO, TModel>
-    internal partial interface IExQuery<TOutDTO, TModel> : IQuery<TOutDTO, TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        where TOutDTO : IModel
-        #endregion
-    { }
-    #endregion
+    { 
+    }
 
     /// <summary>
-    /// Represents an object which holds a enumerables of keyless models directly or indirectly.
-    /// </summary>
-    /// <typeparam name="TModel">Type of keyless Model></typeparam>
-    public partial interface IQuery<TModel> : IQuery<TModel, TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        #endregion
-    { }
-
-    internal partial interface IExQuery<TModel> : IQuery<TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : ISelfModel<TModel>
-        #endregion
-    { }
-
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
+    /// This interface represents an object that allows reading a single or multiple models with primary key of type TID.
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>,
         IFindByID<TOutDTO, TModel, TID>
-    where TOutDTO : IModel
-    where TModel : class, ISelfModel<TID, TModel>, new()
+        where TOutDTO : IModel
+        where TModel : class, ISelfModel<TID, TModel>, new()
     #if (!MODEL_USEDTO)
         , TOutDTO
     #endif
-    where TID : struct
+        where TID : struct
+        #endregion
     {
     }
-    #endregion
 
 For Command Part:
-ICommand\<TID, TModel\>
 ICommand\<TOutDTO, TModel, TID\>
-
-    /// <summary>
-    /// Represents an object which holds a enumerables of keyless models directly or indirectly.
-    /// </summary>
-    /// <typeparam name="TModel">Type of keyless Model></typeparam>
-    public partial interface ICommand<TID, TModel> : IModelCount
-    #if MODEL_DELETABLE
-        , IDelete<TModel>
-    #endif
-    #if MODEL_APPENDABLE
-        , IAdd<TModel>
-    #endif
-    #if MODEL_UPDATABLE
-        , IUpdate<TModel>
-    #endif
-    #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        , IModifiable
-    #endif
-        //+:cnd:noEmit
-        #region TYPE CONSTRAINTS
-        where TModel : class, ISelfModel<TID, TModel>, new()
-        where TID : struct
-        #endregion
-    { }
-    #endregion
-
-    #region IExCommand<TID, TModel>
-    internal partial interface IExCommand<TID, TModel> : ICommand<TID, TModel>,
-        IFindByID<TModel, TModel, TID>, IFirstModel<TModel>
-        #region TYPE CONSTRAINTS
-        where TModel : class, ISelfModel<TID, TModel>, new()
-        where TID : struct
-        #endregion
-    {
-        #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-            IExQuery<TModel> GetQueryObject();
-        #endif
-    }
-    #endregion
 
     #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
     /// <summary>
@@ -2005,15 +1936,35 @@ ICommand\<TOutDTO, TModel, TID\>
     #if MODEL_DELETABLE
         , IDeleteable<TOutDTO, TModel, TID>
     #endif
-        #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TModel : class, ISelfModel<TID, TModel>, new()
-        //-:cnd:noEmit
+    where TOutDTO : IModel
+    where TModel : class, ISelfModel<TID, TModel>, new()
     #if (!MODEL_USEDTO)
         , TOutDTO
     #endif
-        where TID : struct
-        #endregion
+    where TID : struct
     {
     }
     #endif
+
+
+    #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+    /// <summary>
+    /// This interface represents an object that allows reading a single model or multiple models.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>
+    where TOutDTO : IModel
+    where TModel : class, ISelfModel<TID, TModel>, new()
+    #if (!MODEL_USEDTO)
+        , TOutDTO
+    #endif
+    where TID : struct
+    {
+    #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        IQuery<TOutDTO, TModel, TID> GetQueryObject();
+    #endif
+    }
+    #endif
+

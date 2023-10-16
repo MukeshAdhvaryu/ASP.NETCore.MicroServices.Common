@@ -8,6 +8,7 @@ using MicroService.Common.Attributes;
 using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 namespace MicroService.Common.CQRS
 {
