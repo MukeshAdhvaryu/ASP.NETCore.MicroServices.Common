@@ -6,6 +6,7 @@
 #if !TDD
 using System.Reflection;
 
+using MicroService.Common.Interfaces;
 using MicroService.Common.Services;
 using MicroService.Common.Web.API;
 
@@ -29,7 +30,7 @@ namespace MicroService.Common.Models
                 throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
 
             var field = controllerType.GetField("service", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null || !field.FieldType.IsAssignableTo(typeof(IService)))
+            if (field == null || !field.FieldType.IsAssignableTo(typeof(IContract)))
                 throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
 
             var serviceType = field.FieldType;

@@ -52,7 +52,7 @@ namespace UserDefined.API
 #if MODEL_NONREADABLE
             builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
 #endif
-            builder.Services.AddQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
+            builder.Services.AddKeyedQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
 #endif
             //+:cnd:noEmit
 

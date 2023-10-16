@@ -41,7 +41,7 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        protected readonly Mock<IService<TOutDTO, TModel, TID>> MockService;
+        protected readonly Mock<IContract<TOutDTO, TModel, TID>> MockService;
         readonly IActionContract<TModel, TID> Contract;
         protected readonly List<TModel> Models;
         protected readonly IFixture Fixture;
@@ -59,7 +59,7 @@ namespace MicroService.Common.Tests
         public TestStandard()
         {
             Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
-            MockService = Fixture.Freeze<Mock<IService<TOutDTO, TModel, TID>>>();
+            MockService = Fixture.Freeze<Mock<IContract<TOutDTO, TModel, TID>>>();
 
             Contract = CreateContract(MockService.Object);
             var count = DummyModelCount;
@@ -85,15 +85,15 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IActionContract<TModel, TID> CreateContract(IService<TOutDTO, TModel, TID> service);
+        protected abstract IActionContract<TModel, TID> CreateContract(IContract<TOutDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
-        protected void Setup<TResult>(Expression<Func<IService<TOutDTO, TModel, TID>, Task<TResult>>> expression, TResult returnedValue)
+        protected void Setup<TResult>(Expression<Func<IContract<TOutDTO, TModel, TID>, Task<TResult>>> expression, TResult returnedValue)
         {
             MockService.Setup(expression).ReturnsAsync(returnedValue);
         }
-        protected void Setup<TResult>(Expression<Func<IService<TOutDTO, TModel, TID>, Task<TResult>>> expression, Exception exception)
+        protected void Setup<TResult>(Expression<Func<IContract<TOutDTO, TModel, TID>, Task<TResult>>> expression, Exception exception)
         {
             MockService.Setup(expression).Throws(exception);
         }
@@ -118,7 +118,7 @@ namespace MicroService.Common.Tests
         public async Task Get_ByIDFail()
         {
             var id = default(TID);
-            var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForIDException, id.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
             Setup((m) => m.Get(id), e);
             try
             {
@@ -141,37 +141,35 @@ namespace MicroService.Common.Tests
         [WithArgs]
         [Args(0)]
         [Args(3)]
-        public async Task GetAll_Success(int limitOfResult = 0)
+        public async Task GetAll_Success(int count = 0)
         {
-            int count = limitOfResult;
-
-            if (limitOfResult == 0)
+            if (count == 0)
             {
-                limitOfResult = Models.Count;
-                Setup((m) => m.GetAll(limitOfResult), Items);
-                var result = await Contract.GetAll(limitOfResult) as ObjectResult;
+                count = Models.Count;
+                Setup((m) => m.GetAll(0), Items);
+                var result = await Contract.GetAll(0) as ObjectResult;
                 var expected = result?.Value as IEnumerable<TOutDTO>;
-                Verifier.Equal(limitOfResult, expected?.Count());
+                Verifier.Equal(count, expected?.Count());
             }
             else
             {
-                Setup((m) => m.GetAll(limitOfResult), Items.Take(limitOfResult));
-                var result = await Contract.GetAll(limitOfResult) as ObjectResult;
+                Setup((m) => m.GetAll(count), Items.Take(count));
+                var result = await Contract.GetAll(count) as ObjectResult;
                 var expected = result?.Value as IEnumerable<TOutDTO>;
-                Verifier.Equal(limitOfResult, expected?.Count());
+                Verifier.Equal(count, expected?.Count());
                 Verifier.Equal(StatusCodes.Status200OK, result?.StatusCode);
             }
         }
 
         [WithArgs]
         [Args(-1)]
-        public async Task GetAll_Fail(int limitOfResult = 0)
+        public async Task GetAll_Fail(int count = 0)
         {
-            var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCountException, limitOfResult.ToString());
-            Setup((m) => m.GetAll(limitOfResult), e);
+            var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCount, count.ToString());
+            Setup((m) => m.GetAll(count), e);
             try
             {
-                await Contract.GetAll(limitOfResult);
+                await Contract.GetAll(count);
                 Verifier.Equal(true, false);
             }
             catch (Exception ex)
@@ -205,7 +203,7 @@ namespace MicroService.Common.Tests
         {
             var ID = Models[0].ID;
 
-            var e = DummyModel.GetModelException(ExceptionType.AddOperationFailedException, ID.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.AddOperationFailed, ID.ToString());
 
             var inModel = Fixture.Create<TInDTO>();
             Setup((m) => m.Add(inModel), e);
@@ -243,7 +241,7 @@ namespace MicroService.Common.Tests
         public async Task Delete_Fail()
         {
             var ID = Fixture.Create<TID>();
-            var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailedException, ID.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailed, ID.ToString());
 
             Setup((m) => m.Delete(ID), e);
             try
@@ -281,7 +279,7 @@ namespace MicroService.Common.Tests
         public async Task Update_Fail()
         {
             var ID = Fixture.Create<TID>();
-            var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailedException, ID.ToString());
+            var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, ID.ToString());
             var inModel = Fixture.Create<TInDTO>();
             Setup((m) => m.Update(ID, inModel), e);
             try
@@ -327,7 +325,7 @@ namespace MicroService.Common.Tests
         //To use member data, you must define a static method or property returning IEnumerable<object[]>.
         [WithArgs]
         [ArgSource(typeof(MemberDataExample), "GetData")]
-        public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+        public Task GetAll_ReturnAllUseMemberData(int count = 0)
         {
             //
         }
@@ -336,7 +334,7 @@ namespace MicroService.Common.Tests
         //To use class data, ArgSource<source> will suffice.
         [WithArgs]
         [ArgSource<ClassDataExample>]
-        public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+        public Task GetAll_ReturnAllUseClassData(int count = 0)
         {
             //
         }

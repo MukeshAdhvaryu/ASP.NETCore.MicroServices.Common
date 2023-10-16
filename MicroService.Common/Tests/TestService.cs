@@ -80,8 +80,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NoModelFoundException:
-                    case ExceptionType.NoModelFoundForIDException:
+                    case ExceptionType.NoModelFound:
+                    case ExceptionType.NoModelFoundForID:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -94,28 +94,28 @@ namespace MicroService.Common.Tests
         [WithArgs]
         [Args(0)]
         [Args(3)]
-        public async Task GetAll_Success(int limitOfResult = 0)
+        public async Task GetAll_Success(int count = 0)
         {
-            if (limitOfResult == 0)
+            if (count == 0)
             {
-                limitOfResult = Contract.GetModelCount();
-                var expected = await Contract.GetAll(limitOfResult);
-                Verifier.Equal(limitOfResult, expected?.Count());
+                count = Contract.GetModelCount();
+                var expected = await Contract.GetAll(count);
+                Verifier.Equal(count, expected?.Count());
             }
             else
             {
-                var expected = await Contract.GetAll(limitOfResult);
-                Verifier.Equal(limitOfResult, expected?.Count());
+                var expected = await Contract.GetAll(count);
+                Verifier.Equal(count, expected?.Count());
             }
         }
 
         [WithArgs]
         [Args(-1)]
-        public async Task GetAll_Fail(int limitOfResult = 0)
+        public async Task GetAll_Fail(int count = 0)
         {
             try
             {
-                await Contract.GetAll(limitOfResult);
+                await Contract.GetAll(count);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -123,7 +123,7 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NegativeFetchCountException:
+                    case ExceptionType.NegativeFetchCount:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -163,8 +163,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.AddOperationFailedException:
-                    case ExceptionType.NoModelSuppliedException:
+                    case ExceptionType.AddOperationFailed:
+                    case ExceptionType.NoModelSupplied:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -202,8 +202,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.NoModelFoundForIDException:
-                    case ExceptionType.DeleteOperationFailedException:
+                    case ExceptionType.NoModelFoundForID:
+                    case ExceptionType.DeleteOperationFailed:
                         Verifier.Equal(true, true);
                         return;
                     default:
@@ -243,8 +243,8 @@ namespace MicroService.Common.Tests
                 var exceptionType = (ex as IModelException)?.Type ?? 0;
                 switch (exceptionType)
                 {
-                    case ExceptionType.UpdateOperationFailedException:
-                    case ExceptionType.NoModelSuppliedException:
+                    case ExceptionType.UpdateOperationFailed:
+                    case ExceptionType.NoModelSupplied:
                     case ExceptionType.ModelCopyOperationFailed:
                         Verifier.Equal(true, true);
                         return;
@@ -286,7 +286,7 @@ namespace MicroService.Common.Tests
         //To use member data, you must define a static method or property returning IEnumerable<object[]>.
         [WithArgs]
         [ArgSource(typeof(MemberDataExample), "GetData")]
-        public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+        public Task GetAll_ReturnAllUseMemberData(int count = 0)
         {
             //
         }
@@ -295,7 +295,7 @@ namespace MicroService.Common.Tests
         //To use class data, ArgSource<source> will suffice.
         [WithArgs]
         [ArgSource<ClassDataExample>]
-        public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+        public Task GetAll_ReturnAllUseClassData(int count = 0)
         {
             //
         }

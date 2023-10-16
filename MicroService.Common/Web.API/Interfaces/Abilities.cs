@@ -6,6 +6,8 @@
 #if !TDD && MODEL_USEACTION
 //+:cnd:noEmit
 
+using System;
+
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
@@ -13,31 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MicroService.Common.Web.API.Interfaces
 {
-    #region IReadable<TModel, TID>
-    //-:cnd:noEmit
-#if !MODEL_NONQUERYABLE || !MODEL_NONREADABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TModel, TID>: IFindByID<TModel, TID>
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IFind<TModel>
-#endif
-        //+:cnd:noEmit
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
-
     #region IDeletable<TModel, TID>
     //-:cnd:noEmit
 #if MODEL_DELETABLE
@@ -125,31 +102,39 @@ namespace MicroService.Common.Web.API.Interfaces
     //+:cnd:noEmit
     #endregion
 
-    #region IFind<TModel>
-    //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-    public interface IFind<TModel>
-        where TModel : ISelfModel<TModel>
+    #region IFetch<TModel>
+    //-:cnd:noEmit 
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+    public interface IFetch<TModel> where TModel : ISelfModel<TModel>
     {
         /// <summary>
         /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IActionResult> GetAll(int limitOfResult = 0);
+        Task<IActionResult> GetAll(int count = 0);
 
         /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// Gets all models contained in this object picking from the index specified up to a count determined by count.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
         /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IActionResult> GetAll(int startIndex, int limitOfResult);
+        Task<IActionResult> GetAll(int startIndex, int count);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
 
+    #region ISearch<TModel>
+    //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+    public interface ISearch<TModel> where TModel : ISelfModel<TModel>
+    {
         /// <summary>
         /// Finds a model based on given paramters.
         /// </summary>
@@ -173,13 +158,19 @@ namespace MicroService.Common.Web.API.Interfaces
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds a model based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<IActionResult> Find(ISearchParameter? parameter);
     }
 #endif
     //+:cnd:noEmit
     #endregion
 
-    #region IReadable<TModel, TID>
-    //-:cnd:noEmit
+    #region IFindByID<TModel, TID>
 #if !MODEL_NONQUERYABLE || !MODEL_NONREADABLE
 
     /// <summary>
@@ -202,8 +193,7 @@ namespace MicroService.Common.Web.API.Interfaces
         Task<IActionResult> Get(TID? id);
     }
 #endif
-    //+:cnd:noEmit
-    #endregion
+#endregion
 }
 //-:cnd:noEmit
 #endif

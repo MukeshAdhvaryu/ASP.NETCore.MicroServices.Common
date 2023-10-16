@@ -2,7 +2,8 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
@@ -36,3 +37,6 @@ namespace MicroService.Common.Parameters
         public Criteria Criteria { get; }
     }
 }
+#endif
+//-:cnd:noEmit
+

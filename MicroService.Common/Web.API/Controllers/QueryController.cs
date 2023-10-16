@@ -3,12 +3,11 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if !TDD 
+#if !TDD && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 //+:cnd:noEmit
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
-using MicroService.Common.Services;
 
 //-:cnd:noEmit
 #if MODEL_USEACTION
@@ -34,7 +33,7 @@ namespace MicroService.Common.Web.API
 #if !MODEL_USEACTION
         , IQueryContract<TOutDTO, TModel>
 #else
-        , IQueryContract<TModel>
+        , IActionQueryContract<TModel>
 #endif
         //+:cnd:noEmit
 
@@ -55,11 +54,11 @@ namespace MicroService.Common.Web.API
         /// to divert contract calls to perform contract operations.
         /// Since this contro
         /// </summary>
-        IQueryService<TOutDTO, TModel> service;
+        protected IQueryContract<TOutDTO, TModel> service;
         #endregion
 
         #region CONSTRUCTORS
-        public QueryController(IQueryService<TOutDTO, TModel> _service)
+        public QueryController(IQueryContract<TOutDTO, TModel> _service)
         {
             service = _service;
         }
@@ -90,7 +89,7 @@ namespace MicroService.Common.Web.API
         /// <param name="count">If a number greater than zero is specified, then limits returned results up to that number, otherwise returns all.</param>
         /// <returns>IEnumerable of TModel</returns>
         [HttpGet("GetAll/{count}")]
-        public async Task<IEnumerable<TOutDTO>> GetAll(int count = 0)
+        public async Task<IEnumerable<TOutDTO>?> GetAll(int count = 0)
         {
             try
             {
@@ -104,10 +103,10 @@ namespace MicroService.Common.Web.API
 #else
         /// <summary>
         /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("GetAll/{count}")]
         public async Task<IActionResult> GetAll(int count = 0)
@@ -131,15 +130,15 @@ namespace MicroService.Common.Web.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 #if !MODEL_USEACTION
         /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// Gets all models contained in this object picking from the index specified up to a count determined by count.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
         /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
-        public async Task<IEnumerable<TOutDTO>> GetAll(int startIndex, int count)
+        public async Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count)
         {
             try
             {
@@ -152,12 +151,12 @@ namespace MicroService.Common.Web.API
         }
 #else
         /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// Gets all models contained in this object picking from the index specified up to a count determined by count.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
         /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("GetAll/{startIndex}, {count}")]
         public async Task<IActionResult> GetAll(int startIndex, int count)
@@ -176,13 +175,53 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
+        #region FIND (parameter)
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+#if !MODEL_USEACTION
+
+        [HttpGet("Find/parameter")]
+        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return await service.Find(parameter);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#else
+        /// <summary>
+        /// Finds all models matched based on given parameters.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>An instance of IActionResult.</returns>
+        [HttpGet("Find/parameter")]
+        public async Task<IActionResult> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
+        {
+            try
+            {
+                return Ok(await service.Find(parameter));
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#endif
+#endif
+        //+:cnd:noEmit
+        #endregion
+
         #region FIND ALL (parameter)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
 #if !MODEL_USEACTION
 
         [HttpGet("FindAll/parameter")]
-        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IEnumerable<TOutDTO>?> FindAll([FromQuery][ModelBinder(BinderType =typeof(ParamBinder))] ISearchParameter? parameter)
         {
             try
             {
@@ -200,7 +239,7 @@ namespace MicroService.Common.Web.API
         /// <param name="parameter">Parameter to be used to find the model.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/parameter")]
-        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter parameter)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] ISearchParameter? parameter)
         {
             try
             {
@@ -218,7 +257,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -228,7 +267,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IEnumerable<TOutDTO>> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IEnumerable<TOutDTO>?> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -248,7 +287,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
         [HttpGet("FindAll/{conditionJoin}")]
-        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -266,7 +305,7 @@ namespace MicroService.Common.Web.API
 
         #region FIND ALL (parameters)
         //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
 #if !MODEL_USEACTION
         /// <summary>
         /// Find the first model matched based on given parameters.
@@ -276,7 +315,7 @@ namespace MicroService.Common.Web.API
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         [HttpGet("Find/{conditionJoin}")]
-        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
+        public async Task<TOutDTO?> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
@@ -311,6 +350,80 @@ namespace MicroService.Common.Web.API
 #endif
         //+:cnd:noEmit
         #endregion
+    }
+    #endregion
+
+    #region QueryController<TOutDTO, TModel, TID>
+    public class QueryController<TOutDTO, TModel, TID> : QueryController<TOutDTO, TModel>
+        //-:cnd:noEmit
+#if !MODEL_USEACTION
+        , IQueryContract<TOutDTO, TModel, TID>
+#else
+        , IActionQueryContract<TModel, TID>
+#endif
+        //+:cnd:noEmit
+
+        #region TYPE CONSTRINTS
+        where TOutDTO : IModel
+        where TModel : Model<TID, TModel>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TOutDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        #region CONSTRUCTORS
+        public QueryController(IQueryContract<TOutDTO, TModel, TID> _service) 
+            : base(_service)
+        {
+        }
+        #endregion
+
+        #region GET MODEL BY ID
+        //-:cnd:noEmit
+#if !MODEL_USEACTION
+        /// <summary>
+        /// Gets a single model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to read.</param>
+        /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
+        [HttpGet("Get/{id}")]
+        public async Task<TOutDTO?> Get(TID? id)
+        {
+            try
+            {
+                return await ((IFindByID<TOutDTO, TModel, TID>)service).Get(id);
+            }
+            catch 
+            {
+                throw;
+            }
+        }
+#else
+        /// <summary>
+        /// Gets a single model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to read.</param>
+        /// <returns>An instance of IActionResult.</returns>
+        [HttpGet("Get/{id}")]
+        public async Task<IActionResult> Get(TID? id)
+        {
+            try
+            {
+                return Ok(await ((IFindByID<TOutDTO, TModel, TID>)service).Get(id));
+            }
+            catch
+            {
+                throw;
+            }
+        }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
     }
     #endregion
 }

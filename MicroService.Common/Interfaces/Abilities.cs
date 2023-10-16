@@ -2,7 +2,6 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using System.Security.Cryptography;
 
 using MicroService.Common.Exceptions;
 using MicroService.Common.Models;
@@ -25,6 +24,8 @@ namespace MicroService.Common.Interfaces
     #endregion
 
     #region IMatch
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
     /// <summary>
     /// Reprents an object which checks if certqain value exists.
     /// </summary>
@@ -37,6 +38,8 @@ namespace MicroService.Common.Interfaces
         /// <returns>True if values match, otherwise false.</returns>
         bool IsMatch(ISearchParameter? searchParameter);
     }
+        //+:cnd:noEmit
+#endif  
     #endregion
 
     #region IModifiable
@@ -111,7 +114,7 @@ namespace MicroService.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
-    #endregion    
+    #endregion
     
     #region IExModelExceptionSupplier
     /// <summary>
@@ -153,46 +156,43 @@ namespace MicroService.Common.Interfaces
     }
     #endregion
 
-    #region IFirstModel<TModel, TID> 
-    /// <summary>
-    /// Represents an object which offers the first model with in its internal collection.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IFirstModel<TModel, TID> : IFirstModel<TModel>
-        where TModel : ISelfModel<TID, TModel>
-        where TID : struct
-    {
-        new TModel? GetFirstModel();
-    }
-    #endregion
-
-    #region IFind<TModel, TOutDTO>
+    #region IFetch<TModel, TOutDTO>
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-    public interface IFind<TOutDTO, TModel>
+    public interface IFetch<TOutDTO, TModel>
         where TOutDTO : IModel
         where TModel : IModel
     {
         /// <summary>
         /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TOutDTO>?> GetAll(int limitOfResult = 0);
+        Task<IEnumerable<TOutDTO>?> GetAll(int count = 0);
 
         /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
+        /// Gets all models contained in this object picking from the index specified up to a count determined by count.
+        /// The count of models returned can be limited by the count parameter.
         /// If the parameter value is zero, then all models are returned.
         /// </summary>
         /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
+        /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int limitOfResult);
+        Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count);
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
 
+    #region ISearch<TModel, TOutDTO>
+    //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+    public interface ISearch<TOutDTO, TModel>
+        where TOutDTO : IModel
+        where TModel : IModel
+    {
         /// <summary>
         /// Finds a model based on given paramters.
         /// </summary>
@@ -200,6 +200,13 @@ namespace MicroService.Common.Interfaces
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
         Task<TOutDTO?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = 0);
+
+        /// <summary>
+        /// Finds a model based on given paramter.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used to find the model.</param>
+        /// <returns>Task with result of type TModel.</returns>
+        Task<TOutDTO?> Find(ISearchParameter? parameter);
 
         /// <summary>
         /// Finds all models matched based on given paramter.
@@ -220,37 +227,6 @@ namespace MicroService.Common.Interfaces
 #endif
     //+:cnd:noEmit
     #endregion
-
-    #region IReadable<TOutDTO, TModel, TID>
-    //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IReadable<TOutDTO, TModel, TID>: IFindByID<TOutDTO, TModel, TID>
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE && !MODEL_NONQUERYABLE
-        , IFind<TOutDTO, TModel>
-#endif
-        //+:cnd:noEmit
-        #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>
-        //-:cnd:noEmit
-#if (!MODEL_USEDTO)
-        , TOutDTO
-#endif
-        //+:cnd:noEmit
-        where TID : struct
-        #endregion
-    {
-    }
-#endif
-    //+:cnd:noEmit
-#endregion
 
     #region IDeletable<TOutDTO, TModel, TID>
     //-:cnd:noEmit
@@ -433,8 +409,8 @@ namespace MicroService.Common.Interfaces
         /// <param name="models">Models to delete.</param>
         /// <returns>Task with result of type boolean.</returns>
         Task<bool> DeleteRange(IEnumerable<TModel>? models);
-#endif
     }
+#endif
     //+:cnd:noEmit
     #endregion
 

@@ -6,9 +6,11 @@
 #if !TDD 
 //+:cnd:noEmit
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 using MicroService.Common.Attributes;
+using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
 using MicroService.Common.Web.API.Middlewares;
@@ -18,6 +20,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -37,10 +41,11 @@ namespace MicroService.Common.Web.API
 
 #if !MODEL_NONQUERYABLE
         static List<Tuple<Type, Type>> QueryControllerTypes = new List<Tuple<Type, Type>>(3);
+        static List<Tuple<Type, Type, Type>> QueryKeyedControllerTypes = new List<Tuple<Type, Type, Type>>(3);
 #endif
 #endif
         //+:cnd:noEmit
-#endregion
+        #endregion
 
         #region PROPERTIES
         public static bool IsProductionEnvironment { get; private set; }
@@ -218,84 +223,27 @@ namespace MicroService.Common.Web.API
             var type = typeof(TOutDTO);
             var modelType = typeof(TModel);
 
-            ServiceScope scope = ServiceScope.Scoped;
-            bool addController = true;
-            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
-            ConnectionKey connectionKey = ConnectionKey.InMemory;
-            string? dbName = null;
+            modelType.GetOptions(configuration, out ServiceScope scope, out bool addController, out Action<DbContextOptionsBuilder> action, dbContextOptions);
 
-            if (modelAttribute != null)
-            {
-                scope = modelAttribute.Scope;
-                addController = modelAttribute.AutoController;
-            }
-            var connectAttribute = modelType.GetCustomAttribute<DBConnectAttribute>();
-            if (connectAttribute != null)
-            {
-                connectionKey = connectAttribute.ConnectionKey;
-                dbName = connectAttribute.Database;
-            }
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
             if (addController)
                 ControllerTypes.Add(Tuple.Create(type, modelType, typeof(TID), typeof(TInDTO)));
 #endif
             //+:cnd:noEmit
-            var dummyModel = (IExModel)new TModel();
-
-            DbContextOptionsBuilder dbOptionBuilder;
-            if (dbContextOptions == null)
-                dbOptionBuilder = new DbContextOptionsBuilder();
-            else
-                dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
-
-            string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
-            Action<DbContextOptionsBuilder> action = (opt) =>
-            {
-                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(dbName))
-                {
-                    connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
-                    _ = opt.UseInMemoryDatabase(connectionString);
-                    return;
-                }
-
-                connectionString = string.Format(connectionString, dbName);
-                switch (connectionKey)
-                {
-                    case ConnectionKey.InMemory:
-                    default:
-                        _ = opt.UseInMemoryDatabase(connectionString);
-                        break;
-                        //-:cnd:noEmit
-#if MODEL_CONNECTSQLSERVER
-                    case ConnectionKey.SQLServer:
-                        _= opt.UseSqlServer(connectionString);
-                        break;
-#elif MODEL_CONNECTPOSTGRESQL
-                    case ConnectionKey.PostgreSQL:
-                       _= opt.UseNpgsql(connectionString);
-                        break;
-#elif MODEL_CONNECTMYSQL
-                        case ConnectionKey.MySQL:
-                       _= opt.UseMySQL(connectionString);
-                        break;
-#endif
-                        //+:cnd:noEmit
-                }
-            };
 
             services.AddDbContext<TDBContext>(action);
             switch (scope)
             {
                 case ServiceScope.Scoped:
                 default:
-                    services.AddScoped<IService<TOutDTO, TModel, TID>, TService>();
+                    services.AddScoped<IContract<TOutDTO, TModel, TID>, TService>();
                     break;
                 case ServiceScope.Transient:
-                    services.AddTransient<IService<TOutDTO, TModel, TID>, TService>();
+                    services.AddTransient<IContract<TOutDTO, TModel, TID>, TService>();
                     break;
                 case ServiceScope.Singleton:
-                    services.AddSingleton<IService<TOutDTO, TModel, TID>, TService>();
+                    services.AddSingleton<IContract<TOutDTO, TModel, TID>, TService>();
                     break;
             }
         }
@@ -423,7 +371,7 @@ namespace MicroService.Common.Web.API
             AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
         #endregion
 
-        #region ADD KEY LESS MODEL
+        #region ADD KEY LESS QUERY MODEL
         //-:cnd:noEmit
 #if !MODEL_NONQUERYABLE
         /// <summary>
@@ -455,84 +403,27 @@ namespace MicroService.Common.Web.API
             var type = typeof(TOutDTO);
             var modelType = typeof(TModel);
 
-            ServiceScope scope = ServiceScope.Scoped;
-            bool addController = true;
-            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
-            ConnectionKey connectionKey = ConnectionKey.InMemory;
-            string? dbName = null;
+            modelType.GetOptions(configuration, out ServiceScope scope, out bool addController, out Action<DbContextOptionsBuilder> action, dbContextOptions);
 
-            if (modelAttribute != null)
-            {
-                scope = modelAttribute.Scope;
-                addController = modelAttribute.AutoController;
-            }
-            var connectAttribute = modelType.GetCustomAttribute<DBConnectAttribute>();
-            if (connectAttribute != null)
-            {
-                connectionKey = connectAttribute.ConnectionKey;
-                dbName = connectAttribute.Database;
-            }
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
             if (addController)
                 QueryControllerTypes.Add(Tuple.Create(type, modelType));
 #endif
             //+:cnd:noEmit
-            var dummyModel = (IExModel)new TModel();
-
-            DbContextOptionsBuilder dbOptionBuilder;
-            if (dbContextOptions == null)
-                dbOptionBuilder = new DbContextOptionsBuilder();
-            else
-                dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
-
-            string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
-            Action<DbContextOptionsBuilder> action = (opt) =>
-            {
-                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(dbName))
-                {
-                    connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
-                    _ = opt.UseInMemoryDatabase(connectionString);
-                    return;
-                }
-
-                connectionString = string.Format(connectionString, dbName);
-                switch (connectionKey)
-                {
-                    case ConnectionKey.InMemory:
-                    default:
-                        _ = opt.UseInMemoryDatabase(connectionString);
-                        break;
-                        //-:cnd:noEmit
-#if MODEL_CONNECTSQLSERVER
-                    case ConnectionKey.SQLServer:
-                        _= opt.UseSqlServer(connectionString);
-                        break;
-#elif MODEL_CONNECTPOSTGRESQL
-                    case ConnectionKey.PostgreSQL:
-                       _= opt.UseNpgsql(connectionString);
-                        break;
-#elif MODEL_CONNECTMYSQL
-                        case ConnectionKey.MySQL:
-                       _= opt.UseMySQL(connectionString);
-                        break;
-#endif
-                        //+:cnd:noEmit
-                }
-            };
 
             services.AddDbContext<TDBContext>(action);
             switch (scope)
             {
                 case ServiceScope.Scoped:
                 default:
-                    services.AddScoped<IQueryService<TOutDTO, TModel>, TService>();
+                    services.AddScoped<IQueryContract<TOutDTO, TModel>, TService>();
                     break;
                 case ServiceScope.Transient:
-                    services.AddTransient<IQueryService<TOutDTO, TModel>, TService>();
+                    services.AddTransient<IQueryContract<TOutDTO, TModel>, TService>();
                     break;
                 case ServiceScope.Singleton:
-                    services.AddSingleton<IQueryService<TOutDTO, TModel>, TService>();
+                    services.AddSingleton<IQueryContract<TOutDTO, TModel>, TService>();
                     break;
             }
         }
@@ -580,6 +471,132 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
+        #region ADD KEYED QUERY MODEL
+        //-:cnd:noEmit
+#if !MODEL_NONQUERYABLE
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TService">Query Service implementation of your choice - must be inherited from Service class.</typeparam>
+        /// <typeparam name="TDBContext">DBContext mplementation of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddKeyedQueryModel<TOutDTO, TModel, TID, TService, TDBContext>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TService : QueryService<TOutDTO, TModel, TID, TDBContext>
+            where TDBContext : DBContext
+            where TID: struct
+            #endregion
+        {
+            var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+           
+            modelType.GetOptions(configuration, out ServiceScope scope, out bool addController, out Action<DbContextOptionsBuilder> action, dbContextOptions);
+
+            //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+            if (addController)
+                QueryKeyedControllerTypes.Add(Tuple.Create(type, modelType, typeof(TID)));
+#endif
+            //+:cnd:noEmit
+
+            services.AddDbContext<TDBContext>(action);
+            switch (scope)
+            {
+                case ServiceScope.Scoped:
+                default:
+                    services.AddScoped<IQueryContract<TOutDTO, TModel, TID>, TService>();
+                    break;
+                case ServiceScope.Transient:
+                    services.AddTransient<IQueryContract<TOutDTO, TModel, TID>, TService>();
+                    break;
+                case ServiceScope.Singleton:
+                    services.AddSingleton<IQueryContract<TOutDTO, TModel, TID>, TService>();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddKeyedQueryModel<TOutDTO, TModel, TID>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TID : struct
+            #endregion
+            => AddKeyedQueryModel<TOutDTO, TModel, TID, QueryService<TOutDTO, TModel, TID, DBContext>, DBContext>(services, configuration, dbContextOptions);
+
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddKeyedQueryModel<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddKeyedQueryModel<TOutDTO, TModel, int, QueryService<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+
+        /// <summary>
+        /// Adds a new model to model query processing layer.
+        /// Use this mehod if you are to provide your own implementation of query service class, otherwise 
+        /// use another override of 'AddQueryModel' method.
+        /// </summary>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
+        public static void AddKeyedQueryModel<TModel>(this IServiceCollection services, IConfiguration configuration, DbContextOptions? dbContextOptions = null)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            new()
+            #endregion
+            =>
+            AddKeyedQueryModel<TModel, TModel, int, QueryService<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+#endif
+        //+:cnd:noEmit
+        #endregion
+
         #region GET MODEL NAME
         //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -609,6 +626,71 @@ namespace MicroService.Common.Web.API
         }
 #endif
         //+:cnd:noEmit
+        #endregion
+
+        #region GET OPTIONS
+        static void GetOptions(this Type modelType, IConfiguration configuration, out ServiceScope scope, out bool addController, 
+            out Action<DbContextOptionsBuilder> action, DbContextOptions? dbContextOptions = null)
+        {
+            scope = ServiceScope.Scoped;
+            addController = true;
+            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
+            ConnectionKey connectionKey = ConnectionKey.InMemory;
+            string? dbName = null;
+
+            if (modelAttribute != null)
+            {
+                scope = modelAttribute.Scope;
+                addController = modelAttribute.AutoController;
+            }
+            var connectAttribute = modelType.GetCustomAttribute<DBConnectAttribute>();
+            if (connectAttribute != null)
+            {
+                connectionKey = connectAttribute.ConnectionKey;
+                dbName = connectAttribute.Database;
+            }
+
+            DbContextOptionsBuilder dbOptionBuilder;
+            if (dbContextOptions == null)
+                dbOptionBuilder = new DbContextOptionsBuilder();
+            else
+                dbOptionBuilder = new DbContextOptionsBuilder(dbContextOptions);
+
+            string connectionString = configuration?.GetSection("ConnectionStrings")[connectionKey.ToString()] ?? "";
+            action = (opt) =>
+            {
+                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(dbName))
+                {
+                    connectionString = configuration?.GetSection("ConnectionStrings")["InMemory"] ?? "Data Source=.\\Data\\SQlLiteDatabase.db";
+                    _ = opt.UseInMemoryDatabase(connectionString);
+                    return;
+                }
+
+                connectionString = string.Format(connectionString, dbName);
+                switch (connectionKey)
+                {
+                    case ConnectionKey.InMemory:
+                    default:
+                        _ = opt.UseInMemoryDatabase(connectionString);
+                        break;
+                        //-:cnd:noEmit
+#if MODEL_CONNECTSQLSERVER
+                    case ConnectionKey.SQLServer:
+                        _= opt.UseSqlServer(connectionString);
+                        break;
+#elif MODEL_CONNECTPOSTGRESQL
+                    case ConnectionKey.PostgreSQL:
+                       _= opt.UseNpgsql(connectionString);
+                        break;
+#elif MODEL_CONNECTMYSQL
+                        case ConnectionKey.MySQL:
+                       _= opt.UseMySQL(connectionString);
+                        break;
+#endif
+                        //+:cnd:noEmit
+                }
+            };
+        }
         #endregion
 
         #region DYNAMIC CONTROLLER CONFIGURATION CLASSES
@@ -662,7 +744,6 @@ namespace MicroService.Common.Web.API
                 controllerType = typeof(Controller<,,,>);
                 foreach (var typeParam in ControllerTypes)
                 {
-
                     feature.Controllers.Add(
                         controllerType.MakeGenericType(typeParam.Item1, typeParam.Item2, typeParam.Item3, typeParam.Item4).GetTypeInfo()
                     );
@@ -673,17 +754,29 @@ namespace MicroService.Common.Web.API
                 //-:cnd:noEmit
 #if !MODEL_NONQUERYABLE
                 if (QueryControllerTypes.Count == 0)
-                    goto EXIT;
+                    goto HANDLE_QUERYKEYEDCONTROLLER;
 
                 controllerType = typeof(QueryController<,>);
                 foreach (var typeParam in QueryControllerTypes)
                 {
-
                     feature.Controllers.Add(
                         controllerType.MakeGenericType(typeParam.Item1, typeParam.Item2).GetTypeInfo()
                     );
                 }
                 QueryControllerTypes.Clear();
+                HANDLE_QUERYKEYEDCONTROLLER:
+
+                if (QueryKeyedControllerTypes.Count == 0)
+                    goto EXIT;
+
+                controllerType = typeof(QueryController<,,>);
+                foreach (var typeParam in QueryKeyedControllerTypes)
+                {
+                    feature.Controllers.Add(
+                        controllerType.MakeGenericType(typeParam.Item1, typeParam.Item2, typeParam.Item3).GetTypeInfo()
+                    );
+                }
+                QueryKeyedControllerTypes.Clear ();
 #endif
                 //+:cnd:noEmit
                 EXIT:

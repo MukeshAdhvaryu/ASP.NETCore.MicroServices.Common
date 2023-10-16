@@ -4,15 +4,12 @@
 */
 
 //-:cnd:noEmit
-#if !TDD
-using System;
-using System.Text.Json;
+#if !TDD && MODEL_SEARCHABLE && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 using System.Text.Json.Nodes;
 
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -24,6 +21,10 @@ namespace MicroService.Common.Web.API
         Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
         {
             var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
+            /* 
+                The following call will create an empty model according to TModel type defined in a controller
+                The method 'GetModel' is defined in ModelCreator class.
+            */
             var model = (IExModel)GetModel(descriptor.ControllerTypeInfo, out _);
 
             var Query = bindingContext.ActionContext.HttpContext.Request.Query;

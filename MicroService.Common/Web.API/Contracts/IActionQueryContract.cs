@@ -3,50 +3,47 @@
  Author: Mukesh Adhvaryu.
 */
 //-:cnd:noEmit
-#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-using MicroService.Common.CQRS;
-#endif
+#if !TDD && MODEL_USEACTION 
 //+:cnd:noEmit
 
+using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
-namespace MicroService.Common.Interfaces
+namespace MicroService.Common.Web.API.Interfaces
 {
-    #region IQueryContract<TOutDTO, TModel>
-    /// <summary>
-    /// This interface represents a contract of operations.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    public interface IQueryContract<TOutDTO, TModel> : IContract
+    #region IQueryActionContract<TModel>
+    public interface IActionQueryContract<TModel> : IContract
     //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-        , IQuery<TOutDTO, TModel>
+        , IFirstModel<TModel>
+        , IFetch<TModel>
+#if MODEL_SEARCHABLE
+        , ISearch<TModel>
+#endif
 #endif
         //+:cnd:noEmit
+
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
         where TModel : ISelfModel<TModel>,
-        //-:cnd:noEmit
-#if (!MODEL_USEDTO)
-        TOutDTO,
-#endif
-        //+:cnd:noEmit
         new()
         #endregion
     { }
     #endregion
 
-    #region IQueryContract<TOutDTO, TModel, TID>
+    #region IQueryContract<TModel, TID>
     /// <summary>
     /// This interface represents repository object to be used in controller class.
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    public interface IQueryContract<TOutDTO, TModel, TID> : 
-        IQueryContract<TOutDTO, TModel>, IFindByID<TOutDTO, TModel, TID>
+    public interface IActionQueryContract<TModel, TID> : IActionQueryContract<TModel>
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        , IFindByID<TModel, TID>
+#endif
+        //+:cnd:noEmit
+
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
         where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -59,3 +56,6 @@ namespace MicroService.Common.Interfaces
     { }
     #endregion
 }
+//-:cnd:noEmit
+#endif
+//+:cnd:noEmit

@@ -2,6 +2,10 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
+
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
+
 using MicroService.Common.Models;
 
 namespace MicroService.Common
@@ -65,6 +69,7 @@ namespace MicroService.Common
             Operator<T>.Compare(left, right, Criteria.Equal);
         #endregion
 
+        #region OPERATOR<T>
         /// <summary>
         /// Class Operation.
         /// </summary>
@@ -732,5 +737,8 @@ namespace MicroService.Common
                 }
             }
         }
+        #endregion
     }
 }
+#endif
+//+:cnd:noEmit

@@ -2,7 +2,7 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-using MicroService.Common.Services;
+using MicroService.Common.Models;
 
 namespace MicroService.Common.Attributes
 {

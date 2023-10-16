@@ -46,7 +46,7 @@ namespace MicroService.Common.Models
             }
             while (index < Available.Count)
             {
-                newID = Available[++index];
+                newID = Available[index++];
 
                 if (!Used.Contains(newID))
                 {

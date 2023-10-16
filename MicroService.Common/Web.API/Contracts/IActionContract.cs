@@ -11,11 +11,8 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Web.API.Interfaces
 {
-    public interface IActionContract<TModel, TID>: IContract, IFirstModel<TModel, TID>, IModelCount
-        //-:cnd:noEmit
-#if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        , IReadable<TModel, TID>
-#endif
+    public interface IActionContract<TModel, TID>: IContract
+      //-:cnd:noEmit
 #if MODEL_DELETABLE
   , IDeleteable<TModel, TID>
 #endif
@@ -25,7 +22,15 @@ namespace MicroService.Common.Web.API.Interfaces
 #if MODEL_UPDATABLE
   , IUpdatable<TModel, TID>
 #endif
-    //+:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        , IFirstModel<TModel>
+        , IFetch<TModel>
+        , IFindByID<TModel, TID>
+#if MODEL_SEARCHABLE
+        , ISearch<TModel>
+#endif
+#endif
+  //+:cnd:noEmit
     #region TYPE CONSTRINTS
         where TModel : ISelfModel<TID, TModel>,
         new()

@@ -193,27 +193,27 @@ namespace MicroService.Common.Models
         /// <summary>
         /// Represents an exception to indicate that no model is found in the collection for a given search or the collection is empty.
         /// </summary>
-        NoModelFoundException,
+        NoModelFound,
 
         /// <summary>
         /// Represents an exception to indicate that no model is found in the collection while searching it with specific ID.
         /// </summary>
-        NoModelFoundForIDException,
+        NoModelFoundForID,
 
         /// <summary>
         /// Represents an exception to indicate that the query to search multiple models returned no models.
         /// </summary>
-        NoModelsFoundException,
+        NoModelsFound,
 
         /// <summary>
         /// Represents an exception to indicate that no model is supplied where it required for example Add or Update functions.
         /// </summary>
-        NoModelSuppliedException,
+        NoModelSupplied,
 
         /// <summary>
         /// Represents an exception to indicate that a negative number is supplied as a count of models to be returned.
         /// </summary>
-        NegativeFetchCountException,
+        NegativeFetchCount,
 
         /// <summary>
         /// Represents an exception to indicate that a copy operation from either DTO or another model is failed.
@@ -223,37 +223,42 @@ namespace MicroService.Common.Models
         /// <summary>
         /// Represents an exception to indicate that no valid paramter is supplied in a model search intended to find multiple or single models with single search criteria.
         /// </summary>
-        NoParameterSuppliedException,
+        NoParameterSupplied,
 
         /// <summary>
         /// Represents an exception to indicate that no valid paramters are supplied in a model search intended to find multiple or single models with multiple search criteria.
         /// </summary>
-        NoParametersSuppliedException,
+        NoParametersSupplied,
 
         /// <summary>
         /// Represents an exception to indicate that an operation of adding a model in the collection failed.
         /// </summary>
-        AddOperationFailedException,
+        AddOperationFailed,
 
         /// <summary>
         /// Represents an exception to indicate that an operation of updating a model in the collection failed.
         /// </summary>
-        UpdateOperationFailedException,
+        UpdateOperationFailed,
 
         /// <summary>
         /// Represents an exception to indicate that an operation of deleting a model in the collection failed.
         /// </summary>
-        DeleteOperationFailedException,
+        DeleteOperationFailed,
 
         /// <summary>
         /// Represents an exception to indicate that server is failed due to an internal error.
         /// </summary>
-        InternalServerErrorException,
+        InternalServerError,
 
         /// <summary>
         /// Represents an exception to indicate that the current operation failed an expectation of the requirement for conducting the operation.
         /// </summary>
-        ExpectationFailedException,
+        ExpectationFailed,
+
+        /// <summary>
+        /// Represents an exception to indicate that the supplied model context is not valid or compitible with the object intended to use it.
+        /// </summary>
+        InvalidContext,
     }
     #endregion
 
@@ -262,7 +267,7 @@ namespace MicroService.Common.Models
     {
         InMemory,
         //-:cnd:noEmit
-#if MODEL_CONNECTSQLSERVER        
+#if MODEL_CONNECTSQLSERVER
         SQLServer = 1,
 #elif MODEL_CONNECTPOSTGRESQL
         PostgreSQL = 1,
@@ -272,9 +277,8 @@ namespace MicroService.Common.Models
         //+:cnd:noEmit
     }
     #endregion
-}
-namespace MicroService.Common.Services
-{
+
+    #region SERVICE SCOPE
     /// <summary>
     /// Provides Scope options for injecting service repository.
     /// </summary>
@@ -295,4 +299,5 @@ namespace MicroService.Common.Services
         /// </summary>
         Singleton,
     }
+    #endregion
 }

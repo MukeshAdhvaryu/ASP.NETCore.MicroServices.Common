@@ -2,46 +2,30 @@
 * This notice may not be removed from any source distribution.
  Author: Mukesh Adhvaryu.
 */
-//-:cnd:noEmit
-#if !TDD  
-//+:cnd:noEmit
 
-using MicroService.Common.Contexts;
 //-:cnd:noEmit
 #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 using MicroService.Common.CQRS;
 #endif
 //+:cnd:noEmit
+
 using MicroService.Common.Models;
-
-using Microsoft.EntityFrameworkCore;
-
 using MicroService.Common.Interfaces;
 
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.Contexts
 {
-    #region DBCONTEXT
-    public partial class DBContext : DbContext, IModelContext
+    #region ModelContext
+    /// <summary>
+    /// Represents an object which creates list based model context useful for TDD.
+    /// </summary>
+    public sealed  partial class ModelContext : IModelContext
     {
-        #region CONSTRUCTOR
-        public DBContext(DbContextOptions<DBContext> options)
-            : base(options)
-        { }
-        #endregion
-
-        #region ON MODEL CREATION
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder = modelBuilder.ApplyConfigurationsFromAssembly(typeof(DBContext).Assembly);
-        }
-        #endregion
-
         #region CREATE COMMAND
         //-:cnd:noEmit
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData)
         {
-            return new CommandObject<TOutDTO, TModel, TID>(this, initialzeData);
+            return new CommandObject<TOutDTO, TModel, TID>(null, initialzeData);
         }
 #endif
         //+:cnd:noEmit
@@ -52,19 +36,24 @@ namespace MicroService.Common.Web.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData)
         {
-            return new QueryObject<TOutDTO, TModel>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel>(null, initialzeData);
         }
         IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData)
         {
-            return new QueryObject<TOutDTO, TModel, TID>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel, TID>(null, initialzeData);
         }
 #endif
         //+:cnd:noEmit
         #endregion
+
+        #region DISPOSE
+        public void Dispose() { }
+        #endregion
     }
     #endregion
 
-    partial class DBContext
+    #region ModelContext
+    partial class ModelContext
     {
         #region COMMAND CLASS IMPLEMENTATION
         //-:cnd:noEmit
@@ -81,14 +70,12 @@ namespace MicroService.Common.Web.API
             where TID : struct
             #endregion
         {
-            DbSet<TModel> models;
-            DBContext context;
+            List<TModel> models;
 
             #region CONSTRUCTORS
-            public CommandObject(DBContext _context, bool initializeData = true)
+            public CommandObject(List<TModel>? _models = null, bool initializeData = true)
             {
-                context = _context;
-                models = context.Set<TModel>();
+                models = _models?? new List<TModel>();
                 if (!initializeData)
                     return;
 
@@ -96,7 +83,6 @@ namespace MicroService.Common.Web.API
                 if (items == null)
                     return;
                 models.AddRange(items);
-                context.SaveChanges();
             }
             #endregion
 
@@ -116,8 +102,7 @@ namespace MicroService.Common.Web.API
 #if (MODEL_DELETABLE)
             protected override bool DeleteModel(TModel model)
             {
-                models.Remove(model);
-                return true;
+                return models.Remove(model);
             }
 #endif
             //+:cnd:noEmit
@@ -128,26 +113,19 @@ namespace MicroService.Common.Web.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             protected override IQuery<TOutDTO, TModel, TID> GetQueryObject()
             {
-                return new QueryObject<TOutDTO, TModel, TID>(context, models, false);
+                return new QueryObject<TOutDTO, TModel, TID>(models, false);
             }
 #endif
             //+:cnd:noEmit
             #endregion
 
             #region GET MODEL COUNT
-            public override int GetModelCount() => models.Count();
+            public override int GetModelCount() => models.Count;
             #endregion
 
             #region GET BY ID
             protected override Task<TModel?> Get(TID id) =>
               Task.FromResult(models.FirstOrDefault(m => Equals(m.ID, id)));
-            #endregion
-
-            #region SAVE CHANGES
-            public override async Task<bool> SaveChanges()
-            {
-                return await context.SaveChangesAsync() > 0;
-            }
             #endregion
         }
 #endif
@@ -169,19 +147,18 @@ namespace MicroService.Common.Web.API
             where TID : struct
             #endregion
         {
-            DbSet<TModel> models;
+            List<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(DBContext context, DbSet<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(List<TModel>? _models = null, bool initialzeData = false)
             {
-                models = _models?? context.Set<TModel>();
+                models = _models ?? new List<TModel>();
                 if (!initialzeData)
                     return;
                 IEnumerable<TModel>? items = GetInitialData();
                 if (items == null)
                     return;
                 models.AddRange(items);
-                context.SaveChanges();
             }
             #endregion
 
@@ -190,7 +167,7 @@ namespace MicroService.Common.Web.API
             #endregion
 
             #region GET MODEL COUNT
-            public override int GetModelCount() => models.Count();
+            public override int GetModelCount() => models.Count;
             #endregion
 
             #region GET MODEL BY ID
@@ -219,19 +196,18 @@ namespace MicroService.Common.Web.API
             //+:cnd:noEmit
             #endregion
         {
-            DbSet<TModel> models;
+            List<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(DBContext context, DbSet<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(List<TModel>? _models = null, bool initialzeData = false)
             {
-                models = _models ?? context.Set<TModel>();
+                models = _models ?? new List<TModel>();
                 if (!initialzeData)
                     return;
                 IEnumerable<TModel>? items = GetInitialData();
                 if (items == null)
                     return;
                 models.AddRange(items);
-                context.SaveChanges();
             }
             #endregion
 
@@ -240,14 +216,12 @@ namespace MicroService.Common.Web.API
             #endregion
 
             #region GET MODEL COUNT
-            public override int GetModelCount() => models.Count();
+            public override int GetModelCount() => models.Count;
             #endregion
         }
 #endif
         //+:cnd:noEmit
         #endregion
     }
+    #endregion
 }
-//-:cnd:noEmit
-#endif
-//+:cnd:noEmit

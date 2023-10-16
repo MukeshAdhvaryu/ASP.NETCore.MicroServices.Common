@@ -58,7 +58,7 @@ namespace UserDefined.Tests
             return new Controller<TOutDTO, TModel, TID, TInDTO>(service);
         }
 #else
-        protected override IActionContract<TModel, int> CreateContract(IService<TInDTO, TModel, int> service)
+        protected override IActionContract<TModel, int> CreateContract(IContract<TInDTO, TModel, int> service)
         {
             return new Controller<TOutDTO, TModel, TID, TInDTO>(service);
         }

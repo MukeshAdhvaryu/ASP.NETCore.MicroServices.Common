@@ -23,9 +23,37 @@ namespace MicroService.Common.Models
     { }
     #endregion
 
+    #region IExModel
+    /// <summary>
+    /// This interface represents a model.
+    /// </summary>
+    internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
+    //-:cnd:noEmit
+#if MODEL_USEDTO
+        , IExModelToDTO
+#endif
+#if MODEL_SEARCHABLE
+        , IMatch
+#endif
+    //+:cnd:noEmit
+    {
+        /// <summary>
+        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
+        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
+        /// </summary>
+        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
+
+        /// <summary>
+        /// Gets initial data.
+        /// </summary>
+        /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
+        IEnumerable<IModel> GetInitialData();
+    }
+    #endregion
+
     #region IModel<TID>
     /// <summary>
-    /// This interface represents a model with primary key named as ID.
+    /// This interface represents a model.
     /// Highly customizable by using the following conditional compilation symbols:
     /// MODEL_DELETABLE;
     /// MODEL_APPENDABLE;
@@ -33,17 +61,22 @@ namespace MicroService.Common.Models
     /// MODEL_USEMYOWNCONTROLLER
     /// </summary>
     /// <typeparam name="TID"></typeparam>
-    public interface IModel<TID> : IModel, IMatch
+    public interface IModel<TID> : IModel
+        //-:cnd:noEmit
+#if MODEL_SEARCHABLE
+        , IMatch
+#endif
+        //+:cnd:noEmit
         where TID : struct
     {
         /// <summary>
-        /// gets primary key value of this model.
+        /// Gets primary key value of this model.
         /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         TID ID { get; }
     }
-    #endregion
+#endregion
 
     #region IExModel<TID>
     /// <summary>
@@ -82,37 +115,17 @@ namespace MicroService.Common.Models
     }
     #endregion
 
-    #region IExModel
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// </summary>
-    internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
-    //-:cnd:noEmit
-#if MODEL_USEDTO
-        , IExModelToDTO
-#endif
-    //+:cnd:noEmit
-    {
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
-
-        /// <summary>
-        /// Gets initial data.
-        /// </summary>
-        /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
-        IEnumerable<IModel> GetInitialData();
-    }
-    #endregion
-
     #region ISelfModel<TModel>
     /// <summary>
-    /// This 
+    /// This interface represents a self-referencing model.
     /// </summary>
     /// <typeparam name="TModel"></typeparam>
-    public partial interface ISelfModel<TModel> : IModel, IMatch
+    public partial interface ISelfModel<TModel> : IModel
+        //-:cnd:noEmit
+#if MODEL_SEARCHABLE
+        , IMatch
+#endif
+        //+:cnd:noEmit
         where TModel : ISelfModel<TModel>
     {
     }
@@ -120,7 +133,7 @@ namespace MicroService.Common.Models
 
     #region ISelfModel<TModel>
     /// <summary>
-    /// This 
+    /// This interface represents a self-referencing model with the primary key of type TID.
     /// </summary>
     /// <typeparam name="TModel"></typeparam>
     public partial interface ISelfModel<TID, TModel> : ISelfModel<TModel>, IModel<TID>
