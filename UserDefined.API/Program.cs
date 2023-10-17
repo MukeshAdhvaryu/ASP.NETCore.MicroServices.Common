@@ -34,12 +34,16 @@ namespace UserDefined.API
             */
 
             //builder.Services.AddModel<Subject>(builder.Configuration);
+            //var list = new List<Subject>();
 
             //-:cnd:noEmit
 #if MODEL_USEDTO
             //If you are using DTO the follwing model can be added:
-            builder.Services.AddModel<ISubjectOutDTO, Subject, ISubjectInDTO>(builder.Configuration);
-            //builder.Services.AddModel<ISubjectOutDTO, Subject>(builder.Configuration);
+            //builder.Services.AddModel<ISubjectOutDTO, Subject, ISubjectInDTO>(builder.Configuration);
+
+            //builder.Services.AddModelSingleton<ISubjectOutDTO, Subject, ISubjectInDTO>(builder.Configuration, list);
+
+            builder.Services.AddModel<ISubjectOutDTO, Subject>(builder.Configuration);
 #else
             /*
              * Single Subject object can be used as in and out type.
@@ -50,8 +54,9 @@ namespace UserDefined.API
 
 #if !MODEL_NONQUERYABLE
 #if MODEL_NONREADABLE
-            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+            //builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
 #endif
+            //builder.Services.AddKeyedQueryModelSingleton<ISubjectOutDTO, Subject>(builder.Configuration, list);
             builder.Services.AddKeyedQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
 #endif
             //+:cnd:noEmit

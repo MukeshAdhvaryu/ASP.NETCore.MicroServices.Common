@@ -18,14 +18,29 @@ namespace MicroService.Common.Contexts
     /// <summary>
     /// Represents an object which creates list based model context useful for TDD.
     /// </summary>
-    public sealed  partial class ModelContext : IModelContext
+    public partial class ModelContext : IModelContext
     {
         #region CREATE COMMAND
         //-:cnd:noEmit
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData)
+        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new CommandObject<TOutDTO, TModel, TID>(null, initialzeData);
+            return newCommandObject<TOutDTO, TModel, TID>(initialzeData, source);
+        }
+
+        protected virtual ICommand<TOutDTO, TModel, TID> newCommandObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
+            #region TYPE CONSTRINTS
+            where TOutDTO : IModel
+            where TModel : class, ISelfModel<TID, TModel>, new()
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            , TOutDTO
+#endif
+            //+:cnd:noEmit
+            where TID : struct
+            #endregion
+        {
+            return new CommandObject<TOutDTO, TModel, TID>(initialzeData, source);
         }
 #endif
         //+:cnd:noEmit
@@ -34,14 +49,44 @@ namespace MicroService.Common.Contexts
         #region CREATE QUERY
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData)
+        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new QueryObject<TOutDTO, TModel>(null, initialzeData);
+            return newQueryObject<TOutDTO, TModel>(initialzeData, source);
         }
-        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData)
+        protected virtual IQuery<TOutDTO, TModel> newQueryObject<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
+            #region TYPE CONSTRINTS
+            where TOutDTO : IModel
+            where TModel : class, ISelfModel<TModel>, new()
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+                , TOutDTO
+#endif
+            //+:cnd:noEmit
+            #endregion
         {
-            return new QueryObject<TOutDTO, TModel, TID>(null, initialzeData);
+            return new QueryObject<TOutDTO, TModel>(initialzeData, source);
         }
+
+        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
+        {
+            return newQueryObject<TOutDTO, TModel, TID>(initialzeData, source);
+        }
+
+        protected virtual IQuery<TOutDTO, TModel, TID> newQueryObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
+            #region TYPE CONSTRINTS
+            where TOutDTO : IModel
+            where TModel : class, ISelfModel<TID, TModel>, new()
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+                , TOutDTO
+#endif
+    //+:cnd:noEmit
+            where TID : struct
+            #endregion
+        {
+            return new QueryObject<TOutDTO, TModel, TID>(initialzeData, source);
+        }
+
 #endif
         //+:cnd:noEmit
         #endregion
@@ -70,10 +115,10 @@ namespace MicroService.Common.Contexts
             where TID : struct
             #endregion
         {
-            List<TModel> models;
+            ICollection<TModel> models;
 
             #region CONSTRUCTORS
-            public CommandObject(List<TModel>? _models = null, bool initializeData = true)
+            public CommandObject(bool initializeData = true, ICollection<TModel>? _models = null)
             {
                 models = _models?? new List<TModel>();
                 if (!initializeData)
@@ -82,7 +127,14 @@ namespace MicroService.Common.Contexts
                 IEnumerable<TModel>? items = GetInitialData();
                 if (items == null)
                     return;
-                models.AddRange(items);
+                
+                if(models is List<TModel>)
+                {
+                    ((List<TModel>)models).AddRange(items);
+                    return;
+                }
+                foreach (TModel model in items)
+                    models.Add(model);
             }
             #endregion
 
@@ -113,7 +165,7 @@ namespace MicroService.Common.Contexts
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             protected override IQuery<TOutDTO, TModel, TID> GetQueryObject()
             {
-                return new QueryObject<TOutDTO, TModel, TID>(models, false);
+                return new QueryObject<TOutDTO, TModel, TID>(false, models);
             }
 #endif
             //+:cnd:noEmit
@@ -147,10 +199,10 @@ namespace MicroService.Common.Contexts
             where TID : struct
             #endregion
         {
-            List<TModel> models;
+            ICollection<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(List<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(bool initialzeData = false, ICollection<TModel>? _models = null)
             {
                 models = _models ?? new List<TModel>();
                 if (!initialzeData)
@@ -158,7 +210,13 @@ namespace MicroService.Common.Contexts
                 IEnumerable<TModel>? items = GetInitialData();
                 if (items == null)
                     return;
-                models.AddRange(items);
+                if (models is List<TModel>)
+                {
+                    ((List<TModel>)models).AddRange(items);
+                    return;
+                }
+                foreach (TModel model in items)
+                    models.Add(model);
             }
             #endregion
 
@@ -196,10 +254,10 @@ namespace MicroService.Common.Contexts
             //+:cnd:noEmit
             #endregion
         {
-            List<TModel> models;
+            ICollection<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(List<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(bool initialzeData = false, ICollection<TModel>? _models = null)
             {
                 models = _models ?? new List<TModel>();
                 if (!initialzeData)
@@ -207,7 +265,13 @@ namespace MicroService.Common.Contexts
                 IEnumerable<TModel>? items = GetInitialData();
                 if (items == null)
                     return;
-                models.AddRange(items);
+                if (models is List<TModel>)
+                {
+                    ((List<TModel>)models).AddRange(items);
+                    return;
+                }
+                foreach (TModel model in items)
+                    models.Add(model);
             }
             #endregion
 

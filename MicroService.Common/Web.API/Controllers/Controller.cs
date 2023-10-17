@@ -7,6 +7,7 @@
 //+:cnd:noEmit
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 //-:cnd:noEmit
 #if MODEL_USEACTION

@@ -39,9 +39,10 @@ namespace MicroService.Common.Web.API
         #region CREATE COMMAND
         //-:cnd:noEmit
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData)
+        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new CommandObject<TOutDTO, TModel, TID>(this, initialzeData);
+        
+            return new CommandObject<TOutDTO, TModel, TID>(this, source, initialzeData);
         }
 #endif
         //+:cnd:noEmit
@@ -50,13 +51,13 @@ namespace MicroService.Common.Web.API
         #region CREATE QUERY
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData)
+        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new QueryObject<TOutDTO, TModel>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel>(this, null, source, initialzeData);
         }
-        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData)
+        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new QueryObject<TOutDTO, TModel, TID>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel, TID>(this, null, source, initialzeData);
         }
 #endif
         //+:cnd:noEmit
@@ -85,10 +86,23 @@ namespace MicroService.Common.Web.API
             DBContext context;
 
             #region CONSTRUCTORS
-            public CommandObject(DBContext _context, bool initializeData = true)
+            public CommandObject(DBContext _context, ICollection<TModel>? source = null, bool initializeData = true)
             {
                 context = _context;
                 models = context.Set<TModel>();
+                if(source != null)
+                {
+                    try
+                    {
+                        models.AddRange(source);
+                        context.SaveChanges();
+
+                    }
+                    catch  
+                    {
+                        throw;
+                    }
+                }
                 if (!initializeData)
                     return;
 
@@ -128,7 +142,7 @@ namespace MicroService.Common.Web.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             protected override IQuery<TOutDTO, TModel, TID> GetQueryObject()
             {
-                return new QueryObject<TOutDTO, TModel, TID>(context, models, false);
+                return new QueryObject<TOutDTO, TModel, TID>(context, models, null, false);
             }
 #endif
             //+:cnd:noEmit
@@ -172,9 +186,21 @@ namespace MicroService.Common.Web.API
             DbSet<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(DBContext context, DbSet<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(DBContext context, DbSet<TModel>? _models = null, ICollection<TModel>? source = null, bool initialzeData = false)
             {
                 models = _models?? context.Set<TModel>();
+                if (source != null)
+                {
+                    try
+                    {
+                        models.AddRange(source);
+                        context.SaveChanges();
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+                }
                 if (!initialzeData)
                     return;
                 IEnumerable<TModel>? items = GetInitialData();
@@ -222,9 +248,22 @@ namespace MicroService.Common.Web.API
             DbSet<TModel> models;
 
             #region CONSTRUCTORS
-            public QueryObject(DBContext context, DbSet<TModel>? _models = null, bool initialzeData = false)
+            public QueryObject(DBContext context, DbSet<TModel>? _models = null, ICollection<TModel>? source = null, bool initialzeData = false)
             {
                 models = _models ?? context.Set<TModel>();
+                if (source != null)
+                {
+                    try
+                    {
+                        models.AddRange(source);
+                        context.SaveChanges();
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+                }
+
                 if (!initialzeData)
                     return;
                 IEnumerable<TModel>? items = GetInitialData();

@@ -4,7 +4,6 @@
 */
 //-:cnd:noEmit
 #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) ||(!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-using System.Security.Cryptography;
 
 using MicroService.Common.CQRS;
 #endif
@@ -16,16 +15,21 @@ namespace MicroService.Common.Contexts
     #region IModelContext
     public interface IModelContext : IDisposable
     {
+        #region CREATE COMMAND
         //-:cnd:noEmit
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
 
         /// <summary>
-        /// Creates new instance of ModelSet<TModel, TID>.
+        /// <summary>
+        /// Creates a new instance implementing ICommand<TOutDTO, TModel, TID> interface.
         /// </summary>
-        /// <typeparam name="TModel">Type of Model<typeparamref name="TID"/></typeparam>
-        /// <typeparam name="TID">Type of TID</typeparam>
-        /// <returns>An instance of ModelSet<TModel, TID></returns>
-        ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true)
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing ICommand<TOutDTO, TModel, TID></returns>
+        ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
             where TOutDTO : IModel
             where TModel : class, ISelfModel<TID, TModel>, new()
@@ -37,18 +41,22 @@ namespace MicroService.Common.Contexts
             where TID : struct
             #endregion
             ;
-
 #endif
         //+:cnd:noEmit
+        #endregion
 
+        #region CREATE QUERY
         //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         /// <summary>
-        /// Creates new instance of QuerySet<TModel>.
+        /// Creates a new instance implementing IQuery<TOutDTO, TModel> interface.
         /// </summary>
-        /// <typeparam name="TModel">Type of Model></typeparam>
-        /// <returns>An instance of QuerySet<TModel, TID></returns>
-        IQuery<TOutDTO, TModel> CreateQuery<TOutDTO, TModel>(bool initialzeData = false)
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing IQuery<TOutDTO, TModel></returns>
+        IQuery<TOutDTO, TModel> CreateQuery<TOutDTO, TModel>(bool initialzeData = false, ICollection<TModel>? source = null)
             #region TYPE CONSTRAINTS
             where TModel : class, ISelfModel<TModel>, new()
             where TOutDTO : IModel
@@ -56,11 +64,15 @@ namespace MicroService.Common.Contexts
             ;
 
         /// <summary>
-        /// Creates new instance of QuerySet<TModel>.
+        /// Creates a new instance implementing IQuery<TOutDTO, TModel, TID> interface.
         /// </summary>
-        /// <typeparam name="TModel">Type of Model></typeparam>
-        /// <returns>An instance of QuerySet<TModel, TID></returns>
-        IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false)
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing IQuery<TOutDTO, TModel, TID></returns>
+        IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
             where TOutDTO : IModel
             where TModel : class, ISelfModel<TID, TModel>, new()
@@ -74,6 +86,7 @@ namespace MicroService.Common.Contexts
             ;
 #endif
         //+:cnd:noEmit
+        #endregion
     }
     #endregion
 }

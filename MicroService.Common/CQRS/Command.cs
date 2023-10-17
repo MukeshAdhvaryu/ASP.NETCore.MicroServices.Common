@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using MicroService.Common.Attributes;
-using MicroService.Common.Contexts;
 using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;

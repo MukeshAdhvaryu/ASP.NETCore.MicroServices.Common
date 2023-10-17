@@ -46,6 +46,7 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [UPDATE12: Adopted Command and Query Segregation pattern.](#UPDATE12)
 
+[UPDATE13: ADD: Support for List based (non DbContext) Singleton CQRS.](#UPDATE13)
 
 ## WHY?
 We already know that a controller can have standard HTTP calls such as HttpGet, HttpPost, etc.
@@ -1968,3 +1969,69 @@ ICommand\<TOutDTO, TModel, TID\>
     }
     #endif
 
+ ## UPDATE13
+
+Added: Support for List based (non DbContext) Sigleton CQRS
+Changes are made in IModelContext, Service classes and Configuration class 
+to add a singleton service by passing List\<TModel\> instance for command and query both.
+Consider the following modified definition of IModelContext interface:
+
+    public interface IModelContext : IDisposable
+    {
+    #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        /// <summary>
+        /// <summary>
+        /// Creates a new instance implementing ICommand<TOutDTO, TModel, TID> interface.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing ICommand<TOutDTO, TModel, TID></returns>
+        ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true, ICollection<TModel>? source = null)
+            where TOutDTO : IModel
+            where TModel : class, ISelfModel<TID, TModel>, new()
+        #if (!MODEL_USEDTO)
+            , TOutDTO
+        #endif
+        where TID : struct
+            ;
+    #endif
+
+    #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
+        /// <summary>
+        /// Creates a new instance implementing IQuery<TOutDTO, TModel> interface.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing IQuery<TOutDTO, TModel></returns>
+        IQuery<TOutDTO, TModel> CreateQuery<TOutDTO, TModel>(bool initialzeData = false, ICollection<TModel>? source = null)
+            where TModel : class, ISelfModel<TModel>, new()
+            where TOutDTO : IModel
+            ;
+
+        /// <summary>
+        /// Creates a new instance implementing IQuery<TOutDTO, TModel, TID> interface.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
+        /// <param name="source">Optional source - providing pre-existing model data.</param>
+        /// <returns>An Instance implementing IQuery<TOutDTO, TModel, TID></returns>
+        IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false, ICollection<TModel>? source = null)
+            #region TYPE CONSTRINTS
+            where TOutDTO : IModel
+            where TModel : class, ISelfModel<TID, TModel>, new()
+            //-:cnd:noEmit
+        #if (!MODEL_USEDTO)
+            , TOutDTO
+        #endif
+        where TID : struct
+        ;
+    #endif
+    }
+As you can see, external source can be passed while creating command or query object.

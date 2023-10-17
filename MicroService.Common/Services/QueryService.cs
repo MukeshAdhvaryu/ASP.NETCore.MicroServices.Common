@@ -38,9 +38,9 @@ namespace MicroService.Common.Services
         #endregion
 
         #region CONSTRUCTORS
-        public QueryService(TContext _context)
+        public QueryService(TContext _context, ICollection<TModel>? source = null)
         {
-            Query = _context.CreateQuery<TOutDTO, TModel>(true);
+            Query = _context.CreateQuery<TOutDTO, TModel>(true, source);
         }
         public QueryService(IQuery<TOutDTO, TModel> query)
         {
@@ -150,8 +150,8 @@ public Task<TOutDTO?> Find(ISearchParameter? parameter)
         #endregion
     {
         #region CONSTRUCTORS
-        public QueryService(TContext _context) :
-            this(_context.CreateQuery<TOutDTO, TModel, TID>(true))
+        public QueryService(TContext _context, ICollection<TModel>? source = null) :
+            this(_context.CreateQuery<TOutDTO, TModel, TID>(true, source))
         { }
         public QueryService(IQuery<TOutDTO, TModel, TID> query) :
             base(query) 

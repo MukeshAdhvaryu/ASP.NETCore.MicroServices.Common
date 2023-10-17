@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 using MicroService.Common.Attributes;
+using MicroService.Common.Contexts;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
@@ -200,7 +201,7 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
         /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
         /// <typeparam name="TService">Service implementation of your choice - must be inherited from Service class.</typeparam>
-        /// <typeparam name="TDBContext">DBContext<typeparamref name="TModel"/> of your choice.</typeparam>
+        /// <typeparam name="TDBContext">DBContext of your choice.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
@@ -257,7 +258,7 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
         /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
         /// <typeparam name="TService">Service implementation of your choice - must be inherited from Service class.</typeparam>
-        /// <typeparam name="TDBContext">DBContext<typeparamref name="TModel"/> of your choice.</typeparam>
+        /// <typeparam name="TDBContext">DBContext of your choice.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
@@ -327,7 +328,7 @@ namespace MicroService.Common.Web.API
             where TOutDTO : IModel
             where TInDTO : IModel
             #endregion
-            => AddModel<TOutDTO, TModel, int, TInDTO, Service<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            => AddModel<TOutDTO, TModel, int, TInDTO>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -350,7 +351,7 @@ namespace MicroService.Common.Web.API
             new()
             where TOutDTO : IModel
             #endregion
-            => AddModel<TOutDTO, TModel, int, Service<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            => AddModel<TOutDTO, TModel, TOutDTO>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model processing layer.
@@ -368,7 +369,7 @@ namespace MicroService.Common.Web.API
             new()
             #endregion
             =>
-            AddModel<TModel, TModel, int, Service<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            AddModel<TModel, TModel>(services, configuration, dbContextOptions);
         #endregion
 
         #region ADD KEY LESS QUERY MODEL
@@ -382,7 +383,7 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
         /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
         /// <typeparam name="TService">Query Service implementation of your choice - must be inherited from Service class.</typeparam>
-        /// <typeparam name="TDBContext">DBContext mplementation of your choice.</typeparam>
+        /// <typeparam name="TDBContext">DBContext of your choice.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
@@ -466,7 +467,7 @@ namespace MicroService.Common.Web.API
             new()
             #endregion
             =>
-            AddQueryModel<TModel, TModel, QueryService<TModel, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            AddQueryModel<TModel, TModel>(services, configuration, dbContextOptions);
 #endif
         //+:cnd:noEmit
         #endregion
@@ -483,7 +484,7 @@ namespace MicroService.Common.Web.API
         /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
         /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
         /// <typeparam name="TService">Query Service implementation of your choice - must be inherited from Service class.</typeparam>
-        /// <typeparam name="TDBContext">DBContext mplementation of your choice.</typeparam>
+        /// <typeparam name="TDBContext">DBContext of your choice.</typeparam>
         /// <param name="services">Service collection instance which to add services to.</param>
         /// <param name="configuration">Instance of application configuration class.</param>
         /// <param name="dbContextOptions">DbContextOptions to use in creating DbContextOptionsBuilder.</param>
@@ -575,7 +576,7 @@ namespace MicroService.Common.Web.API
             new()
             where TOutDTO : IModel
             #endregion
-            => AddKeyedQueryModel<TOutDTO, TModel, int, QueryService<TOutDTO, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            => AddKeyedQueryModel<TOutDTO, TModel, int>(services, configuration, dbContextOptions);
 
         /// <summary>
         /// Adds a new model to model query processing layer.
@@ -592,9 +593,515 @@ namespace MicroService.Common.Web.API
             new()
             #endregion
             =>
-            AddKeyedQueryModel<TModel, TModel, int, QueryService<TModel, TModel, int, DBContext>, DBContext>(services, configuration, dbContextOptions);
+            AddKeyedQueryModel<TModel, TModel>(services, configuration, dbContextOptions);
 #endif
         //+:cnd:noEmit
+        #endregion
+
+        #region ADD KEYED MODEL SINGLETON
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TService">Service implementation of your choice - must be inherited from Service class.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TOutDTO, TModel, TID, TInDTO, TService, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TService : Service<TOutDTO, TModel, TID, TContext> 
+            where TID : struct
+            where TContext : IModelContext, new()
+            #endregion
+        {
+            var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+
+            modelType.GetOptions(out bool addController);
+
+            //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+            if (addController)
+                ControllerTypes.Add(Tuple.Create(type, modelType, typeof(TID), typeof(TInDTO)));
+#endif
+            //+:cnd:noEmit
+
+            services.AddSingleton<IContract<TOutDTO, TModel, TID>>
+            (
+                (p) =>
+                {
+                    var instance = (TService?)Activator.CreateInstance(typeof(TService), new TContext(), source);
+
+                    if (instance == null)
+                        throw new NullReferenceException("Service instance could not be created!");
+                    return instance;
+                }
+            );
+        }
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TOutDTO, TModel, TID, TInDTO, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TID : struct
+            where TContext : IModelContext, new()
+            #endregion
+            => AddModelSingleton<TOutDTO, TModel, TID, TOutDTO, Service<TOutDTO, TModel, TID, TContext>, TContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TOutDTO, TModel, TID, TInDTO>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TID : struct
+            #endregion
+            => AddModelSingleton<TOutDTO, TModel, TID, TOutDTO, ModelContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TOutDTO, TModel, TInDTO>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            #endregion
+            => AddModelSingleton<TOutDTO, TModel, int, TInDTO>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
+
+        /// <summary>
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddModelSingleton<TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            new()
+            #endregion
+            =>
+            AddModelSingleton<TModel, TModel>(services, configuration, source);
+        #endregion
+
+        #region ADD KEYED QUERY MODEL SINGLETON
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TService">Service implementation of your choice - must be inherited from Service class.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TInDTO, TService, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TService : QueryService<TOutDTO, TModel, TID, TContext>
+            where TID : struct
+            where TContext : IModelContext, new()
+            #endregion
+        {
+            var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+
+            modelType.GetOptions(out bool addController);
+
+            //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+            if (addController)
+                QueryKeyedControllerTypes.Add(Tuple.Create(type, modelType, typeof(TID)));
+#endif
+            //+:cnd:noEmit
+
+            services.AddSingleton<IQueryContract<TOutDTO, TModel, TID>>
+            (
+                (p) =>
+                {
+                    var instance = (TService?)Activator.CreateInstance(typeof(TService), new TContext(), source);
+
+                    if (instance == null)
+                        throw new NullReferenceException("Service instance could not be created!");
+                    return instance;
+                }
+            );
+        }
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TInDTO, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TID : struct
+            where TContext : IModelContext, new()
+            #endregion
+            => AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TOutDTO, QueryService<TOutDTO, TModel, TID, TContext>, TContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TInDTO>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TID, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TID : struct
+            #endregion
+            => AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TOutDTO, ModelContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TOutDTO, TModel, TInDTO>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            #endregion
+            => AddKeyedQueryModelSingleton<TOutDTO, TModel, int, TInDTO>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddKeyedQueryModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
+
+        /// <summary>
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddKeyedQueryModelSingleton<TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<int, TModel>,
+            new()
+            #endregion
+            =>
+            AddKeyedQueryModelSingleton<TModel, TModel>(services, configuration, source);
+        #endregion
+
+        #region ADD KEY LESS QUERY MODEL SINGLETON
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TService">Service implementation of your choice - must be inherited from Service class.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddQueryModelSingleton<TOutDTO, TModel, TInDTO, TService, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TService : QueryService<TOutDTO, TModel, TContext>
+            where TContext : IModelContext, new()
+            #endregion
+        {
+            var type = typeof(TOutDTO);
+            var modelType = typeof(TModel);
+
+            modelType.GetOptions(out bool addController);
+
+            //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+            if (addController)
+                QueryControllerTypes.Add(Tuple.Create(type, modelType));
+#endif
+            //+:cnd:noEmit
+
+            services.AddSingleton<IQueryContract<TOutDTO, TModel>>
+            (
+                (p) =>
+                {
+                    var instance = (TService?)Activator.CreateInstance(typeof(TService), new TContext(), source);
+
+                    if (instance == null)
+                        throw new NullReferenceException("Service instance could not be created!");
+                    return instance;
+                }
+            );
+        }
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <typeparam name="TContext">ModelContext of your choice.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddQueryModelSingleton<TOutDTO, TModel, TInDTO, TContext>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            where TInDTO : IModel
+            where TContext : IModelContext, new()
+            #endregion
+            => AddQueryModelSingleton<TOutDTO, TModel, TOutDTO, QueryService<TOutDTO, TModel, TContext>, TContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <typeparam name="TInDTO">DTO interface of your choice  as an input type of PUT, POST calls- must derived from IModel interface.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddQueryModelSingleton<TOutDTO, TModel, TInDTO>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddQueryModelSingleton<TOutDTO, TModel, TOutDTO, ModelContext>(services, configuration, source);
+
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddQueryModelSingleton<TOutDTO, TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+            TOutDTO,
+#endif
+            //+:cnd:noEmit
+            new()
+            where TOutDTO : IModel
+            #endregion
+            => AddQueryModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
+
+        /// <summary>
+        /// <summary>
+        /// Adds a new model to model processing layer.
+        /// Use this mehod if you are to provide your own implementation of service class, otherwise 
+        /// use another override of 'AddModel' method.
+        /// </summary>
+        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
+        /// <param name="services">Service collection instance which to add services to.</param>
+        /// <param name="configuration">Instance of application configuration class.</param>
+        /// <param name="source">Source consisting of pre-existing models.</param>
+        public static void AddQueryModelSingleton<TModel>(this IServiceCollection services, IConfiguration configuration, ICollection<TModel> source)
+            #region TYPE CONSTRAINTS
+            where TModel : Model<TModel>,
+            new()
+            #endregion
+            =>
+            AddQueryModelSingleton<TModel, TModel>(services, configuration, source);
         #endregion
 
         #region GET MODEL NAME
@@ -690,6 +1197,15 @@ namespace MicroService.Common.Web.API
                         //+:cnd:noEmit
                 }
             };
+        }
+        static void GetOptions(this Type modelType, out bool addController)
+        {
+            addController = true;
+            var modelAttribute = modelType.GetCustomAttribute<ModelAttribute>();
+            if (modelAttribute != null)
+            {
+                addController = modelAttribute.AutoController;
+            }
         }
         #endregion
 

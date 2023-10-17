@@ -5,6 +5,7 @@
 using MicroService.Common.Contexts;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 //-:cnd:noEmit
 #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) || (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
@@ -22,7 +23,7 @@ namespace MicroService.Common.Services
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
-    public partial class Service<TOutDTO, TModel, TID, TContext> : IContract<TOutDTO, TModel, TID>
+    public partial class Service<TOutDTO, TModel, TID, TContext> : IContract<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : class, ISelfModel<TID, TModel>,
@@ -48,13 +49,13 @@ namespace MicroService.Common.Services
         #endregion
 
         #region CONSTRUCTORS
-        public Service(TContext _context)
+        public Service(TContext _context, ICollection<TModel>? source = null)
         {
             //-:cnd:noEmit
 #if !(MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
             goto CREATEQUERY;
 #else
-            Command = _context.CreateCommand<TOutDTO, TModel, TID>();
+            Command = _context.CreateCommand<TOutDTO, TModel, TID>(source: source);
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
             Query = ((IExCommand<TOutDTO, TModel, TID>)Command).GetQueryObject();
             return;
@@ -62,7 +63,7 @@ namespace MicroService.Common.Services
 #endif
             CREATEQUERY:
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-            Query = _context.CreateQuery<TOutDTO, TModel, TID>();
+            Query = _context.CreateQuery<TOutDTO, TModel, TID>(source: source);
 #endif
             return;
             //+:cnd:noEmit
