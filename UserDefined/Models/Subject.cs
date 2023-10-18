@@ -5,6 +5,7 @@ using MicroService.Common;
 using MicroService.Common.Attributes;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 using MicroService.Common.Services;
 
 //-:cnd:noEmit
@@ -76,14 +77,6 @@ namespace UserDefined.Models
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string Description => Faculty + ": " + Name;
-
-        protected sealed override IReadOnlyList<string> GetPropertyNames(bool forSerch = false) => 
-            new string[] 
-            { 
-                nameof(Name),
-                nameof(Faculty),
-                nameof(ID),
-            };
         #endregion
 
         #region PARSE
@@ -92,11 +85,11 @@ namespace UserDefined.Models
             var valueFromParameter = parameter is IModelParameter? ((IModelParameter)parameter).FirstValue: parameter.Value;            
             currentValue =  null;
             parsedValue = null;
-            var name = parameter.Name;
+            var name = parameter.Name.ToLower();
 
             switch (name)
             {
-                case nameof(Name):
+                case "name":
                     currentValue = Name;
                     if (valueFromParameter is string)
                     {
@@ -110,7 +103,7 @@ namespace UserDefined.Models
                         return Message.MissingRequiredValue(name);
 
                     break;
-                case nameof(Faculty):
+                case "faculty":
                     currentValue = faculty;
                     Faculty f;
                     if (valueFromParameter is Faculty)

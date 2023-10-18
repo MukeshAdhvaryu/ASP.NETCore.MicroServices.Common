@@ -2,8 +2,8 @@
 
 using MicroService.Common;
 using MicroService.Common.Attributes;
-using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+using MicroService.Common.Parameters;
 
 namespace UserDefined.Models.Models
 {

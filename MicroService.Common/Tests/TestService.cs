@@ -17,7 +17,7 @@ using MicroService.Common.Tests.Attributes;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class ServiceTest<TOutDTO, TModel, TID>  
+    public abstract class ServiceTest<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : Model<TID, TModel>,
@@ -31,16 +31,15 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        readonly IContract<TOutDTO, TModel, TID> Contract;
-        protected readonly IFixture Fixture;
-
-        static readonly IExModelExceptionSupplier DummyModel = new TModel();
+        IContract<TOutDTO, TModel, TID> Contract;
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
+        protected readonly IFixture Fixture;
+        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         #endregion
 
         #region CONSTRUCTOR
@@ -61,8 +60,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Get_ByIDSuccess()
         {
-            var model = Contract.GetFirstModel();
-            var result = await Contract.Get(model?.ID);
+            var model = Contract.Query.GetFirstModel();
+            var result = await Contract.Query.Get(model?.ID);
             Verifier.NotNull(result);
         }
 
@@ -72,7 +71,7 @@ namespace MicroService.Common.Tests
             var id = default(TID);
             try
             {
-                await Contract.Get(id);
+                await Contract.Query.Get(id);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -98,13 +97,13 @@ namespace MicroService.Common.Tests
         {
             if (count == 0)
             {
-                count = Contract.GetModelCount();
-                var expected = await Contract.GetAll(count);
+                count = Contract.Query.GetModelCount();
+                var expected = await Contract.Query.GetAll(count);
                 Verifier.Equal(count, expected?.Count());
             }
             else
             {
-                var expected = await Contract.GetAll(count);
+                var expected = await Contract.Query.GetAll(count);
                 Verifier.Equal(count, expected?.Count());
             }
         }
@@ -115,7 +114,7 @@ namespace MicroService.Common.Tests
         {
             try
             {
-                await Contract.GetAll(count);
+                await Contract.Query.GetAll(count);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -144,18 +143,18 @@ namespace MicroService.Common.Tests
         public async Task Add_Success()
         {
             var model = Fixture.Create<TModel>();
-            var expected = await Contract.Add(model);
+            var expected = await Contract.Command.Add(model);
             Verifier.NotNull(expected);
         }
         [NoArgs]
         public async Task Add_Fail()
         {
             var model = (IExModel<TID>)Fixture.Create<TModel>();
-            model.ID = Contract.GetFirstModel()?.ID?? default(TID);
+            model.ID = GetFirstModel()?.ID ?? default(TID);
 
             try
-            { 
-                await Contract.Add(model);
+            {
+                await Contract.Command.Add(model);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -183,8 +182,8 @@ namespace MicroService.Common.Tests
         [NoArgs]
         public async Task Delete_Success()
         {
-            TModel? model = Contract.GetFirstModel();
-            var expected = await Contract.Delete(model?.ID?? default(TID));
+            TModel? model = GetFirstModel();
+            var expected = await Contract.Command.Delete(model?.ID ?? default(TID));
             Verifier.NotNull(expected);
         }
 
@@ -194,7 +193,7 @@ namespace MicroService.Common.Tests
             var ID = default(TID);
             try
             {
-                await Contract.Delete(ID);
+                await Contract.Command.Delete(ID);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -223,8 +222,8 @@ namespace MicroService.Common.Tests
         public async Task Update_Success()
         {
             var model = Fixture.Create<TModel>();
-            var ID = Contract.GetFirstModel()?.ID ?? default(TID);
-            var expected = await Contract.Update(ID, model);
+            var ID = GetFirstModel()?.ID ?? default(TID);
+            var expected = await Contract.Command.Update(ID, model);
             Verifier.NotNull(expected);
         }
 
@@ -232,10 +231,10 @@ namespace MicroService.Common.Tests
         public async Task Update_Fail()
         {
             var ID = default(TID);
-            var model = Contract.GetFirstModel();
+            var model = GetFirstModel();
             try
             {
-                await Contract.Update(ID, model);
+                await Contract.Command.Update(ID, model);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -256,6 +255,22 @@ namespace MicroService.Common.Tests
         }
 #endif
         //+:cnd:noEmit
+        #endregion
+
+        #region GET FIRST MODEL
+        protected TModel? GetFirstModel()
+        {
+            //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)                                            
+            return Contract.Query.GetFirstModel();
+
+#elif (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+            return ((IExCommand<TOutDTO, TModel, TID>)Contract.Command).GetFirstModel();
+#else
+            return default(TModel?);
+#endif
+            //+:cnd:noEmit
+        }
         #endregion
 
         #region TO DTO

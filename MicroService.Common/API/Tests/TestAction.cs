@@ -15,9 +15,8 @@ using AutoFixture.AutoMoq;
 using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Services;
 using MicroService.Common.Tests.Attributes;
-using MicroService.Common.Web.API.Interfaces;
+using MicroService.Common.Web.API;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +25,8 @@ using Moq;
 
 namespace MicroService.Common.Tests
 {
-    public abstract class TestStandard<TOutDTO, TModel, TID, TInDTO>
+    [Testable]
+    public abstract class TestAction<TOutDTO, TModel, TID, TInDTO>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TInDTO : IModel
@@ -41,27 +41,30 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        protected readonly Mock<IContract<TOutDTO, TModel, TID>> MockService;
-        readonly IActionContract<TModel, TID> Contract;
-        protected readonly List<TModel> Models;
-        protected readonly IFixture Fixture;
+        protected readonly Controller<TOutDTO, TModel, TID, TInDTO> Contract;
 
-        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
+
+        readonly Mock<IContract<TOutDTO, TModel, TID>> MockService;
+        protected readonly List<TModel> Models;
+        protected readonly IFixture Fixture;
+
+        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         #endregion
 
         #region CONSTRUCTOR
-        public TestStandard()
+        public TestAction()
         {
             Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
             MockService = Fixture.Freeze<Mock<IContract<TOutDTO, TModel, TID>>>();
 
-            Contract = CreateContract(MockService.Object);
+            Contract = CreateController(MockService.Object);
+            var Service = MockService.Object;
             var count = DummyModelCount;
             if (count < 5)
                 count = 5;
@@ -85,7 +88,7 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IActionContract<TModel, TID> CreateContract(IContract<TOutDTO, TModel, TID> service);
+        protected abstract Controller<TOutDTO, TModel, TID, TInDTO> CreateController(IContract<TOutDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
@@ -107,7 +110,7 @@ namespace MicroService.Common.Tests
         {
             var id = Models[0].ID;
             var model = ToDTO(Models[0]);
-            Setup((m) => m.Get(id), model);
+            Setup((m) => m.Query.Get(id), model);
             var result = await Contract.Get(id) as ObjectResult;
             var expected = result?.Value;
             Verifier.Equal(model, expected);
@@ -119,7 +122,7 @@ namespace MicroService.Common.Tests
         {
             var id = default(TID);
             var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
-            Setup((m) => m.Get(id), e);
+            Setup((m) => m.Query.Get(id), e);
             try
             {
                 await Contract.Get(id);
@@ -146,14 +149,14 @@ namespace MicroService.Common.Tests
             if (count == 0)
             {
                 count = Models.Count;
-                Setup((m) => m.GetAll(0), Items);
+                Setup((m) => m.Query.GetAll(0), Items);
                 var result = await Contract.GetAll(0) as ObjectResult;
                 var expected = result?.Value as IEnumerable<TOutDTO>;
                 Verifier.Equal(count, expected?.Count());
             }
             else
             {
-                Setup((m) => m.GetAll(count), Items.Take(count));
+                Setup((m) => m.Query.GetAll(count), Items.Take(count));
                 var result = await Contract.GetAll(count) as ObjectResult;
                 var expected = result?.Value as IEnumerable<TOutDTO>;
                 Verifier.Equal(count, expected?.Count());
@@ -166,7 +169,7 @@ namespace MicroService.Common.Tests
         public async Task GetAll_Fail(int count = 0)
         {
             var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCount, count.ToString());
-            Setup((m) => m.GetAll(count), e);
+            Setup((m) => m.Query.GetAll(count), e);
             try
             {
                 await Contract.GetAll(count);
@@ -192,7 +195,7 @@ namespace MicroService.Common.Tests
             var inModel = Fixture.Create<TInDTO>();
 
             var returnModel = ToDTO(model);
-            Setup((m) => m.Add(inModel), returnModel);
+            Setup((m) => m.Command.Add(inModel), returnModel);
             var result = await Contract.Add(inModel) as ObjectResult;
             var expected = (result)?.Value;
             Verifier.Equal(expected, returnModel);
@@ -206,7 +209,7 @@ namespace MicroService.Common.Tests
             var e = DummyModel.GetModelException(ExceptionType.AddOperationFailed, ID.ToString());
 
             var inModel = Fixture.Create<TInDTO>();
-            Setup((m) => m.Add(inModel), e);
+            Setup((m) => m.Command.Add(inModel), e);
             try
             {
                 await Contract.Add(inModel);
@@ -230,7 +233,7 @@ namespace MicroService.Common.Tests
         {
             TModel? model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
-            Setup((m) => m.Delete(model.ID), returnModel);
+            Setup((m) => m.Command.Delete(model.ID), returnModel);
             var result = await Contract.Delete(model.ID) as ObjectResult;
             var expected = result?.Value;
             Verifier.Equal(returnModel, expected);
@@ -243,7 +246,7 @@ namespace MicroService.Common.Tests
             var ID = Fixture.Create<TID>();
             var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailed, ID.ToString());
 
-            Setup((m) => m.Delete(ID), e);
+            Setup((m) => m.Command.Delete(ID), e);
             try
             {
                 await Contract.Delete(ID);
@@ -268,7 +271,7 @@ namespace MicroService.Common.Tests
             var model = Fixture.Create<TModel>();
             var inModel = Fixture.Create<TInDTO>();
             var returnModel = ToDTO(model);
-            Setup((m) => m.Update(model.ID, inModel), returnModel);
+            Setup((m) => m.Command.Update(model.ID, inModel), returnModel);
             var result = await Contract.Update(model.ID, inModel) as ObjectResult;
             var expected = result?.Value;
             Verifier.Equal(returnModel, expected);
@@ -281,7 +284,7 @@ namespace MicroService.Common.Tests
             var ID = Fixture.Create<TID>();
             var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, ID.ToString());
             var inModel = Fixture.Create<TInDTO>();
-            Setup((m) => m.Update(ID, inModel), e);
+            Setup((m) => m.Command.Update(ID, inModel), e);
             try
             {
                 await Contract.Update(ID, inModel);

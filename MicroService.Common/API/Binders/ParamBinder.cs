@@ -6,6 +6,7 @@
 //-:cnd:noEmit
 #if !TDD && MODEL_SEARCHABLE && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
@@ -31,7 +32,6 @@ namespace MicroService.Common.Web.API
             bool multiple = Query.ContainsKey(bindingContext.OriginalModelName);
 
             List<ISearchParameter> list = new List<ISearchParameter>();
-            var PropertyNames = model.GetPropertyNames();
             
             if (multiple)
             {
@@ -46,20 +46,14 @@ namespace MicroService.Common.Web.API
                     string? Name = result["name"]?.GetValue<string>()?.ToLower();
                     if (!string.IsNullOrEmpty(Name))
                     {
-                        foreach (var name in PropertyNames)
-                        {
-                            if (Name == name.ToLower())
-                            {
-                                var pvalue = result["value"]?.GetValue<object>();
-                                var parameter = new ObjParameter(pvalue, name);
-                                Enum.TryParse(result["criteria"]?.GetValue<string>(), true, out Criteria criteria);
+                        var pvalue = result["value"]?.GetValue<object>();
+                        var parameter = new ObjParameter(pvalue, Name);
+                        Enum.TryParse(result["criteria"]?.GetValue<string>(), true, out Criteria criteria);
 
-                                var message = model.Parse(parameter, out _, out object? value, false, criteria);
-                                if (message.Status == ResultStatus.Sucess)
-                                    list.Add(new SearchParameter(name, value, criteria));
-                                break;
-                            }
-                        }
+                        var message = model.Parse(parameter, out _, out object? value, false, criteria);
+                        if (message.Status == ResultStatus.Sucess)
+                            list.Add(new SearchParameter(Name, value, criteria));
+                        break;
                     }
                 }
             }
@@ -67,18 +61,14 @@ namespace MicroService.Common.Web.API
             {
                 var Name = Query["name"][0]?.ToLower();
 
-                foreach (var name in PropertyNames)
+                if (!string.IsNullOrEmpty(Name))
                 {
-                    if (Name == name.ToLower())
-                    {
-                        var parameter = new ModelParameter(Query["value"], name);
-                        Enum.TryParse(Query["criteria"], true, out Criteria criteria);
-                        var message = model.Parse(parameter, out _, out object? value, false, criteria);
+                    var parameter = new ModelParameter(Query["value"], Name);
+                    Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+                    var message = model.Parse(parameter, out _, out object? value, false, criteria);
 
-                        if (message.Status == ResultStatus.Sucess)
-                            list.Add(new SearchParameter(name, value, criteria));
-                        break;
-                    }
+                    if (message.Status == ResultStatus.Sucess)
+                        list.Add(new SearchParameter(Name, value, criteria));
                 }
             }
             if(list.Count ==0)

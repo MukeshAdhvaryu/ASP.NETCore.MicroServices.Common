@@ -152,6 +152,11 @@ namespace MicroService.Common.Web.API
             public override int GetModelCount() => models.Count();
             #endregion
 
+            #region GET FIRST MODEL
+            protected override TModel? GetFirstModel() => 
+                models.FirstOrDefault();
+            #endregion
+
             #region GET BY ID
             protected override Task<TModel?> Get(TID id) =>
               Task.FromResult(models.FirstOrDefault(m => Equals(m.ID, id)));

@@ -5,13 +5,14 @@
 //-:cnd:noEmit
 #if !TDD && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
 //+:cnd:noEmit
+
+using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Parameters;
 
 //-:cnd:noEmit
-#if MODEL_USEACTION
-using MicroService.Common.Web.API.Interfaces;
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+using MicroService.Common.Parameters;
 #endif
 //+:cnd:noEmit
 
@@ -28,15 +29,7 @@ namespace MicroService.Common.Web.API
     /// <typeparam name="TOutDTO">Any model of your choice.</typeparam>
     [ApiController]
     [Route("[controller]")]
-    public class QueryController<TOutDTO, TModel> : ControllerBase, IExController
-        //-:cnd:noEmit
-#if !MODEL_USEACTION
-        , IQueryContract<TOutDTO, TModel>
-#else
-        , IActionQueryContract<TModel>
-#endif
-        //+:cnd:noEmit
-
+    public class QueryController<TOutDTO, TModel> : ControllerBase, IExController, IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : Model<TModel>,
@@ -49,34 +42,42 @@ namespace MicroService.Common.Web.API
         #endregion
     {
         #region VARIABLES
-        /// <summary>
-        /// Since we are using repository pattern, we need service repository
-        /// to divert contract calls to perform contract operations.
-        /// Since this contro
-        /// </summary>
-        protected IQueryContract<TOutDTO, TModel> service;
+        protected readonly IQuery<TOutDTO, TModel> Query;
         #endregion
 
         #region CONSTRUCTORS
         public QueryController(IQueryContract<TOutDTO, TModel> _service)
         {
-            service = _service;
+            var service = _service;
+            Query = service.Query;   
         }
         #endregion
 
         #region PROPERTIES
+        IQuery<TOutDTO, TModel> IQueryContract<TOutDTO, TModel>.Query => Query;
         #endregion
 
-        #region GET FIRST MODEL
-        IModel? IFirstModel.GetFirstModel() =>
-            service.GetFirstModel();
-        TModel? IFirstModel<TModel>.GetFirstModel() =>
-            service.GetFirstModel();
+        #region GET NEW MODEL
+        static TModel GetNewModel() => 
+            new TModel();
         #endregion
 
         #region GET MODEL COUNT
-        int IModelCount.GetModelCount() =>
-            service.GetModelCount();
+        [HttpGet("GetCount")]
+        public int GetModelCount()
+        {
+            return Query.GetModelCount();
+        }
+        #endregion
+
+        #region GET FIRST MODEL
+        [HttpGet("GetFirst")]
+        public TModel? GetFirstModel()
+        {
+            return Query.GetFirstModel();
+        }
+        IModel? IFirstModel.GetFirstModel() =>
+            GetFirstModel();
         #endregion
 
         #region GET ALL (Optional: count)
@@ -93,7 +94,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-               return await service.GetAll(count);
+               return await Query.GetAll(count);
             }
             catch
             {
@@ -113,7 +114,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.GetAll(count));
+                return Ok(await Query.GetAll(count));
             }
             catch
             {
@@ -142,7 +143,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.GetAll(startIndex, count);
+                return await Query.GetAll(startIndex, count);
             }
             catch
             {
@@ -163,7 +164,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.GetAll(startIndex, count));
+                return Ok(await Query.GetAll(startIndex, count));
             }
             catch
             {
@@ -185,7 +186,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Find(parameter);
+                return await Query.Find(parameter);
             }
             catch
             {
@@ -203,7 +204,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Find(parameter));
+                return Ok(await Query.Find(parameter));
             }
             catch
             {
@@ -225,7 +226,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.FindAll(parameter);
+                return await Query.FindAll(parameter);
             }
             catch
             {
@@ -243,7 +244,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.FindAll(parameter));
+                return Ok(await Query.FindAll(parameter));
             }
             catch
             {
@@ -266,12 +267,12 @@ namespace MicroService.Common.Web.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("FindAll/{conditionJoin}")]
+        [HttpGet("FindAll/parameters{conditionJoin}")]
         public async Task<IEnumerable<TOutDTO>?> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
-                return await service.FindAll(parameters, conditionJoin);
+                return await Query.FindAll(parameters, conditionJoin);
             }
             catch
             {
@@ -286,12 +287,12 @@ namespace MicroService.Common.Web.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("FindAll/{conditionJoin}")]
+        [HttpGet("FindAll/{parameters}, {conditionJoin}")]
         public async Task<IActionResult> FindAll([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
-                return Ok(await service.FindAll(parameters, conditionJoin));
+                return Ok(await Query.FindAll(parameters, conditionJoin));
             }
             catch
             {
@@ -319,7 +320,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Find(parameters, conditionJoin);
+                return await Query.Find(parameters, conditionJoin);
             }
             catch
             {
@@ -334,18 +335,19 @@ namespace MicroService.Common.Web.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("Find/{conditionJoin}")]
+        [HttpGet("Find/{parameters},{conditionJoin}")]
         public async Task<IActionResult> Find([FromQuery][ModelBinder(BinderType = typeof(ParamBinder))] IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = AndOr.OR)
         {
             try
             {
-                return Ok(await service.FindAll(parameters, conditionJoin));
+                return Ok(await Query.FindAll(parameters, conditionJoin));
             }
             catch
             {
                 throw;
             }
         }
+
 #endif
 #endif
         //+:cnd:noEmit
@@ -354,15 +356,7 @@ namespace MicroService.Common.Web.API
     #endregion
 
     #region QueryController<TOutDTO, TModel, TID>
-    public class QueryController<TOutDTO, TModel, TID> : QueryController<TOutDTO, TModel>
-        //-:cnd:noEmit
-#if !MODEL_USEACTION
-        , IQueryContract<TOutDTO, TModel, TID>
-#else
-        , IActionQueryContract<TModel, TID>
-#endif
-        //+:cnd:noEmit
-
+    public class QueryController<TOutDTO, TModel, TID> : QueryController<TOutDTO, TModel>, IQueryContract<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : Model<TID, TModel>,
@@ -375,11 +369,20 @@ namespace MicroService.Common.Web.API
         where TID : struct
         #endregion
     {
+        #region VARIABLES
+        protected readonly new IQuery<TOutDTO, TModel, TID> Query;
+        #endregion
+
         #region CONSTRUCTORS
         public QueryController(IQueryContract<TOutDTO, TModel, TID> _service) 
             : base(_service)
         {
+            Query = _service.Query;
         }
+        #endregion
+
+        #region PROPERTIES
+        IQuery<TOutDTO, TModel, TID> IQueryContract<TOutDTO, TModel, TID>.Query => Query;
         #endregion
 
         #region GET MODEL BY ID
@@ -395,7 +398,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await ((IFindByID<TOutDTO, TModel, TID>)service).Get(id);
+                return await Query.Get(id);
             }
             catch 
             {
@@ -413,7 +416,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await ((IFindByID<TOutDTO, TModel, TID>)service).Get(id));
+                return Ok(await Query.Get(id));
             }
             catch
             {
@@ -423,7 +426,6 @@ namespace MicroService.Common.Web.API
 #endif
         //+:cnd:noEmit
         #endregion
-
     }
     #endregion
 }

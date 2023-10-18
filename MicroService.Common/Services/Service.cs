@@ -23,7 +23,7 @@ namespace MicroService.Common.Services
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
-    public partial class Service<TOutDTO, TModel, TID, TContext> : IContract<TOutDTO, TModel, TID> 
+    public partial class Service<TOutDTO, TModel, TID, TContext> : IContract<TOutDTO, TModel, TID>  
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : class, ISelfModel<TID, TModel>,
@@ -40,10 +40,10 @@ namespace MicroService.Common.Services
         #region VARIABLES
         //-:cnd:noEmit
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        readonly IQuery<TOutDTO, TModel, TID>? Query;
+        readonly IQuery<TOutDTO, TModel, TID> Query;
 #endif
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        readonly ICommand<TOutDTO, TModel, TID>? Command;
+        readonly IExCommand<TOutDTO, TModel, TID> Command;
 #endif
         //+:cnd:noEmit
         #endregion
@@ -55,9 +55,9 @@ namespace MicroService.Common.Services
 #if !(MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
             goto CREATEQUERY;
 #else
-            Command = _context.CreateCommand<TOutDTO, TModel, TID>(source: source);
+            Command = (IExCommand<TOutDTO, TModel, TID>)_context.CreateCommand<TOutDTO, TModel, TID>(source: source);
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-            Query = ((IExCommand<TOutDTO, TModel, TID>)Command).GetQueryObject();
+            Query = Command.GetQueryObject();
             return;
 #endif
 #endif
@@ -73,121 +73,22 @@ namespace MicroService.Common.Services
 #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
         public Service(ICommand<TOutDTO, TModel, TID> command)
         {
-            Command = command;
+            Command = (IExCommand<TOutDTO, TModel, TID>)command;
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-            Query = ((IExCommand<TOutDTO, TModel, TID>)command).GetQueryObject();
+            Query = Command.GetQueryObject();
 #endif        
         }
         //+:cnd:noEmit
 #endif
         #endregion
 
-        #region ADD
-        //-:cnd:noEmit
-#if MODEL_APPENDABLE
-        public Task<TOutDTO?> Add(IModel? model)
-        {
-            return Command.Add(model);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region UPDATE
-        //-:cnd:noEmit
-#if MODEL_UPDATABLE
-        public Task<TOutDTO?> Update(TID id, IModel? model)
-        {
-            return Command.Update(id, model);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region DELETE
-        //-:cnd:noEmit
-#if MODEL_DELETABLE
-        public Task<TOutDTO?> Delete(TID id)
-        {
-            return Command.Delete(id);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region GET ALL(count)
+        #region PROPERTIES
         //-:cnd:noEmit
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        public Task<IEnumerable<TOutDTO>?> GetAll(int count = 0)
-        {
-            return Query.GetAll(count);
-        }
+        IQuery<TOutDTO, TModel, TID> IContract<TOutDTO, TModel, TID>.Query => Query;
 #endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region GET ALL(startIndex, count)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        public Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count)
-        {
-            return Query.GetAll(startIndex, count);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND ALL(parameter)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public Task<IEnumerable<TOutDTO>?> FindAll(ISearchParameter? parameter)
-        {
-            return Query.FindAll(parameter);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND ALL(parameters, conditionJoin)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public Task<TOutDTO?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.AND)
-        {
-            return Query.Find(parameters, conditionJoin);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND(parameters, conditionJoin)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public Task<IEnumerable<TOutDTO>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.AND)
-        {
-            return Query.FindAll(parameters, conditionJoin);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND (parameter)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public Task<TOutDTO?> Find(ISearchParameter? parameter)
-        {
-            return Query.Find(parameter);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND BY ID(id)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        public Task<TOutDTO?> Get(TID? id)
-        {
-            return Query.Get(id);
-        }
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        ICommand<TOutDTO, TModel, TID> IContract<TOutDTO, TModel, TID>.Command => Command;
 #endif
         //+:cnd:noEmit
         #endregion
@@ -208,20 +109,21 @@ namespace MicroService.Common.Services
         #endregion
 
         #region GET FIRST MODEL
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
         public TModel? GetFirstModel()
         {
+            //-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+            return Command.GetFirstModel();
+#elif (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
             return Query.GetFirstModel();
-        }
-
-        IModel? IFirstModel.GetFirstModel()
-        {
-            return ((IFirstModel)Query).GetFirstModel();
-        }
+#else
+            return default(TModel?);
 #endif
-        //+:cnd:noEmit
+            //+:cnd:noEmit
+        }
+        IModel? IFirstModel.GetFirstModel() =>
+            GetFirstModel();
         #endregion
     }
-#endregion
+    #endregion
 }

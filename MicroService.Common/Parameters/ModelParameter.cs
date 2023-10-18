@@ -5,6 +5,7 @@
 using System.Collections;
 
 using MicroService.Common.Interfaces;
+using MicroService.Common.Parameters;
 
 namespace MicroService.Common
 {

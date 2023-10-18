@@ -179,6 +179,11 @@ namespace MicroService.Common.Contexts
             protected override Task<TModel?> Get(TID id) =>
               Task.FromResult(models.FirstOrDefault(m => Equals(m.ID, id)));
             #endregion
+
+            #region GET FIRST MODEL
+            protected override TModel? GetFirstModel() =>
+                models.FirstOrDefault();
+            #endregion
         }
 #endif
         //+:cnd:noEmit

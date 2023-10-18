@@ -4,7 +4,7 @@ Author: Mukesh Adhvaryu.
 */
 
 //-:cnd:noEmit
-#if MODEL_ADDTEST && (!MODEL_USEACTION || TDD)
+#if MODEL_ADDTEST  
 //+:cnd:noEmit
 
 using System.Linq.Expressions;
@@ -12,9 +12,9 @@ using System.Linq.Expressions;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 
+using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Services;
 using MicroService.Common.Tests.Attributes;
 
 using Moq;
@@ -36,18 +36,19 @@ namespace MicroService.Common.Tests
         #endregion
     {
         #region VARIABLES
-        protected readonly Mock<IContract<TOutDTO, TModel, TID>> MockService;
-        readonly IContract<TOutDTO, TModel, TID> Contract;
-        protected readonly List<TModel> Models;
-        protected readonly IFixture Fixture;
-
-        static readonly IExModelExceptionSupplier DummyModel = new TModel();
+        protected readonly IContract<TOutDTO, TModel, TID> Contract;
         //-:cnd:noEmit
 #if MODEL_USEDTO
         static readonly Type DTOType = typeof(TOutDTO);
         static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
 #endif
         //+:cnd:noEmit
+
+        readonly Mock<IContract<TOutDTO, TModel, TID>> MockService;
+        protected readonly List<TModel> Models;
+        protected readonly IFixture Fixture;
+
+        static readonly IExModelExceptionSupplier DummyModel = new TModel();
         #endregion
 
         #region CONSTRUCTOR
@@ -99,8 +100,8 @@ namespace MicroService.Common.Tests
         {
             var id = Models[0].ID;
             var model = ToDTO(Models[0]);
-            Setup((m) => m.Get(id), model);
-            var result = await Contract.Get(id);
+            Setup((m) => m.Query.Get(id), model);
+            var result = await Contract.Query.Get(id);
             Verifier.Equal(model, result);
         }
 
@@ -109,10 +110,10 @@ namespace MicroService.Common.Tests
         {
             var id = Fixture.Create<TID>();
             var e = DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
-            Setup((m) => m.Get(id), e);
+            Setup((m) => m.Query.Get(id), e);
             try
             {
-                await Contract.Get(id);
+                await Contract.Query.Get(id);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -129,14 +130,14 @@ namespace MicroService.Common.Tests
             if (count == 0)
             {
                 count = Models.Count;
-                Setup((m) => m.GetAll(0), Items);
-                var expected = await Contract.GetAll(count);
+                Setup((m) => m.Query.GetAll(0), Items);
+                var expected = await Contract.Query.GetAll(0);
                 Verifier.Equal(count, expected?.Count());
             }
             else
             {
-                Setup((m) => m.GetAll(count), Items.Take(count));
-                var expected = await Contract.GetAll(count);
+                Setup((m) => m.Query.GetAll(count), Items.Take(count));
+                var expected = await Contract.Query.GetAll(count);
                 Verifier.Equal(count, expected?.Count());
             }
         }
@@ -146,10 +147,10 @@ namespace MicroService.Common.Tests
         public async Task GetAll_Fail(int count = 0)
         {
             var e = DummyModel.GetModelException(ExceptionType.NegativeFetchCount, count.ToString());
-            Setup((m) => m.GetAll(count), e);
+            Setup((m) => m.Query.GetAll(count), e);
             try
             {
-                await Contract.GetAll(count);
+                await Contract.Query.GetAll(count);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -171,8 +172,8 @@ namespace MicroService.Common.Tests
             var inModel = Fixture.Create<TInDTO>();
 
             var returnModel = ToDTO(model);
-            Setup((m) => m.Add(inModel), returnModel);
-            var expected = await Contract.Add(inModel);
+            Setup((m) => m.Command.Add(inModel), returnModel);
+            var expected = await Contract.Command.Add(inModel);
             Verifier.Equal(expected, returnModel);
         }
         [NoArgs]
@@ -180,10 +181,10 @@ namespace MicroService.Common.Tests
         {
             var e = DummyModel.GetModelException(ExceptionType.AddOperationFailed);
             var inModel = Fixture.Create<TInDTO>();
-            Setup((m) => m.Add(inModel), e);
+            Setup((m) => m.Command.Add(inModel), e);
             try
             {
-                await Contract.Add(inModel);
+                await Contract.Command.Add(inModel);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -203,8 +204,8 @@ namespace MicroService.Common.Tests
         {
             TModel? model = Fixture.Create<TModel>();
             var returnModel = ToDTO(model);
-            Setup((m) => m.Delete(model.ID), returnModel);
-            var expected = await Contract.Delete(model.ID);
+            Setup((m) => m.Command.Delete(model.ID), returnModel);
+            var expected = await Contract.Command.Delete(model.ID);
             Verifier.Equal(returnModel, expected);
         }
 
@@ -213,10 +214,10 @@ namespace MicroService.Common.Tests
         {
             var ID = default(TID);
             var e = DummyModel.GetModelException(ExceptionType.DeleteOperationFailed, ID.ToString());
-            Setup((m) => m.Delete(ID), e);
+            Setup((m) => m.Command.Delete(ID), e);
             try
             {
-                await Contract.Delete(ID);
+                await Contract.Command.Delete(ID);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)
@@ -237,8 +238,8 @@ namespace MicroService.Common.Tests
             TModel? model = Fixture.Create<TModel>();
             var inModel = Fixture.Create<TInDTO>();
             var returnModel = ToDTO(model);
-            Setup((m) => m.Update(model.ID, inModel), returnModel);
-            var expected = await Contract.Update(model.ID, inModel);
+            Setup((m) => m.Command.Update(model.ID, inModel), returnModel);
+            var expected = await Contract.Command.Update(model.ID, inModel);
             Verifier.Equal(returnModel, expected);
         }
 
@@ -249,10 +250,10 @@ namespace MicroService.Common.Tests
             var e = DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, ID.ToString());
             var model = Fixture.Create<TModel>();
             var inModel = Fixture.Create<TInDTO>();
-            Setup((m) => m.Update(ID, inModel), e);
+            Setup((m) => m.Command.Update(ID, inModel), e);
             try
             {
-                await Contract.Update(ID, inModel);
+                await Contract.Command.Update(ID, inModel);
                 Verifier.Equal(true, true);
             }
             catch (Exception ex)

@@ -44,9 +44,11 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [UPDATE11: Abstract Models for common primary key type: int, long, Guid, enum are added.](#UPDATE11)
 
-[UPDATE12: Adopted Command and Query Segregation pattern.](#UPDATE12)
+[UPDATE12: Adapted Command and Query Segregation pattern.](#UPDATE12)
 
 [UPDATE13: ADD: Support for List based (non DbContext) Singleton CQRS.](#UPDATE13)
+
+[UPDATE14: MODIFY design: Mixed UOW with repository pattern.](#UPDATE14)
 
 ## WHY?
 We already know that a controller can have standard HTTP calls such as HttpGet, HttpPost, etc.
@@ -55,7 +57,7 @@ So, we know the possible methods of the controller class.
 The problem is: definition of model (entity) which can differ from project to project as different business domains have different entities.  
 However, it pained me to start a new project from 'WeatherForecast' template and then write almost everything from the scratch.
 
-We do need something better than that. A template powerful enough to get adopted in most common cases with bare minimum modifications.
+We do need something better than that. A template powerful enough to get adapted in most common cases with bare minimum modifications.
 
 ## WHAT?
 On one fine day, it dawned upon me that I need to explore a possibility of creating something which addresses the moving part of the microservice device: Model.
@@ -75,7 +77,7 @@ To have a write-only (command) controller generated dynamically
 Or to have both.
 At last, the user should be able choose to use dynamically generated controller or their own controller (going back to 'WeatherForecast')
 
-### TDD is also an integral part of any project. Creating a common template that handles the three most prominent testing frameworks (xUNIT, NUNIT and MSTest) should not be easy.
+### TDD is also an integral part of any project. Creating a common template that handles the three most prominent testing frameworks (xUNIT, NUNIT and MSTest) should be an apt thing to do.
 
 The goal was also to include a common test project to handle all three without the user need to change much except any custom test they want to write.
 It would be an apt thing to do to define custom attributes to map important attributes from all three testing frameworks.
@@ -1027,7 +1029,7 @@ One for Standard Web API testing (Controller via Service repository)
         #endregion
 
         #region CREATE CONTROLLER
-        protected abstract IContract<TOutDTO, TModel, TID> CreateContract(IService<TOutDTO, TModel, TID> service);
+        protected abstract IContract<TOutDTO, TModel, TID> CreateContract(IContract<TOutDTO, TModel, TID> service);
         #endregion
 
         #region SETUP FUNCTION
@@ -1446,178 +1448,63 @@ Finally,
 
 ## UPDATE6
 Added Support for IActionResult for controller. 
-
-    #if MODEL_DELETABLE
-    /// <summary>
-    /// This interface represents an object that allows deleting a single model with a specified ID.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IDeleteable<TModel, TID>
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-        /// <summary>
-        /// Deletes the model with the specified ID.
-        /// </summary>
-        /// <param name="id">ID of the model to delete.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Delete(TID id);
-    }
-    #endif
-
-    #region IAppendable<TModel, TID>
-    #if MODEL_APPENDABLE
-    /// <summary>
-    /// This interface represents an object that has a list of models to which a new model can be appended.
-    /// Any object that implements the IModel interface can be provided. This allows DTOs to be used instead of an actual model object.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IAppendable<TModel, TID>
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-        /// <summary>
-        /// Adds a new model based on the given model.
-        /// If the given model is not TModel, then a new appropriate model will be created by copying data from the given model.
-        /// </summary>
-        /// <param name="model">
-        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
-        /// This allows DTOs to be used instead of an actual model object.
-        /// </param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Add(IModel? model);
-    }
-    #endif
-
-    #region IUpdatable<TModel, TID>
-    #if MODEL_UPDATABLE
-    /// <summary>
-    /// This interface represents an object that has a list of models and allows a model with a specified ID to be updated with data from the given model parameter.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IUpdatable<TModel, TID>
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-        /// <summary>
-        /// Updates a model specified by the given ID with the data of the given model.
-        /// </summary>
-        /// <param name="id">ID of the model to be updated.</param>
-        /// <param name="model">
-        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
-        /// This allows DTOs to be used instead of an actual model object.
-        /// </param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Update(TID id, IModel? model);
-    }
-    #endif
-
-    #region IFind<TModel>
-    #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-    public interface IFind<TModel>
-        where TModel : ISelfModel<TModel>
-    {
-        /// <summary>
-        /// Gets all models contained in this object.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of models.</returns>
-        Task<IActionResult> GetAll(int limitOfResult = 0);
-
-        /// <summary>
-        /// Gets all models contained in this object picking from the index specified up to a count determined by limitOfResult.
-        /// The count of models returned can be limited by the limitOfResult parameter.
-        /// If the parameter value is zero, then all models are returned.
-        /// </summary>
-        /// <param name="startIndex">Start index which to start picking records from.</param>
-        /// <param name="limitOfResult">Number to limit the number of models returned.</param>
-        /// <returns>IEnumerable of models.</returns>
-        Task<IActionResult> GetAll(int startIndex, int limitOfResult);
-
-        /// <summary>
-        /// Finds a model based on given paramters.
-        /// </summary>
-        /// <param name="parameters">Parameters to be used to find the model.</param>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IActionResult> Find(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
-
-        /// <summary>
-        /// Finds all models matched based on given paramter.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<IActionResult> FindAll(ISearchParameter parameter);
-
-        /// <summary>
-        /// Finds all models matched based on given parameters.
-        /// </summary>
-        /// <param name="parameters">Parameters to be used to find the model.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
-        /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IActionResult> FindAll(IEnumerable<ISearchParameter> parameters, AndOr conditionJoin = 0);
-
-        /// <summary>
-        /// Finds a model based on given paramter.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<IActionResult> Find(ISearchParameter? parameter);
-    }
-    #endif
-
-    #if !MODEL_NONQUERYABLE || !MODEL_NONREADABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IFindByID<TModel, TID>
-        #region TYPE CONSTRINTS
-        where TModel : ISelfModel<TID, TModel>,
-        new()
-        where TID : struct
-        #endregion
-    {
-        /// <summary>
-        /// Gets a single model with the specified ID.
-        /// </summary>
-        /// <param name="id">ID of the model to read.</param>
-        /// <returns>An instance of IActionResult.</returns>
-        Task<IActionResult> Get(TID? id);
-    }
-    #endif
-
-    public interface IActionContract<TModel, TID>: IContract
-    #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        , IActionQuery<TModel>
-        , IFindByID<TModel, TID>
-    #endif
-    #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
-    , IActionCommand<TModel, TID>
-    #endif
-    where TModel : ISelfModel<TID, TModel>, new()
-    where TID : struct
-    {
-    }
-These interfaces are identical to the regular ones except they all returns Task\<IActionResult\>
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
+Consider the following code in controller class:
+
+    [ApiController]
+    [Route("[controller]")]
+    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController , IContract<TOutDTO, TModel, TID>
+    where TOutDTO : IModel
+    where TModel : class, ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+    new()
+    where TID : struct
+    where TInDTO : IModel
+    {
+        #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        #if !MODEL_USEACTION
+            /// <summary>
+            /// Gets a single model with the specified ID.
+            /// </summary>
+            /// <param name="id">ID of the model to read.</param>
+            /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
+            [HttpGet("Get/{id}")]
+            public async Task<TOutDTO?> Get(TID? id)
+            {
+                try
+                {
+                    return await Query.Get(id);
+                }
+                catch 
+                {
+                    throw;
+                }
+            }
+        #else
+            /// <summary>
+            /// Gets a single model with the specified ID.
+            /// </summary>
+            /// <param name="id">ID of the model to read.</param>
+            /// <returns>An instance of IActionResult.</returns>
+            [HttpGet("Get/{id}")]
+            public async Task<IActionResult> Get(TID? id)
+            {
+                try
+                {
+                    return Ok(await Query.Get(id));
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+         #endif
+         #endif
+    }
+As you can see if MODEL_USEACTION is true then Get(id) method result will be Task\<IActionResult\> instead of  Task\<TOutDTO?\>
 
 ## UPDATE7
 Feature: Choose database at model level.
@@ -1664,12 +1551,7 @@ So now it is Controller<TOutDTO, TModel, TID, TInDTO>
 
     [ApiController]
     [Route("[controller]")]
-    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController
-    #if !MODEL_USEACTION
-        , IContract<TOutDTO, TModel, TID>
-    #else
-        , IActionContract<TModel, TID>
-    #endif
+    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController , IContract<TOutDTO, TModel, TID>
     where TOutDTO : IModel
     where TModel : class, ISelfModel<TID, TModel>,
     #if (!MODEL_USEDTO)
@@ -1690,35 +1572,31 @@ This is to allow single DBContext to hold multiple model sets..
 
     public partial class DBContext : DbContext, IModelContext
     {
-        #region CONSTRUCTOR
         public DBContext(DbContextOptions<DBContext> options)
             : base(options)
         { }
-        #endregion
 
-        #region ON MODEL CREATION
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder = modelBuilder.ApplyConfigurationsFromAssembly(typeof(DBContext).Assembly);
         }
-        #endregion
-
-        #region CREATE COMMAND
+        
         #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData)
+        ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new CommandObject<TOutDTO, TModel, TID>(this, initialzeData);
+        
+            return new CommandObject<TOutDTO, TModel, TID>(this, source, initialzeData);
         }
         #endif
         
         #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData)
+        IQuery<TOutDTO, TModel> IModelContext.CreateQuery<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new QueryObject<TOutDTO, TModel>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel>(this, null, source, initialzeData);
         }
-        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData)
+        IQuery<TOutDTO, TModel, TID> IModelContext.CreateQuery<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
         {
-            return new QueryObject<TOutDTO, TModel, TID>(this, null, initialzeData);
+            return new QueryObject<TOutDTO, TModel, TID>(this, null, source, initialzeData);
         }
         #endif
     }
@@ -1876,12 +1754,16 @@ Also note that when you are using an actual database GetNewID() method implement
 You may want to get unique ID from the database itself. 
     
 ## UPDATE12 
-Adapted: CQRS pattern.
+
 Adapted Command and Query Segregation pattern.
+
 The follwing interfaces were created and the solution was re-designed
 around them.
+
 For Query Part:
+
 IQuery\<TModel\>
+
 IQuery\<TOutDTO, TModel, TID\>
 
      /// <summary>
@@ -2035,3 +1917,60 @@ Consider the following modified definition of IModelContext interface:
     #endif
     }
 As you can see, external source can be passed while creating command or query object.
+
+## UPDATE14
+MODIFY design: Mixed UOW with repository pattern.
+Why?
+Modifying IQuery or ICommand is easy as we do not need to change service repository.
+We only need to modify controller that is only if we want to include new methods  in the controller.
+Less code same result. Consider the following changes made in IContract\<TOutDTO, TModel, TID\> interface:
+
+OLD IContract\<TOutDTO, TModel, TID\> interface:
+
+    /// <summary>
+    /// This interface represents a contract of operations.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IContract<TOutDTO, TModel, TID> : IContract
+    #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        , IQuery<TOutDTO, TModel, TID>
+    #endif
+    #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+        , ICommand<TOutDTO, TModel, TID>
+    #endif
+    where TOutDTO : IModel
+    where TModel : class, ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+        new()
+    where TID : struct
+    {
+    }
+
+NEW IContract\<TOutDTO, TModel, TID\> interface:
+
+    /// <summary>
+    /// This interface represents a contract of operations.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel>
+    where TOutDTO : IModel
+    where TModel : class, ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+        new()
+    where TID : struct
+    {
+    #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        IQuery<TOutDTO, TModel, TID> Query { get; }
+    #endif
+    #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+        ICommand<TOutDTO, TModel, TID> Command { get; }
+    #endif
+    }

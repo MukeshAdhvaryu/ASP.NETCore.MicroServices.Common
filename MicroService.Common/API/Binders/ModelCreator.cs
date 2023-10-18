@@ -6,9 +6,9 @@
 #if !TDD
 using System.Reflection;
 
-using MicroService.Common.Interfaces;
-using MicroService.Common.Services;
 using MicroService.Common.Web.API;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace MicroService.Common.Models
 {
@@ -29,18 +29,23 @@ namespace MicroService.Common.Models
             if (!controllerType.IsAssignableTo(typeof(IExController)))
                 throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
 
-            var field = controllerType.GetField("service", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null || !field.FieldType.IsAssignableTo(typeof(IContract)))
-                throw new NotSupportedException("Controller: " + controllerType.Name + " is not supported!");
+            var baseType = typeof(ControllerBase);
+            Type? top = controllerType;
+            while (top != null)
+            {
+                if (top.BaseType == baseType)
+                    break;
+                top = top.BaseType;
+            }
+            if (top != null)
+                controllerType = top;
 
-            var serviceType = field.FieldType;
-            modelType = serviceType.GenericTypeArguments[1];
-            var model = Activator.CreateInstance(modelType) as IExModel;
-
+            var model = controllerType.GetMethod("GetNewModel", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
             if (model == null || !(model is IExModel))
-                throw new NotSupportedException("Model: " + modelType.Name + " is not supported!");
+                throw new NotSupportedException("Model is not supported!");
 
-            return model;
+            modelType = model.GetType();
+            return (IExModel) model;
         }
     }
 }

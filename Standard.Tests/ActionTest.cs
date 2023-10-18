@@ -1,11 +1,16 @@
-﻿//-:cnd:noEmit
-#if MODEL_ADDTEST && !MODEL_USEACTION && !TDD
+﻿/* Licensed under the MIT/X11 license.
+* This notice may not be removed from any source distribution.
+Author: Mukesh Adhvaryu.
+*/
+
+//-:cnd:noEmit
+#if MODEL_ADDTEST && MODEL_USEACTION && !TDD
 //+:cnd:noEmit
 
-using MicroService.Common.Tests;
-using MicroService.Common.Tests.Attributes;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Web.API;
+using MicroService.Common.Tests.Attributes;
+using MicroService.Common.Tests;
 
 /*
     * Yo can choose your own model to test by changing the using statements given beolow:
@@ -41,9 +46,9 @@ using TModel = MicroService.Common.Tests.TestModel;
 namespace UserDefined.Tests
 {
     [Testable]
-    public class StandardTest: TestStandard<TOutDTO, TModel, TID, TInDTO>
+    public class ActionTest: TestAction<TOutDTO, TModel, TID, TInDTO>
     {
-        protected override IContract<TOutDTO, TModel, TID> CreateContract(IContract<TOutDTO, TModel, TID> service)
+        protected override Controller<TOutDTO, TModel, TID, TInDTO> CreateController(IContract<TOutDTO, TModel, TID> service)
         {
             return new Controller<TOutDTO, TModel, TID, TInDTO>(service);
         }

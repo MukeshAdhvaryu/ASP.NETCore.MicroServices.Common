@@ -187,6 +187,14 @@ namespace MicroService.Common.CQRS
         public abstract int GetModelCount();
         #endregion
 
+        #region GET FIRST MODEL
+        protected abstract TModel? GetFirstModel();
+        TModel? IFirstModel<TModel>.GetFirstModel() =>
+            GetFirstModel();
+        IModel? IFirstModel.GetFirstModel() => 
+            GetFirstModel();
+        #endregion
+
         #region GET BY ID
         protected abstract Task<TModel?> Get(TID id);
         #endregion

@@ -37,11 +37,6 @@ namespace MicroService.Common.Tests
         public string? Name { get; set; }
         #endregion
 
-        #region GET PROEPRTY NAMES
-        protected override IReadOnlyList<string> GetPropertyNames(bool forSearch = false) =>
-            new string[] { nameof(ID) };
-        #endregion
-
         #region COPY FROM
         protected override Task<bool> CopyFrom(IModel model)
         {
@@ -71,11 +66,11 @@ namespace MicroService.Common.Tests
         {
             var value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
             currentValue = parsedValue = null;
-            var name = parameter.Name;
+            var name = parameter.Name.ToLower();
 
-            switch (parameter.Name)
+            switch (name)
             {
-                case nameof(Name):
+                case "name":
                     currentValue = Name;
                     if (value is string)
                     {

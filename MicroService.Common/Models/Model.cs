@@ -38,30 +38,6 @@ namespace MicroService.Common.Models
         public string ModelName => modelName;
         #endregion
 
-        #region GET PROPERTY NAMES
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        protected virtual IReadOnlyList<string> GetPropertyNames(bool forSearch = false) => null;
-        IReadOnlyList<string> IExModel.GetPropertyNames(bool forSearch)
-        {
-            var propertyNames = GetPropertyNames(forSearch);
-
-            if (propertyNames == null || propertyNames.Count == 0)
-            {
-                propertyNames = GetType().GetProperties().Where(p =>
-                {
-                    var attr = p.GetType().GetCustomAttribute<DatabaseGeneratedAttribute>();
-                    if (attr?.DatabaseGeneratedOption == DatabaseGeneratedOption.Computed)
-                        return false;
-                    return true;
-                }).Select(p => p.Name).ToArray();
-            }
-            return propertyNames;
-        }
-        #endregion
-
         #region PARSE
         /// <summary>
         /// Parses the specified parameter and if possible emits the value compitible with
@@ -75,7 +51,7 @@ namespace MicroService.Common.Models
         protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
         Message IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
-            var name = parameter.Name;
+            var name = parameter.Name?.ToLower();
             parsedValue = null;
             object? value;
             
@@ -303,13 +279,13 @@ namespace MicroService.Common.Models
         #region PARSE
         Message IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
-            var name = parameter.Name;
+            var name = parameter.Name.ToLower();
             parsedValue = null;
             object? valueFromParameter;
 
             switch (name)
             {
-                case nameof(ID):
+                case "id":
                     currentValue = id;
                     valueFromParameter = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
                     switch (criteria)

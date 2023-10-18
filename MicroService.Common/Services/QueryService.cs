@@ -5,6 +5,7 @@
 //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
 //+:cnd:noEmit
+
 using MicroService.Common.Contexts;
 using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
@@ -48,62 +49,8 @@ namespace MicroService.Common.Services
         }
         #endregion
 
-        #region GET ALL(count)
-        public Task<IEnumerable<TOutDTO>?> GetAll(int count = 0)
-        {
-            return Query.GetAll(count);
-        }
-        #endregion
-
-        #region GET ALL(startIndex, count)
-        public Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count)
-        {
-            return Query.GetAll(startIndex, count);
-        }
-        #endregion
-
-        #region FIND ALL(parameter)
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-        public Task<IEnumerable<TOutDTO>?> FindAll(ISearchParameter? parameter)
-        {
-            return Query.FindAll(parameter);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND ALL(parameters, conditionJoin)
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-public Task<TOutDTO?> Find(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.AND)
-        {
-            return Query.Find(parameters, conditionJoin);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND(parameters, conditionJoin)
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-public Task<IEnumerable<TOutDTO>?> FindAll(IEnumerable<ISearchParameter>? parameters, AndOr conditionJoin = AndOr.AND)
-        {
-            return Query.FindAll(parameters, conditionJoin);
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND (parameter)
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-public Task<TOutDTO?> Find(ISearchParameter? parameter)
-        {
-            return Query.Find(parameter);
-        }
-#endif
-        //+:cnd:noEmit
+        #region PROPERTIES
+        IQuery<TOutDTO, TModel> IQueryContract<TOutDTO, TModel>.Query => Query;
         #endregion
 
         #region GET MODEL COUNT
@@ -114,15 +61,12 @@ public Task<TOutDTO?> Find(ISearchParameter? parameter)
         #endregion
 
         #region GET FIRST MODEL
-        public TModel? GetFirstModel()
-        {
-            return Query.GetFirstModel();
-        }
-        IModel? IFirstModel.GetFirstModel()
-        {
-            return ((IFirstModel)Query).GetFirstModel();
-        }
+        public TModel? GetFirstModel() =>
+            Query.GetFirstModel();
+        IModel? IFirstModel.GetFirstModel() =>
+            Query.GetFirstModel();
         #endregion
+
     }
     //+:cnd:noEmit
     #endregion
@@ -135,7 +79,7 @@ public Task<TOutDTO?> Find(ISearchParameter? parameter)
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
     public partial class QueryService<TOutDTO, TModel, TID, TContext> :
-        QueryService<TOutDTO, TModel, TContext>, IQueryContract<TOutDTO, TModel, TID>
+        QueryService<TOutDTO, TModel, TContext>, IQueryContract<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : class, ISelfModel<TID, TModel>,
@@ -149,18 +93,25 @@ public Task<TOutDTO?> Find(ISearchParameter? parameter)
         where TContext : IModelContext
         #endregion
     {
+        #region VARIABLES
+        protected readonly new IQuery<TOutDTO, TModel, TID> Query;
+        #endregion
+
         #region CONSTRUCTORS
         public QueryService(TContext _context, ICollection<TModel>? source = null) :
             this(_context.CreateQuery<TOutDTO, TModel, TID>(true, source))
-        { }
+        {
+            Query =(IQuery<TOutDTO, TModel, TID>) ((IQueryContract<TOutDTO, TModel>)this).Query;
+        }
         public QueryService(IQuery<TOutDTO, TModel, TID> query) :
             base(query) 
-        { }
+        {
+            Query = (IQuery<TOutDTO, TModel, TID>)((IQueryContract<TOutDTO, TModel>)this).Query;
+        }
         #endregion
 
-        #region FIND BY ID(id)
-        public Task<TOutDTO?> Get(TID? id) =>
-            ((IFindByID<TOutDTO, TModel, TID>)Query).Get(id);
+        #region PROPERTIES
+        IQuery<TOutDTO, TModel, TID> IQueryContract<TOutDTO, TModel, TID>.Query => Query;
         #endregion
     }
     //+:cnd:noEmit

@@ -38,12 +38,6 @@ namespace MicroService.Common.Models
     //+:cnd:noEmit
     {
         /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
-
-        /// <summary>
         /// Gets initial data.
         /// </summary>
         /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>

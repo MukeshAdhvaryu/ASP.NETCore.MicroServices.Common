@@ -56,8 +56,9 @@ namespace UserDefined.API
 #if MODEL_NONREADABLE
             //builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
 #endif
-            //builder.Services.AddKeyedQueryModelSingleton<ISubjectOutDTO, Subject>(builder.Configuration, list);
             builder.Services.AddKeyedQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
+            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+            //builder.Services.AddKeyedQueryModelSingleton<ISubjectOutDTO, Subject>(builder.Configuration, list);
 #endif
             //+:cnd:noEmit
 

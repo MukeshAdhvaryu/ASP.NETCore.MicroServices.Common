@@ -11,7 +11,6 @@ using System.Net;
 using MicroService.Common.Constants;
 using MicroService.Common.Models;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -30,12 +29,11 @@ namespace MicroService.Common.Web.API
             var Query = bindingContext.ActionContext.HttpContext.Request.Query;
 
             List<Message> messages = new List<Message>();
-            var PropertyNames = model.GetPropertyNames();
             bool failed = false;
 
-            foreach ( var name in PropertyNames )
+            foreach ( var name in Query.Keys )
             {
-                var parameter = Query.ContainsKey(name) ? new ModelParameter(Query[name], name) : new ModelParameter(name);
+                var parameter = new ModelParameter(Query[name], name);
                 var message = model.Parse(parameter, out _, out _, true);
 
                 switch (message.Status)

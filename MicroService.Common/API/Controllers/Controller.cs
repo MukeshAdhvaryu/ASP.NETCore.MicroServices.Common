@@ -5,13 +5,14 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
+
+using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Parameters;
 
 //-:cnd:noEmit
-#if MODEL_USEACTION
-using MicroService.Common.Web.API.Interfaces;
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+using MicroService.Common.Parameters;
 #endif
 //+:cnd:noEmit
 
@@ -35,15 +36,7 @@ namespace MicroService.Common.Web.API
     /// <typeparam name="TOutDTO">Any model of your choice.</typeparam>
     [ApiController]
     [Route("[controller]")]
-    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController
-        //-:cnd:noEmit
-#if !MODEL_USEACTION
-        , IContract<TOutDTO, TModel, TID>
-#else
-        , IActionContract<TModel, TID>
-#endif
-        //+:cnd:noEmit
-
+    public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IContract<TOutDTO, TModel, TID>, IExController
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : class, ISelfModel<TID, TModel>,
@@ -58,38 +51,93 @@ namespace MicroService.Common.Web.API
         #endregion
     {
         #region VARIABLES
-        /// <summary>
-        /// Since we are using repository pattern, we need service repository
-        /// to divert contract calls to perform contract operations.
-        /// Since this contro
-        /// </summary>
-        IContract<TOutDTO, TModel, TID> service;
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        protected readonly IQuery<TOutDTO, TModel, TID> Query;
+#endif
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        protected readonly ICommand<TOutDTO, TModel, TID> Command;
+#endif
         #endregion
 
         #region CONSTRUCTORS
-        public Controller(IContract<TOutDTO, TModel, TID> _service)
+        public Controller(IContract<TOutDTO, TModel, TID> service)
         {
-            service = _service;
+            var Service = service;
+            //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+            Query = Service.Query;
+#endif
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+            Command = Service.Command;
+#endif
+            //+:cnd:noEmit
         }
         #endregion
 
         #region PROPERTIES
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        IQuery<TOutDTO, TModel, TID> IContract<TOutDTO, TModel, TID>.Query =>
+            Query;
+#endif
+#if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
+        ICommand<TOutDTO, TModel, TID> IContract<TOutDTO, TModel, TID>.Command =>
+            Command;
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region GET NEW MODEL
+        static TModel GetNewModel() =>
+            new TModel();
+        #endregion
+
+        #region GET MODEL COUNT
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+        [HttpGet("GetCount")]
+        public int GetModelCount() =>
+            ((IModelCount)this).GetModelCount();
+#endif
+        //+:cnd:noEmit
+
+        int IModelCount.GetModelCount()
+        {
+            //-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+            return Command.GetModelCount();
+#elif (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+            return Query.GetModelCount();
+#else
+            return 0;
+#endif
+            //+:cnd:noEmit
+        }
         #endregion
 
         #region GET FIRST MODEL
         //-:cnd:noEmit
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-        IModel? IFirstModel.GetFirstModel() => 
-            service.GetFirstModel();
-        TModel? IFirstModel<TModel>.GetFirstModel() =>
-            service.GetFirstModel();
-#endif     
+        [HttpGet("GetFirst")]
+        public TModel? GetFirstModel() =>
+           ((IFirstModel<TModel>)this).GetFirstModel();
+#endif
         //+:cnd:noEmit
-        #endregion
-
-        #region GET MODEL COUNT
-        int IModelCount.GetModelCount() =>
-            service.GetModelCount();
+        IModel? IFirstModel.GetFirstModel() =>
+           ((IFirstModel<TModel>)this).GetFirstModel();
+        TModel? IFirstModel<TModel>.GetFirstModel()
+        {
+            //-:cnd:noEmit
+#if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
+            return ((IExCommand<TOutDTO, TModel, TID>)Command).GetFirstModel();
+#elif (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
+            return Query.GetFirstModel();
+#else
+            return default(TModel?);
+#endif
+            //+:cnd:noEmit
+        }
         #endregion
 
         #region GET MODEL BY ID
@@ -106,7 +154,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Get(id);
+                return await Query.Get(id);
             }
             catch 
             {
@@ -124,7 +172,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Get(id));
+                return Ok(await Query.Get(id));
             }
             catch
             {
@@ -150,7 +198,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-               return await service.GetAll(count);
+               return await Query.GetAll(count);
             }
             catch
             {
@@ -170,7 +218,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.GetAll(count));
+                return Ok(await Query.GetAll(count));
             }
             catch
             {
@@ -199,7 +247,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.GetAll(startIndex, count);
+                return await Query.GetAll(startIndex, count);
             }
             catch
             {
@@ -220,7 +268,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.GetAll(startIndex, count));
+                return Ok(await Query.GetAll(startIndex, count));
             }
             catch
             {
@@ -241,7 +289,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Find(parameters, conditionJoin);
+                return await Query.Find(parameters, conditionJoin);
             }
             catch
             {
@@ -259,7 +307,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Find(parameters, conditionJoin));
+                return Ok(await Query.Find(parameters, conditionJoin));
             }
             catch
             {
@@ -281,7 +329,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.FindAll(parameter);
+                return await Query.FindAll(parameter);
             }
             catch
             {
@@ -299,7 +347,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.FindAll(parameter));
+                return Ok(await Query.FindAll(parameter));
             }
             catch
             {
@@ -327,7 +375,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.FindAll(parameters, conditionJoin);
+                return await Query.FindAll(parameters, conditionJoin);
             }
             catch
             {
@@ -347,7 +395,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.FindAll(parameters, conditionJoin));
+                return Ok(await Query.FindAll(parameters, conditionJoin));
             }
             catch
             {
@@ -369,7 +417,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Find(parameter);
+                return await Query.Find(parameter);
             }
             catch
             {
@@ -387,7 +435,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Find(parameter));
+                return Ok(await Query.Find(parameter));
             }
             catch
             {
@@ -417,18 +465,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Add(model);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-        async Task<TOutDTO?> IAppendable<TOutDTO, TModel, TID>.Add(IModel? model)
-        {
-            try
-            {
-               return await service.Add(model);
+                return await Command.Add(model);
             }
             catch
             {
@@ -450,18 +487,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Add(model));
-            }
-            catch
-            {
-                throw;
-            }
-        }
-        async Task<IActionResult> IAppendable<TModel, TID>.Add(IModel? model)
-        {
-            try
-            {
-                return Ok(await service.Add(model));
+                return Ok(await Command.Add(model));
             }
             catch
             {
@@ -487,7 +513,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Delete(id);
+                return await Command.Delete(id);
             }
             catch
             {
@@ -505,7 +531,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Delete(id));
+                return Ok(await Command.Delete(id));
             }
             catch
             {
@@ -536,18 +562,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return await service.Update(id, model);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-        async Task<TOutDTO?> IUpdatable<TOutDTO, TModel, TID>.Update(TID id, IModel? model)
-        {
-            try
-            {
-                return await service.Update(id, model);
+                return await Command.Update(id, model);
             }
             catch
             {
@@ -569,19 +584,7 @@ namespace MicroService.Common.Web.API
         {
             try
             {
-                return Ok(await service.Update(id, model));
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        async Task<IActionResult> IUpdatable<TModel, TID>.Update(TID id, IModel? model)
-        {
-            try
-            {
-                return Ok(await service.Update(id, model));
+                return Ok(await Command.Update(id, model));
             }
             catch
             {

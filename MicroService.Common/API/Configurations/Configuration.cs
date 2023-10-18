@@ -6,8 +6,9 @@
 #if !TDD 
 //+:cnd:noEmit
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+
+using CQRS.Common;
 
 using MicroService.Common.Attributes;
 using MicroService.Common.Contexts;
@@ -21,10 +22,6 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroService.Common.Web.API
 {
@@ -35,10 +32,11 @@ namespace MicroService.Common.Web.API
     public static class Configuration
     {
         #region VARIABLES
+        static readonly object GeneralLock = new object();
+        static volatile bool isProductionEnvironment;
         //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
         static List<Tuple<Type, Type, Type, Type>> ControllerTypes = new List<Tuple<Type, Type, Type, Type>>(3);
-        static volatile HashSet<string> ControllerNames = new HashSet<string>();
 
 #if !MODEL_NONQUERYABLE
         static List<Tuple<Type, Type>> QueryControllerTypes = new List<Tuple<Type, Type>>(3);
@@ -48,8 +46,27 @@ namespace MicroService.Common.Web.API
         //+:cnd:noEmit
         #endregion
 
+        #region CONSTRUCTORS
+        static Configuration()
+        {
+            lock (GeneralLock)
+            {
+                //-:cnd:noEmit
+#if !MODEL_USEMYOWNCONTROLLER
+                ControllerTypes = new List<Tuple<Type, Type, Type, Type>>(3);
+
+#if !MODEL_NONQUERYABLE
+                QueryControllerTypes = new List<Tuple<Type, Type>>(3);
+                QueryKeyedControllerTypes = new List<Tuple<Type, Type, Type>>(3);
+#endif
+#endif
+                //+:cnd:noEmit
+            }
+        }
+        #endregion
+
         #region PROPERTIES
-        public static bool IsProductionEnvironment { get; private set; }
+        public static bool IsProductionEnvironment => isProductionEnvironment;
         #endregion
 
         #region CONFIGURE MVC
@@ -65,7 +82,7 @@ namespace MicroService.Common.Web.API
         /// <returns>IMvcBuilder instance.</returns>
         public static IMvcBuilder AddMVC(this IServiceCollection services, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
-            IsProductionEnvironment = isProductionEnvironment;
+            Configuration.isProductionEnvironment = isProductionEnvironment;
             var mvcBuilder = MvcServiceCollectionExtensions.AddMvc(services);
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -90,7 +107,7 @@ namespace MicroService.Common.Web.API
 
             mvcBuilder.AddJsonOptions(option =>
             {
-                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                option.JsonSerializerOptions.AddDefaultOptions();
             });
 
 
@@ -129,7 +146,7 @@ namespace MicroService.Common.Web.API
         /// <returns>IMvcBuilder instance.</returns>
         public static IMvcBuilder AddMVC(this IServiceCollection services, Action<MvcOptions> action, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
-            IsProductionEnvironment = isProductionEnvironment;
+            Configuration.isProductionEnvironment = isProductionEnvironment;
             var nativeAction = action;
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -168,7 +185,7 @@ namespace MicroService.Common.Web.API
 
             mvcBuilder.AddJsonOptions(option =>
             {
-                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                option.JsonSerializerOptions.AddDefaultOptions();
             });
 
             //-:cnd:noEmit
@@ -1104,37 +1121,6 @@ namespace MicroService.Common.Web.API
             AddQueryModelSingleton<TModel, TModel>(services, configuration, source);
         #endregion
 
-        #region GET MODEL NAME
-        //-:cnd:noEmit
-#if !MODEL_USEMYOWNCONTROLLER
-        static string GetModelName(this Type type)
-        {
-            //Let's check if a specific name for the associated controller is provided as an attribute of TModel.
-            //If provided, no do further, assign name and exit.
-            var nameAttribute = type.GetCustomAttribute<ModelAttribute>();
-            if (!string.IsNullOrEmpty(nameAttribute?.Name))
-                return nameAttribute.Name;
-
-            var name = type.Name;
-
-            //If TModel is an interface remove 'I' suffix from the name.
-            //if (type.IsInterface && name.Length > 1 && char.IsUpper(name[1]) && (name[0] == 'I' || name[0] == 'i'))
-            //    name = name.Substring(1);
-
-            if (name.Length == 1 || !type.IsGenericType)
-            {
-                return name;
-            }
-            //If TModel is genereic type, remove part representing generic name for example: name of Any<T> resolves in Any `1 as name of the type.
-            var idx = name.IndexOf('`');
-            if (idx != -1)
-                name = name.Substring(0, idx);
-            return name;
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
         #region GET OPTIONS
         static void GetOptions(this Type modelType, IConfiguration configuration, out ServiceScope scope, out bool addController, 
             out Action<DbContextOptionsBuilder> action, DbContextOptions? dbContextOptions = null)
@@ -1218,33 +1204,8 @@ namespace MicroService.Common.Web.API
             {
                 if (controller.ControllerType.IsGenericType)
                 {
-                    string finalName;
-                    var controllerType = controller.ControllerType;
-                    var type = controllerType.GenericTypeArguments[1];
-                    var modelAttr = type.GetCustomAttribute<ModelAttribute>();
-                    finalName = type.GetModelName();
-                    if (!string.IsNullOrEmpty(modelAttr?.Name) && !ControllerNames.Contains(modelAttr.Name))
-                        finalName = modelAttr.Name;
-
-                    //bool IsQueryController = controllerType.GetGenericTypeDefinition() == (typeof(QueryController<,>));
-                    int i = -1;
-                    int count = controllerType.GenericTypeArguments.Length;
-
-                    while (ControllerNames.Contains(finalName))
-                    {
-                        ++i;
-                        if (i == 2)
-                            continue;
-                        if (i >= count)
-                            break;
-                        type = controllerType.GenericTypeArguments[i];
-                        modelAttr = type.GetCustomAttribute<ModelAttribute>();
-                        finalName = type.GetModelName();
-                        if (!string.IsNullOrEmpty(modelAttr?.Name) && !ControllerNames.Contains(modelAttr.Name))
-                            finalName = modelAttr.Name;
-                    }
-                    controller.ControllerName = finalName;
-                    ControllerNames.Add(finalName);
+                    var type = controller.ControllerType.GenericTypeArguments[1];
+                    controller.ControllerName = controller.ControllerType.GetName(type);
                 }
             }
         }

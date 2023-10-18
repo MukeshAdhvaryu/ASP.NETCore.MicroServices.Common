@@ -18,12 +18,7 @@ namespace MicroService.Common.Interfaces
     /// </summary>
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
-    public interface IQueryContract<TOutDTO, TModel> : IContract
-    //-:cnd:noEmit
-#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-        , IQuery<TOutDTO, TModel>
-#endif
-        //+:cnd:noEmit
+    public interface IQueryContract<TOutDTO, TModel> : IContract, IFirstModel<TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : ISelfModel<TModel>,
@@ -34,7 +29,13 @@ namespace MicroService.Common.Interfaces
         //+:cnd:noEmit
         new()
         #endregion
-    { }
+    {
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        IQuery<TOutDTO, TModel> Query { get; }
+#endif
+        //+:cnd:noEmit
+    }
     #endregion
 
     #region IQueryContract<TOutDTO, TModel, TID>
@@ -44,10 +45,10 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     public interface IQueryContract<TOutDTO, TModel, TID> : 
-        IQueryContract<TOutDTO, TModel>, IFindByID<TOutDTO, TModel, TID>
+        IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
-        where TModel : ISelfModel<TID, TModel>,
+        where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         TOutDTO,
@@ -56,6 +57,12 @@ namespace MicroService.Common.Interfaces
         new()
         where TID : struct
         #endregion
-    { }
+    {
+        //-:cnd:noEmit
+#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
+        new IQuery<TOutDTO, TModel, TID> Query { get; }
+#endif
+        //+:cnd:noEmit
+    }
     #endregion
 }

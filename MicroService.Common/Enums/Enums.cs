@@ -300,4 +300,27 @@ namespace MicroService.Common.Models
         Singleton,
     }
     #endregion
+
+    #region CONTRACT KIND
+    /// <summary>
+    /// Indicates a type of contract.
+    /// </summary>
+    public enum ContractKind : byte
+    {
+        /// <summary>
+        /// Indicates that the type of contract is command contract.
+        /// </summary>
+        Cmd,
+
+        /// <summary>
+        /// Indicates that the type of contract is query contract.
+        /// </summary>
+        Qry,
+
+        /// <summary>
+        /// Indicates that the type of contract is both command and query contract.
+        /// </summary>
+        Cmd_Qry
+    }
+    #endregion
 }

@@ -58,7 +58,7 @@ namespace MicroService.Common.CQRS
     /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>
+    internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>, IFirstModel<TModel>
         #region TYPE CONSTRINTS
         where TOutDTO : IModel
         where TModel : class, ISelfModel<TID, TModel>, new()
