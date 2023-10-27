@@ -32,7 +32,7 @@ namespace MicroService.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

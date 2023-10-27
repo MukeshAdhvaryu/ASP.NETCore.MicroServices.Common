@@ -10,7 +10,6 @@ Author: Mukesh Adhvaryu.
 using System.ComponentModel.DataAnnotations;
 
 using MicroService.Common.Attributes;
-using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
 namespace MicroService.Common.Tests
@@ -38,12 +37,12 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region COPY FROM
-        protected override Task<bool> CopyFrom(IModel model)
+        protected override Task<Tuple<bool, string>> CopyFrom(IModel model)
         {
             if (!(model is TestModel))
-                return Task.FromResult(false);
+                return Task.FromResult(Tuple.Create(false, GetModelExceptionMessage(ExceptionType.InAppropriateModelSupplied, model?.ToString())));
             Name = ((TestModel)model).Name;
-            return Task.FromResult(true);
+            return Task.FromResult(Tuple.Create(true, "All success"));
         }
         #endregion
 
@@ -62,28 +61,29 @@ namespace MicroService.Common.Tests
         #endregion
 
         #region PARSE
-        protected override Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
+        protected override bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed)
         {
-            var value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-            currentValue = parsedValue = null;
-            var name = parameter.Name.ToLower();
+            if(base.Parse(propertyName, propertyValue, out parsedValue, updateValueIfParsed))
+                return true;
 
-            switch (name)
+            parsedValue = null;
+            propertyName = propertyName?.ToLower();
+            switch (propertyName)
             {
                 case "name":
-                    currentValue = Name;
-                    if (value is string)
+                    if (propertyValue is string)
                     {
-                        parsedValue = (string)value;
-                        return Message.Sucess(name);
+                        var value = (string)propertyValue;
+                        parsedValue = value;
+                        if (updateValueIfParsed)
+                            Name = value;
+                        return true;
                     }
-                    if (value == null)
-                        return Message.MissingRequiredValue(name);
                     break;
                 default:
                     break;
             }
-            return Message.Failure(name);
+            return false;
         }
         #endregion
 
@@ -92,7 +92,7 @@ namespace MicroService.Common.Tests
         #region IModelToDTO
         protected override IModel? ToDTO(Type type)
         {
-            if (type == typeof(ITestModelDTO))
+            if (type == typeof(TestModelDTO))
                 return new TestModelDTO(this);
             return base.ToDTO(type);
         }

@@ -32,13 +32,6 @@ namespace MicroService.Common.Models
             return ++IDCounter;
         }
         #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out int newID)
-        {
-            return int.TryParse(value.ToString(), out newID);
-        }
-        #endregion
     }
     #endregion
 }

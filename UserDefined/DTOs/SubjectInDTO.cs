@@ -1,7 +1,6 @@
 ﻿//-:cnd:noEmit
 #if MODEL_USEDTO
 //+:cnd:noEmit
-using System.ComponentModel.DataAnnotations;
 
 using MicroService.Common.Models;
 
@@ -9,24 +8,17 @@ using UserDefined.Models;
 
 namespace UserDefined.DTOs
 {
-    public interface ISubjectInDTO : IModel
-    {
-        [Required]
-        string? Name { get; }
-
-        [Required]
-        Faculty Faculty { get; }
-    }
-
-    public class SubjectInDTO : ISubjectInDTO
+    public struct SubjectInDTO : IModel
     {
         public SubjectInDTO(ISubject subject)
         {
             Name = subject.Name;
             Faculty = subject.Faculty;
+            Book = subject.Book;
         }
-        public string? Name { get; }
-        public Faculty Faculty { get; }
+        public string? Name { get; set; }
+        public Faculty Faculty { get; set; }
+        public Book Book { get; set; }
     }
 }
 

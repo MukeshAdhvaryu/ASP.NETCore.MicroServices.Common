@@ -50,6 +50,10 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [UPDATE14: MODIFY design: Mixed UOW with repository pattern.](#UPDATE14)
 
+[UPDATE15: Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.](#UPDATE15)
+
+[UPDATE16: Support for Multi search criteria is added.](#UPDATE16)
+
 ## WHY?
 We already know that a controller can have standard HTTP calls such as HttpGet, HttpPost, etc.
 So, we know the possible methods of the controller class. 
@@ -121,8 +125,8 @@ To handle under-fetching and over-fetching:
 The following Generic Type definitions are used throughout the project:
 
      TID where TID : struct. (To represent a primary key type of the model - no string key support sorry!).
-     TOutDTO  where TOutDTO : IModel (Root interface of all models).
-     TInDTO  where TInDTO : IModel (Root interface of all models).
+     TOutDTO  where TOutDTO : IModel, new() (Root interface of all models).
+     TInDTO  where TInDTO : IModel, new() (Root interface of all models).
      
      TModel where TModel : class, ISelfModel<TID, TModel>, new()
      #if (!MODEL_USEDTO)
@@ -174,7 +178,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
                 , ICommand<TOutDTO, TModel, TID>
             #endif
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
             #if (!MODEL_USEDTO)
                 TOutDTO,
@@ -188,7 +192,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
                 , IQuery<TOutDTO, TModel>
             #endif
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : ISelfModel<TModel>, new()
             #if (!MODEL_USEDTO)
                 , TOutDTO
@@ -209,7 +213,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
                     , IDeleteable<TOutDTO, TModel, TID>
                 #endif
 
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
                 #if (!MODEL_USEDTO)
                     , TOutDTO
@@ -223,12 +227,12 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
         #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             public partial interface IQuery<TOutDTO, TModel> : IModelCount, IFind<TOutDTO, TModel>, IFirstModel<TModel>
             where TModel : ISelfModel<TModel>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             { 
             }
 
             public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>, IFindByID<TOutDTO, TModel, TID>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
                 #if (!MODEL_USEDTO)
                     , TOutDTO
@@ -247,7 +251,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
 
         #if MODEL_DELETABLE
             public interface IDeleteable<TOutDTO, TModel, TID>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : ISelfModel<TID, TModel>, new()
                 #if (!MODEL_USEDTO)
                     , TOutDTO
@@ -260,7 +264,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
         
         #if MODEL_APPENDABLE
             public interface IAppendable<TOutDTO, TModel, TID>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : ISelfModel<TID, TModel>, new()
                 #if (!MODEL_USEDTO)
                     , TOutDTO
@@ -273,7 +277,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
         
         #if MODEL_UPDATABLE
             public interface IUpdatable<TOutDTO, TModel, TID>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : ISelfModel<TID, TModel>, new()
                 #if (!MODEL_USEDTO)
                     TOutDTO,
@@ -286,7 +290,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
 
         #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
             public interface IFindByID<TOutDTO, TModel, TID>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : ISelfModel<TID, TModel>
                 #if (!MODEL_USEDTO)
                     , TOutDTO
@@ -297,7 +301,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             }
             
             public interface IFind<TOutDTO, TModel>
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : IModel
             {
                 Task<IEnumerable<TOutDTO>?> GetAll(int limitOfResult = 0);
@@ -425,24 +429,23 @@ As we already talked about a model centric approach, the following internal inte
     #endregion
 
 Single repsonsibility interfaces:
-   1. IMatch
+   1. IEntity
    2. IExCopyable
    3. IExParamParser
    4. IExModelExceptionSupplier       
 
     /// <summary>
-    /// Reprents an object which checks if certqain value exists.
+    /// Represents a model which can provide get accesor to extract properties it contains.
     /// </summary>
-    public interface IMatch
+    public interface IEntity: IModel
     {
         /// <summary>
-        /// Finds whether the given value matches the current value of property found by specified property name.
+        /// Gets value of the property specified by property Name.
         /// </summary>
-        /// <param name="searchParameter">Search parameter to use to match records in this object.</param>
-        /// <returns>True if values match, otherwise false.</returns>
-        
-        bool IsMatch(ISearchParameter? searchParameter);
-    } 
+        /// <param name="propertyName">Name of the property which to get value for.</param>
+        /// <returns>Value of property if found, otherwise null.</returns>
+        object? this[string? propertyName] { get; }
+    }
     
     /// <summary>
     /// This interface represents an object that copies data from another model.
@@ -468,14 +471,14 @@ Single repsonsibility interfaces:
         /// Parses the specified parameter and if possible emits the value compitible with
         /// the property this object posseses.
         /// </summary>
-        /// <param name="parameter">Parameter to parse.</param>
-        /// <param name="currentValue">Current value exists for the given property in this object.</param>
+        /// <param name="propertyName">Name of the property which to parse the value against.</param>
+        /// <param name="propertyValue">Value to be parsed to obtain compitible value.</param>
         /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
-        /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
+        /// <param name="updateValueIfParsed">If succesful, replaces the current value with the compitible parsed value.</param>
         /// <returns>Result Message with Status of the parse operation.</returns>
         /// <param name="criteria">Criteria to be used when parsing value.</param>
-       
-       Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
+
+        bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
     }
     
     /// <summary>
@@ -513,32 +516,7 @@ Now consider an implementation of all of the above to conjure up the model centr
 
         #region PROPERTIES
         public string ModelName => modelName;
-        #endregion
-
-        #region GET PROPERTY NAMES
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        protected virtual IReadOnlyList<string> GetPropertyNames(bool forSearch = false) => null;
-        
-        IReadOnlyList<string> IExModel.GetPropertyNames(bool forSearch)
-        {
-            var propertyNames = GetPropertyNames(forSearch);
-
-            if (propertyNames == null || propertyNames.Count == 0)
-            {
-                propertyNames = GetType().GetProperties().Where(p =>
-                {
-                    var attr = p.GetType().GetCustomAttribute<DatabaseGeneratedAttribute>();
-                    if (attr?.DatabaseGeneratedOption == DatabaseGeneratedOption.Computed)
-                        return false;
-                    return true;
-                }).Select(p => p.Name).ToArray();
-            }
-            return propertyNames;
-        }
-        #endregion
+        #endregion       
 
         #region PARSE
         /// <summary>
@@ -551,7 +529,7 @@ Now consider an implementation of all of the above to conjure up the model centr
         /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
         /// <returns>Result Message with Status of the parse operation.</returns>
         protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
-        Message IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
+        bool IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
             var name = parameter.Name;
             parsedValue = null;
@@ -562,36 +540,17 @@ Now consider an implementation of all of the above to conjure up the model centr
                 default:
                     switch (criteria)
                     {
-                        case Criteria.Occurs:
-                        case Criteria.BeginsWith:
-                        case Criteria.EndsWith:
-                        case Criteria.OccursNoCase:
-                        case Criteria.BeginsWithNoCase:
-                        case Criteria.EndsWithNoCase:
-                        case Criteria.StringEqual:
-                        case Criteria.StringEqualNoCase:
-                        case Criteria.StringNumGreaterThan:
-                        case Criteria.StringNumLessThan:
-                        case Criteria.NotOccurs:
-                        case Criteria.NotBeginsWith:
-                        case Criteria.NotEndsWith:
-                        case Criteria.NotOccursNoCase:
-                        case Criteria.NotBeginsWithNoCase:
-                        case Criteria.NotEndsWithNoCase:
-                        case Criteria.NotStrEqual:
-                        case Criteria.NotStrEqualNoCase:
-                        case Criteria.NotStringGreaterThan:
-                        case Criteria.NotStringLessThan:
-                            value = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                            parsedValue = value?.ToString();
-                            Parse(parameter, out currentValue, out _, updateValueIfParsed);
-                            return Message.Sucess(name);
-                        default:
-                            break;
+                       /* 
+                        Handles string based criteria. We only need to convert value to string.
+                        parsedValue = value.ToString();
+                        return true;
+                        For other type of criterias, we need to do parsing.
+
+                       */
                     }
                     break;
             }
-            return Parse(parameter, out currentValue, out parsedValue, updateValueIfParsed);
+            return Parse(propertyName, propertyValue, out parsedValue, updateValueIfParsed, criteria);
         }
         #endregion
 
@@ -618,107 +577,28 @@ Now consider an implementation of all of the above to conjure up the model centr
             GetInitialData();
         #endregion
 
-        #region IsMATCH
-        /// <summary>
-        /// Matches property with specified name using criteria given and emits current value exists for the given property
-        /// and a compitible value parsed using supplied value from parameter.
-        /// </summary>
-        /// <param name="propertyName">Name of property which to match for.</param>
-        /// <param name="criteria">Criteria enum to specify on the grounds the match should perform.</param>
-        /// <param name="currentValue">Current value exists for the given property.</param>
-        /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
-        /// <returns>True if values match, otherwise false.</returns>
-        protected virtual bool IsMatch(string propertyName, Criteria criteria, object? currentValue, object? parsedValue)
-        {
-            if (parsedValue == null)
-            {
-                if (currentValue == null && criteria == Criteria.Equal)
-                    return true;
-                    
-                return false;
-            }
-            return Operations.Compare(currentValue, criteria, parsedValue);
-        }
-
-        bool IMatch.IsMatch(ISearchParameter? parameter)
-        {
-            if(parameter == null) 
-                return false; 
-            var result = ((IExParamParser)this).Parse(parameter, out var currentValue, out var newValue, false, parameter.Criteria);
-            switch (result.Status)
-            {
-                case ResultStatus.Sucess:
-                    return IsMatch(parameter.Name, parameter.Criteria, currentValue, newValue);
-                case ResultStatus.Failure:
-                case ResultStatus.Ignored:
-                case ResultStatus.MissingValue:
-                case ResultStatus.MissingRequiredValue:
-                default:
-                    return false;
-            }
-        }
-        #endregion
-
         #region GET APPROPRIATE EXCEPTION
-        /// <summary>
-        /// Supplies an appropriate exception for a failure in a specified method.
+                /// <summary>
+        /// Supplies an appropriate exception message for a failure in a specified method.
         /// </summary>
         /// <param name="exceptionType">Type of exception to get.</param>
         /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
-        /// <returns>Instance of SpecialException class.</returns>
-        protected virtual ModelException GetAppropriateException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null)
+        /// <returns>Exception message.</returns>
+        protected virtual string GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo = null)
         {
             bool noAdditionalInfo = string.IsNullOrEmpty(additionalInfo);
 
             switch (exceptionType)
             {
-                case ExceptionType.NoModelFound:
-                case ExceptionType.NoModelFoundForID:
-                    return ModelException.Create(string.Format("No {0} is found additional info: {1}", modelName, noAdditionalInfo ? "None" : "ID = " + additionalInfo), exceptionType, innerException);
-
-                case ExceptionType.NoModelsFound:
-                    return ModelException.Create(string.Format("No {0} are found additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.NoModelSupplied:
-                    return ModelException.Create(string.Format("Null {0} can not be supplied additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.NegativeFetchCount:
-                    return ModelException.Create(string.Format("{0} fetch count must be > 0; provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.ModelCopyOperationFailed:
-                    return ModelException.Create(string.Format("Copy operation of {0} is failed; model provided: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.NoParameterSupplied:
-                    return ModelException.Create(string.Format("Null parameter for searching a {0} is not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.NoParametersSupplied:
-                    return ModelException.Create(string.Format("Null parameters for searching  {0}s are not allowed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.AddOperationFailed:
-                    return ModelException.Create(string.Format("Add operation for adding new {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.UpdateOperationFailed:
-                    return ModelException.Create(string.Format("Update operation for updating the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.DeleteOperationFailed:
-                    return ModelException.Create(string.Format("Delete operation for deleting the {0} is failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.InternalServerError:
-                    return ModelException.Create(string.Format("Model {0}: internal server error; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.ExpectationFailed:
-                    return ModelException.Create(string.Format("Model {0}: expectation failed; additional info: {1}", modelName, additionalInfo ?? " None"), exceptionType, innerException);
-
-                case ExceptionType.InvalidContext:
-                    return ModelException.Create(string.Format("The supplied model context is not valid or compitible with the {0}", additionalInfo ?? " None"), exceptionType, innerException);
+                // Provides tailor made message for given exception type.
 
                 default:
-                    return ModelException.Create("Need to supply your message", ExceptionType.Unknown);
+                    return ("Need to supply your message");
             }
         }
 
-        ModelException IExModelExceptionSupplier.GetModelException(ExceptionType exceptionType, string? additionalInfo, Exception? innerException) =>
-            GetAppropriateException(exceptionType, additionalInfo, innerException);
+        string IExModelExceptionSupplier.GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo, Exception? innerException) =>
+            GetAppropriateExceptionMessage(exceptionType, additionalInfo, innerException);
         #endregion
 
         #if MODEL_USEDTO
@@ -742,8 +622,6 @@ Now consider an implementation of all of the above to conjure up the model centr
         #endif
     }
 
-
-
     public abstract partial class Model<TID, TModel> : Model<TModel>,
         IExModel<TID>, IExModel, ISelfModel<TID, TModel>
         where TID : struct
@@ -766,95 +644,8 @@ Now consider an implementation of all of the above to conjure up the model centr
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public TID ID { get => id; protected set => id = value; }
        
-       TID IExModel<TID>.ID { get => id; set => id = value; }
-        #endregion
-
-        #region PARSE
-        Message IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
-        {
-            var name = parameter.Name;
-            parsedValue = null;
-            object? valueFromParameter;
-
-            switch (name)
-            {
-                case nameof(ID):
-                    currentValue = id;
-                    valueFromParameter = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                    switch (criteria)
-                    {
-                        case Criteria.Occurs:
-                        case Criteria.BeginsWith:
-                        case Criteria.EndsWith:
-                        case Criteria.OccursNoCase:
-                        case Criteria.BeginsWithNoCase:
-                        case Criteria.EndsWithNoCase:
-                        case Criteria.StringEqual:
-                        case Criteria.StringEqualNoCase:
-                        case Criteria.StringNumGreaterThan:
-                        case Criteria.StringNumLessThan:
-                        case Criteria.NotOccurs:
-                        case Criteria.NotBeginsWith:
-                        case Criteria.NotEndsWith:
-                        case Criteria.NotOccursNoCase:
-                        case Criteria.NotBeginsWithNoCase:
-                        case Criteria.NotEndsWithNoCase:
-                        case Criteria.NotStrEqual:
-                        case Criteria.NotStrEqualNoCase:
-                        case Criteria.NotStringGreaterThan:
-                        case Criteria.NotStringLessThan:
-                            parsedValue = valueFromParameter?.ToString();
-                            return Message.Sucess(name);
-                        default:
-                            break;
-                    }
-                    if (valueFromParameter == null)
-                        goto EXIT_ID;
-                    if (((IExModel<TID>)this).TryParseID(valueFromParameter, out TID newID))
-                    {
-                        parsedValue = newID;
-                        if (updateValueIfParsed && Equals(id, default(TID)))
-                            id = newID;
-
-                        return Message.Sucess(name);
-                    }
-                    EXIT_ID:
-                    return Message.Ignored(name);
-                default:
-                    switch (criteria)
-                    {
-                        case Criteria.Occurs:
-                        case Criteria.BeginsWith:
-                        case Criteria.EndsWith:
-                        case Criteria.OccursNoCase:
-                        case Criteria.BeginsWithNoCase:
-                        case Criteria.EndsWithNoCase:
-                        case Criteria.StringEqual:
-                        case Criteria.StringEqualNoCase:
-                        case Criteria.StringNumGreaterThan:
-                        case Criteria.StringNumLessThan:
-                        case Criteria.NotOccurs:
-                        case Criteria.NotBeginsWith:
-                        case Criteria.NotEndsWith:
-                        case Criteria.NotOccursNoCase:
-                        case Criteria.NotBeginsWithNoCase:
-                        case Criteria.NotEndsWithNoCase:
-                        case Criteria.NotStrEqual:
-                        case Criteria.NotStrEqualNoCase:
-                        case Criteria.NotStringGreaterThan:
-                        case Criteria.NotStringLessThan:
-                            valueFromParameter = parameter is IModelParameter ? ((IModelParameter)parameter).FirstValue : parameter.Value;
-                            parsedValue = valueFromParameter?.ToString();
-                            Parse(parameter, out currentValue, out _, updateValueIfParsed);
-                            return Message.Sucess(name);
-                        default:
-                            break;
-                    }
-                    break;
-            }
-            return Parse(parameter, out currentValue, out parsedValue, updateValueIfParsed);
-        }
-        #endregion
+        TID IExModel<TID>.ID { get => id; set => id = value; }
+        #endregion        
 
         #region COPY FROM
         Task<bool> IExCopyable.CopyFrom(IModel model)
@@ -888,28 +679,57 @@ Now consider an implementation of all of the above to conjure up the model centr
             GetNewID();
         #endregion
 
-        #region TRY PARSE ID
+                #region TRY PARSE ID
         /// <summary>
         /// Tries to parse the given value to the type of ID
         /// Returns parsed value if succesful, otherwise default value.
         /// </summary>
-        /// <param name="value">Value to be parsed as TIDType.</param>
-        /// <param name="newID">Parsed value.</param>
+        /// <param name="propertyValue">Value to be parsed as TIDType.</param>
+        /// <param name="id">Parsed value.</param>
         /// <returns>True if succesful, otherwise false</returns>
-        protected abstract bool TryParseID(object value, out TID newID);
-        bool IExModel<TID>.TryParseID(object value, out TID newID)
+        protected virtual bool TryParseID(object? propertyValue, out TID id)
         {
-            if (value is TID)
+            id = default(TID);
+            return false;
+        }
+        bool IExModel<TID>.TryParseID(object? propertyValue, out TID id)
+        {
+            if (propertyValue is TID)
             {
-                newID = (TID)value;
+                id = (TID)(object)propertyValue;
                 return true;
             }
-            if (value == null)
+            if (propertyValue == null)
             {
-                newID = default(TID);
+                id = default(TID);
                 return false;
-            }            
-            return TryParseID(value, out newID);
+            }
+            var value = propertyValue?.ToString();
+            id = default(TID);
+
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            switch (IDType)
+            {
+                 case IDType.Int32:
+                    if (int.TryParse(value, out int iResult))
+                    {
+                        id = (TID)(object)iResult;
+                        return true;
+                    }
+                    break;
+                /*
+                   Provides parsing for other known types such as long, byte, sbyte, uint, ulong, Guid etc.
+                    For any custom ID Type you will need to override TryParseID method for parsing successfully.
+                */
+                
+                default:
+                    break;
+            }
+
+            //Handles custom ID types.
+            return TryParseID(propertyValue, out id);
         }
         #endregion
     }
@@ -922,7 +742,7 @@ A single test project is created for each TDD and Non TDD environment.
 One for testing a service in TDD environment:
 
         public abstract class ServiceTest<TOutDTO, TModel, TID>  
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : Model<TID, TModel>,
         #if (!MODEL_USEDTO)
         TOutDTO,
@@ -982,8 +802,8 @@ One for Standard Web API testing (Controller via Service repository)
     
     public abstract class TestStandard<TOutDTO, TModel, TID, TInDTO>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TInDTO : IModel
+        where TOutDTO : IModel, new()
+        where TInDTO : IModel, new()
         where TModel : Model<TID, TModel>,
         #if (!MODEL_USEDTO)
         TOutDTO,
@@ -1338,65 +1158,10 @@ First, out own exception class and exception type enum are needed:
         /// </summary>
         NoModelFoundForID,
 
-        /// <summary>
-        /// Represents an exception to indicate that the query to search multiple models returned no models.
-        /// </summary>
-        NoModelsFound,
-
-        /// <summary>
-        /// Represents an exception to indicate that no model is supplied where it required for example Add or Update functions.
-        /// </summary>
-        NoModelSupplied,
-
-        /// <summary>
-        /// Represents an exception to indicate that a negative number is supplied as a count of models to be returned.
-        /// </summary>
-        NegativeFetchCount,
-
-        /// <summary>
-        /// Represents an exception to indicate that a copy operation from either DTO or another model is failed.
-        /// </summary>
-        ModelCopyOperationFailed,
-
-        /// <summary>
-        /// Represents an exception to indicate that no valid paramter is supplied in a model search intended to find multiple or single models with single search criteria.
-        /// </summary>
-        NoParameterSupplied,
-
-        /// <summary>
-        /// Represents an exception to indicate that no valid paramters are supplied in a model search intended to find multiple or single models with multiple search criteria.
-        /// </summary>
-        NoParametersSupplied,
-
-        /// <summary>
-        /// Represents an exception to indicate that an operation of adding a model in the collection failed.
-        /// </summary>
-        AddOperationFailed,
-
-        /// <summary>
-        /// Represents an exception to indicate that an operation of updating a model in the collection failed.
-        /// </summary>
-        UpdateOperationFailed,
-
-        /// <summary>
-        /// Represents an exception to indicate that an operation of deleting a model in the collection failed.
-        /// </summary>
-        DeleteOperationFailed,
-
-        /// <summary>
-        /// Represents an exception to indicate that server is failed due to an internal error.
-        /// </summary>
-        InternalServerError,
-
-        /// <summary>
-        /// Represents an exception to indicate that the current operation failed an expectation of the requirement for conducting the operation.
-        /// </summary>
-        ExpectationFailed,
-
-        /// <summary>
-        /// Represents an exception to indicate that the supplied model context is not valid or compitible with the object intended to use it.
-        /// </summary>
-        InvalidContext,
+        /*
+           Other common exception types for models are provided.
+           Add more types as per your need.
+        */
     }
 
 You can define more excetions types based on your needs.
@@ -1455,14 +1220,14 @@ Consider the following code in controller class:
     [ApiController]
     [Route("[controller]")]
     public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController , IContract<TOutDTO, TModel, TID>
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>,
     #if (!MODEL_USEDTO)
         TOutDTO,
     #endif
     new()
     where TID : struct
-    where TInDTO : IModel
+    where TInDTO : IModel, new()
     {
         #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
         #if !MODEL_USEACTION
@@ -1552,14 +1317,14 @@ So now it is Controller<TOutDTO, TModel, TID, TInDTO>
     [ApiController]
     [Route("[controller]")]
     public class Controller<TOutDTO, TModel, TID, TInDTO> : ControllerBase, IExController , IContract<TOutDTO, TModel, TID>
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>,
     #if (!MODEL_USEDTO)
         TOutDTO,
     #endif
     new()
     where TID : struct
-    where TInDTO : IModel
+    where TInDTO : IModel, new()
     {
         // controller code
     }
@@ -1583,8 +1348,7 @@ This is to allow single DBContext to hold multiple model sets..
         
         #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         ICommand<TOutDTO, TModel, TID> IModelContext.CreateCommand<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
-        {
-        
+        {        
             return new CommandObject<TOutDTO, TModel, TID>(this, source, initialzeData);
         }
         #endif
@@ -1643,7 +1407,7 @@ Support for Query-Only-Controllers and Keyless models is added.
     #else
         , IQueryContract<TModel>
     #endif
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : Model<TModel>,
     #if (!MODEL_USEDTO)
         TOutDTO,
@@ -1777,7 +1541,7 @@ IQuery\<TOutDTO, TModel, TID\>
         , ISearch<TOutDTO, TModel>
     #endif
         where TModel : ISelfModel<TModel>
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
     { 
     }
 
@@ -1789,7 +1553,7 @@ IQuery\<TOutDTO, TModel, TID\>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>,
         IFindByID<TOutDTO, TModel, TID>
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>, new()
     #if (!MODEL_USEDTO)
         , TOutDTO
@@ -1819,7 +1583,7 @@ ICommand\<TOutDTO, TModel, TID\>
     #if MODEL_DELETABLE
         , IDeleteable<TOutDTO, TModel, TID>
     #endif
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>, new()
     #if (!MODEL_USEDTO)
         , TOutDTO
@@ -1838,7 +1602,7 @@ ICommand\<TOutDTO, TModel, TID\>
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>, new()
     #if (!MODEL_USEDTO)
         , TOutDTO
@@ -1872,7 +1636,7 @@ Consider the following modified definition of IModelContext interface:
         /// <param name="source">Optional source - providing pre-existing model data.</param>
         /// <returns>An Instance implementing ICommand<TOutDTO, TModel, TID></returns>
         ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true, ICollection<TModel>? source = null)
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
         #if (!MODEL_USEDTO)
             , TOutDTO
@@ -1892,7 +1656,7 @@ Consider the following modified definition of IModelContext interface:
         /// <returns>An Instance implementing IQuery<TOutDTO, TModel></returns>
         IQuery<TOutDTO, TModel> CreateQuery<TOutDTO, TModel>(bool initialzeData = false, ICollection<TModel>? source = null)
             where TModel : class, ISelfModel<TModel>, new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             ;
 
         /// <summary>
@@ -1906,7 +1670,7 @@ Consider the following modified definition of IModelContext interface:
         /// <returns>An Instance implementing IQuery<TOutDTO, TModel, TID></returns>
         IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
             //-:cnd:noEmit
         #if (!MODEL_USEDTO)
@@ -1940,7 +1704,7 @@ OLD IContract\<TOutDTO, TModel, TID\> interface:
     #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE)
         , ICommand<TOutDTO, TModel, TID>
     #endif
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>,
     #if (!MODEL_USEDTO)
         TOutDTO,
@@ -1959,7 +1723,7 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel>
-    where TOutDTO : IModel
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>,
     #if (!MODEL_USEDTO)
         TOutDTO,
@@ -1974,3 +1738,159 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
         ICommand<TOutDTO, TModel, TID> Command { get; }
     #endif
     }
+
+## UPDATE15
+Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
+
+These are the optional methods; only available when the relevant CCC is true for example:
+MODEL_APPENDBULK: For bulk model additions.
+MODEL_UPDATEBULK: For bulk model updatations.
+MODEL_DELETEBULK: For bulk model deletions.
+
+
+    #if MODEL_APPENDABLE
+    /// <summary>
+    /// This interface represents an object that has a list of models to which a new model can be appended.
+    /// Any object that implements the IModel interface can be provided. This allows DTOs to be used instead of an actual model object.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IAppendable<TOutDTO, TModel, TID>
+        where TOutDTO : IModel, new()
+        where TModel : ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+        new()
+        where TID : struct
+    {
+        /// <summary>
+        /// Adds a new model based on the given model.
+        /// If the given model is not TModel, then a new appropriate model will be created by copying data from the given model.
+        /// </summary>
+        /// <param name="model">
+        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
+        /// This allows DTOs to be used instead of an actual model object.
+        /// </param>
+        /// <returns>Model that is added.</returns>
+        Task<TOutDTO?> Add(IModel? model);
+
+    #if MODEL_APPENDBULK
+        /// <summary>
+        /// Adds new models based on an enumerable of models specified.
+        /// </summary>
+        /// <param name="models">An enumerable of models to add to the model collection.</param>
+        /// <returns>Collection of models which are successfully added and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange<T>(IEnumerable<T?>? models)
+            where T: IModel;
+    #endif
+    }
+    #endif
+
+    #region IUpdatable<TOutDTO, TModel, TID>
+    #if MODEL_UPDATABLE
+    /// <summary>
+    /// This interface represents an object that has a list of models and allows a model with a specified ID to be updated with data from the given model parameter.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IUpdatable<TOutDTO, TModel, TID>
+        where TOutDTO : IModel, new()
+        where TModel : ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+        new()
+        where TID : struct
+    {
+        /// <summary>
+        /// Updates a model specified by the given ID with the data of the given model.
+        /// </summary>
+        /// <param name="id">ID of the model to be updated.</param>
+        /// <param name="model">
+        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
+        /// This allows DTOs to be used instead of an actual model object.
+        /// </param>
+        /// <returns></returns>
+        Task<TOutDTO?> Update(TID id, IModel? model);
+
+    #if MODEL_UPDATEBULK
+        /// <summary>
+        /// Updates models based on an enumerable of models specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
+        /// <param name="models">An enumerable of models to update the model collection.</param>
+        /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange<T>(IEnumerable<TID>? IDs, IEnumerable<T?>? models)
+            where T: IModel;
+    #endif
+    }
+    #endif
+
+    #if MODEL_DELETABLE
+    /// <summary>
+    /// This interface represents an object that allows deleting a single model with a specified ID.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IDeleteable<TOutDTO, TModel, TID>
+        where TOutDTO : IModel, new()
+        where TModel : ISelfModel<TID, TModel>,
+    #if (!MODEL_USEDTO)
+        TOutDTO,
+    #endif
+        new()
+        where TID : struct
+    {
+        /// <summary>
+        /// Deletes the model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to delete.</param>
+        /// <returns></returns>
+        Task<TOutDTO?> Delete(TID id);
+
+    #if MODEL_DELETEBULK
+        /// <summary>
+        /// Deletes new models based on an enumerable of IDs specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
+        /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO?>?, string>> DeleteRange(IEnumerable<TID>? IDs);
+    #endif
+    }
+    #endif
+
+## UPDATE16
+UPDATE16: Support for Multi search criteria is added. 
+Consider the following four options.
+
+    public enum Criteria
+    {
+        //Other criteria existed before.
+
+
+        //// <summary>
+        /// Checks if value falls between the range of two other values.
+        /// </summary>
+        Between = 16,
+
+        /// <summary>
+        /// Checks if value does not fall between the range of two other values.
+        /// </summary>
+        NotBetween = -17,
+
+        /// <summary>
+        /// Checks for the value if it matches with any of other values provided as paramters.
+        /// </summary>
+        In = 17,
+
+        /// <summary>
+        /// Checks for the value if it does not match with any of other values provided as paramters.
+        /// </summary>
+        NotIn = 18,
+    }
+
+ Changes are made to Operations.cs to handle these options.

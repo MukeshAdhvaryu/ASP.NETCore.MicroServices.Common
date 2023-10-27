@@ -6,70 +6,88 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
-using System.Net;
-
-using MicroService.Common.Constants;
 using MicroService.Common.Models;
 
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.API
 {
-    public sealed class ModelBinder : ModelCreator, IModelBinder
+    public sealed class ModelBinder : Binder
     {
+        #region CONSTRUCTORS
+        public ModelBinder(IObjectModelValidator _validator) :
+            base(_validator)
+        { }
+        #endregion
+
         #region BIND MODEL
-        async Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
+        public override Task BindModelAsync(ModelBindingContext bindingContext)
         {
             var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
-            var model = (IExModel)GetModel(descriptor.ControllerTypeInfo, out Type modelType);
-
-            bool NeedToUseDTO = !bindingContext.ModelType.IsAssignableFrom(modelType);
-
             var Query = bindingContext.ActionContext.HttpContext.Request.Query;
 
-            List<Message> messages = new List<Message>();
-            bool failed = false;
+            var controllerType = descriptor.ControllerTypeInfo.GetControllerType(out Type? inDTOType);
 
-            foreach ( var name in Query.Keys )
+            if (inDTOType == null || controllerType == null || Query == null || Query.Count == 0)
+                goto ERROR;
+
+            var OriginalModelName = bindingContext.OriginalModelName;
+
+            object? Result;
+
+            bool IsJson = Query.ContainsKey(OriginalModelName);
+            if (IsJson)
             {
-                var parameter = new ModelParameter(Query[name], name);
-                var message = model.Parse(parameter, out _, out _, true);
+                var json = Query[OriginalModelName].ToString();
+                Result = bindingContext.ModelType.ToDTO(json, controllerType);
 
-                switch (message.Status)
-                {
-                    case ResultStatus.Failure:
-                    case ResultStatus.MissingRequiredValue:
-                        failed = true;
-                        break;
-                    default:
-                        break;
-                }
-                messages.Add(message);
-            }            
-            if (!failed)
-            {
-                //-:cnd:noEmit
-#if MODEL_USEDTO
-                if (NeedToUseDTO)
-                    bindingContext.Result = ModelBindingResult.Success(model.ToDTO(bindingContext.ModelType));
-                else
-                    bindingContext.Result = ModelBindingResult.Success(model);
+                if (Result == null)
+                    goto ERROR;
 
-#else
-                bindingContext.Result = ModelBindingResult.Success(model);
-
-#endif
-                //+:cnd:noEmit
-                return;
+                goto VALIDATE;
             }
 
-            var response = bindingContext.HttpContext.Response;
-            response.StatusCode = (int)HttpStatusCode.ExpectationFailed;
-            response.ContentType = Contents.JSON;
-            await response.WriteAsJsonAsync(messages.Select((m, i) => ++i+ ". " + m));
-            await response.CompleteAsync();
-            return;
+            IExModel Model = (IExModel)controllerType.GetModel(Query.ContainsKey(OriginalModelName));
+            bool NeedToUseDTO = !inDTOType.IsAssignableFrom(Model.GetType());
+
+            foreach (var propertyName in Query.Keys)
+            {
+                var items = Query[propertyName];
+                if (!Model.Parse(propertyName, items, out _, true))
+                    goto ERROR;
+            }
+
+            //-:cnd:noEmit
+#if MODEL_USEDTO
+            if (NeedToUseDTO)
+            {
+                Result = Model.ToDTO(inDTOType);
+                goto VALIDATE;
+            }
+#endif
+            //+:cnd:noEmit
+
+            Result = Model;
+            goto VALIDATE;
+
+            VALIDATE:
+            if (Result != null)
+            {
+                Validator.Validate(
+                    bindingContext.ActionContext,
+                    validationState: bindingContext.ValidationState,
+                    prefix: string.Empty,
+                    model: Result
+                );
+            }
+            bindingContext.Result = ModelBindingResult.Success(Result);
+            return Task.CompletedTask;
+
+            ERROR:
+            bindingContext.Result = ModelBindingResult.Failed();
+            return Task.CompletedTask;
         }
         #endregion
     }

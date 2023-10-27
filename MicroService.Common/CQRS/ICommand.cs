@@ -34,7 +34,7 @@ namespace MicroService.Common.CQRS
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>, new()
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -60,7 +60,7 @@ namespace MicroService.Common.CQRS
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>, IFirstModel<TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>, new()
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

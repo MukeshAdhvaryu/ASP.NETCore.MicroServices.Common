@@ -5,7 +5,7 @@ Credit for the code below goes to: https://avarnon.medium.com/how-to-show-enums-
 */
 
 //-:cnd:noEmit
-#if MODEL_USESWAGGER
+#if !TDD && MODEL_USESWAGGER
 using System.Runtime.Serialization;
 
 using Microsoft.OpenApi.Any;
@@ -13,7 +13,7 @@ using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.API
 {
     public class EnumSchemaFilter : ISchemaFilter
     {
@@ -24,11 +24,13 @@ namespace MicroService.Common.Web.API
                 model.Enum.Clear();
                 foreach (string enumName in Enum.GetNames(context.Type))
                 {
-                    System.Reflection.MemberInfo memberInfo = context.Type.GetMember(enumName).FirstOrDefault(m => m.DeclaringType == context.Type);
-                    EnumMemberAttribute enumMemberAttribute = memberInfo == null
-                     ? null
-                     : memberInfo.GetCustomAttributes(typeof(EnumMemberAttribute), false).OfType<EnumMemberAttribute>().FirstOrDefault();
-                    string label = enumMemberAttribute == null || string.IsNullOrWhiteSpace(enumMemberAttribute.Value)
+                    System.Reflection.MemberInfo? memberInfo = context.Type.GetMember(enumName).FirstOrDefault(m => m.DeclaringType == context.Type);
+                    EnumMemberAttribute? enumMemberAttribute = null;
+                    if (memberInfo != null)
+                    {
+                        enumMemberAttribute = memberInfo?.GetCustomAttributes(typeof(EnumMemberAttribute), false).OfType<EnumMemberAttribute>().FirstOrDefault();
+                    }
+                    string label = string.IsNullOrWhiteSpace(enumMemberAttribute?.Value)
                      ? enumName
                      : enumMemberAttribute.Value;
                     model.Enum.Add(new OpenApiString(label));

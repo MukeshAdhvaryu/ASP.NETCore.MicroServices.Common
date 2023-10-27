@@ -26,7 +26,7 @@ namespace MicroService.Common.CQRS
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
         where TModel : ISelfModel<TModel>
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         #endregion
     { }
     #endregion
@@ -41,13 +41,14 @@ namespace MicroService.Common.CQRS
     public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>,
         IFindByID<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TModel : class, ISelfModel<TID, TModel>, new()
+        where TOutDTO : IModel, new()
+        where TModel : class, ISelfModel<TID, TModel>
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
         , TOutDTO
 #endif
         //+:cnd:noEmit
+            , new()
         where TID : struct
         #endregion
     {

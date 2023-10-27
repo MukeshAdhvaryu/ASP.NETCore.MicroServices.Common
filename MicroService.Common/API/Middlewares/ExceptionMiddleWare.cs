@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace MicroService.Common.Web.API.Middlewares
+namespace MicroService.Common.API.Middlewares
 {
     public class HttpExceptionMiddleWare : IMiddleware
     {

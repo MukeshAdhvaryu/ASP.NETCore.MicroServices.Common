@@ -10,7 +10,11 @@ using MicroService.Common.Contexts;
 using MicroService.Common.CQRS;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
 using MicroService.Common.Parameters;
+#endif
+//+:cnd:noEmit
 
 namespace MicroService.Common.Services
 {
@@ -23,7 +27,7 @@ namespace MicroService.Common.Services
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
     public partial class QueryService<TOutDTO, TModel, TContext> : IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -81,7 +85,7 @@ namespace MicroService.Common.Services
     public partial class QueryService<TOutDTO, TModel, TID, TContext> :
         QueryService<TOutDTO, TModel, TContext>, IQueryContract<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

@@ -23,8 +23,8 @@ namespace MicroService.Common.Tests
 {
     public abstract class TestStandard<TOutDTO, TModel, TID, TInDTO>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TInDTO : IModel
+        where TOutDTO : IModel, new()
+        where TInDTO: IModel, new()
         where TModel : Model<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

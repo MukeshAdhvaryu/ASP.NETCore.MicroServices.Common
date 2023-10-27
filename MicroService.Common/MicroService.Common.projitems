@@ -9,6 +9,13 @@
     <Import_RootNamespace>MicroService.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)API\Attributes\FlexiBinderAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Attributes\ParamBinderAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Binders\Binder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Globals\Globals.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Attributes\DTOBinderAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Controllers\ExController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Swagger\OperationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
@@ -25,15 +32,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Globals\Globals.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelEnum.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelGuid.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt32.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt64.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\QueryService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Service.cs" />
@@ -45,7 +49,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tests\TestStandard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)API\Binders\ModelBinder.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)API\Binders\ModelCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)API\Binders\ParamBinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)API\Configurations\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)API\Controllers\Controller.cs" />

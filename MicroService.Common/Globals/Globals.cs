@@ -5,20 +5,24 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 using MicroService.Common.Attributes;
+using MicroService.Common.Exceptions;
+using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 
-namespace CQRS.Common
+namespace MicroService.Common
 {
-    public static class Globals
+    public static partial class Globals
     {
         #region VARIABLES
         public static readonly JsonSerializerOptions JsonSerializerOptions;
         static HashSet<string> Names;
         static readonly object GlobalLock = new object();
         internal static readonly string Url;
+        static volatile bool isProductionEnvironment;
         #endregion
 
         #region CONSTRUCTOR
@@ -26,11 +30,15 @@ namespace CQRS.Common
         {
             lock (GlobalLock)
             {
-                JsonSerializerOptions = new JsonSerializerOptions().AddDefaultOptions();
+                JsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web).AddDefaultOptions();
                 Names = new HashSet<string>(3);
                 Url = @"/{0} /{1}";
             }
         }
+        #endregion
+
+        #region PROPERTIES
+        public static bool IsProductionEnvironment {get => isProductionEnvironment; internal set { isProductionEnvironment = value; } }
         #endregion
 
         #region ADD DEFAULT JSON OPTIONS
@@ -38,6 +46,8 @@ namespace CQRS.Common
         {
             JsonSerializerOptions.IncludeFields = true;
             JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            JsonSerializerOptions.IgnoreReadOnlyFields = true;
+            JsonSerializerOptions.IgnoreReadOnlyProperties = true;
             JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             return JsonSerializerOptions;
         }
@@ -104,13 +114,13 @@ namespace CQRS.Common
         }
         #endregion
 
-        #region TRY PARSE
-        public static bool TryParse<T>(string query, out T? result)
+        #region PARSE AS T
+        public static T? Parse<T>(string query)
+            where T: new()
         {
             try
             {
-                result = JsonSerializer.Deserialize<T>(query, JsonSerializerOptions);
-                return true;
+                return  JsonSerializer.Deserialize<T>(query, JsonSerializerOptions);
             }
             catch
             {
@@ -119,21 +129,98 @@ namespace CQRS.Common
         }
         #endregion
 
-        #region TRY PARSE ENUMERABLE
-        public static bool TryParseEnumerable<T>(string query, out IEnumerable<T?>? result)  
+        #region PARSE AS OBJECT
+        public static object? Parse(string query, Type type)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize(query, type, JsonSerializerOptions);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        #region PARSE AS OBJECT
+        public static T? Parse<T>(JsonElement element)
+        {
+            try
+            {
+                var obj = JsonSerializer.Deserialize(element, typeof(T), JsonSerializerOptions);
+                if (obj == null)
+                    return default(T);
+                return (T)obj;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        #endregion
+
+        #endregion
+
+        #region PARSE ENUMERABLE
+        public static T?[] ParseArray<T>(string query)
+            where T : new()
         {
             try
             {
                 using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(query)))
                 {
-                    result = JsonSerializer.DeserializeAsyncEnumerable<T>(stream, JsonSerializerOptions).ToBlockingEnumerable().ToArray();
-                    return true;
+                    return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, JsonSerializerOptions).ToBlockingEnumerable().ToArray();
                 }
             }
             catch
             {
                 throw;
             }
+        }
+
+        public static U[] ParseArray<T, U>(string query)
+            where T : U, new()
+        {
+            try
+            {
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(query)))
+                {
+                    return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, JsonSerializerOptions).ToBlockingEnumerable().OfType<U>().ToArray();
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        #endregion
+
+        #region GET APPROPRIATE EXCEPTION
+        /// <summary>
+        /// Supplies an appropriate exception for a failure in a specified method.
+        /// </summary>
+        /// <param name="exceptionType">Type of exception to get.</param>
+        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
+        /// <returns>Instance of SpecialException class.</returns>
+        internal static ModelException GetModelException(this IExModelExceptionSupplier model, ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null)
+        {
+            var message = model.GetModelExceptionMessage(exceptionType, additionalInfo);
+            return exceptionType.Create(message, innerException);
+        }
+        #endregion
+
+        #region CREATE MODEL EXCEPTION
+        /// <summary>
+        /// Creates an instance of ModelException.
+        /// </summary>
+        /// <param name="message">Custom message provided by user.</param>
+        /// <param name="type">Type of the model exception.</param>
+        /// <param name="exception">Original exception raised by some operation performed on model.</param>
+        /// <returns></returns>
+        public static ModelException Create(this ExceptionType type, string message, Exception? exception = null)
+        {
+            if (exception == null)
+                return new ModelException(message, type);
+            return new ModelException(message, type, exception);
         }
         #endregion
     }

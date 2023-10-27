@@ -18,7 +18,7 @@ using Microsoft.EntityFrameworkCore;
 
 using MicroService.Common.Interfaces;
 
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.API
 {
     #region DBCONTEXT
     public partial class DBContext : DbContext, IModelContext
@@ -72,7 +72,7 @@ namespace MicroService.Common.Web.API
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         class CommandObject<TOutDTO, TModel, TID> : Command<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -178,13 +178,14 @@ namespace MicroService.Common.Web.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         class QueryObject<TOutDTO, TModel, TID> : Query<TOutDTO, TModel>, IQuery<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
-            where TModel : class, ISelfModel<TID, TModel>, new()
+            where TOutDTO : IModel, new()
+            where TModel : class, ISelfModel<TID, TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             , TOutDTO
 #endif
             //+:cnd:noEmit
+            , new()
             where TID : struct
             #endregion
         {
@@ -241,13 +242,14 @@ namespace MicroService.Common.Web.API
 
         class QueryObject<TOutDTO, TModel> : Query<TOutDTO, TModel>
             #region TYPE CONSTRINTS
-    where TOutDTO : IModel
-    where TModel : class, ISelfModel<TModel>, new()
+    where TOutDTO : IModel, new()
+    where TModel : class, ISelfModel<TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
     , TOutDTO
 #endif
             //+:cnd:noEmit
+            , new()
             #endregion
         {
             DbSet<TModel> models;

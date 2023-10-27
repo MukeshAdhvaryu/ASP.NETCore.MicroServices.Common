@@ -16,7 +16,7 @@ using MicroService.Common.Exceptions;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Tests.Attributes;
-using MicroService.Common.Web.API;
+using MicroService.Common.API;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,8 +28,8 @@ namespace MicroService.Common.Tests
     [Testable]
     public abstract class TestAction<TOutDTO, TModel, TID, TInDTO>
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
-        where TInDTO : IModel
+        where TOutDTO : IModel, new()
+        where TInDTO: IModel, new()
         where TModel : Model<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

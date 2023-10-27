@@ -8,22 +8,25 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 
-using CQRS.Common;
+using MicroService.Common;
 
 using MicroService.Common.Attributes;
 using MicroService.Common.Contexts;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
 using MicroService.Common.Services;
-using MicroService.Common.Web.API.Middlewares;
+using MicroService.Common.API.Middlewares;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.API
 {
     #region CONFIGURATION
     /// <summary>
@@ -33,7 +36,6 @@ namespace MicroService.Common.Web.API
     {
         #region VARIABLES
         static readonly object GeneralLock = new object();
-        static volatile bool isProductionEnvironment;
         //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
         static List<Tuple<Type, Type, Type, Type>> ControllerTypes = new List<Tuple<Type, Type, Type, Type>>(3);
@@ -65,10 +67,6 @@ namespace MicroService.Common.Web.API
         }
         #endregion
 
-        #region PROPERTIES
-        public static bool IsProductionEnvironment => isProductionEnvironment;
-        #endregion
-
         #region CONFIGURE MVC
         /// <summary>
         /// Creates MVCBuilder from service collection instance using the given action.
@@ -82,7 +80,7 @@ namespace MicroService.Common.Web.API
         /// <returns>IMvcBuilder instance.</returns>
         public static IMvcBuilder AddMVC(this IServiceCollection services, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
-            Configuration.isProductionEnvironment = isProductionEnvironment;
+            Globals.IsProductionEnvironment = isProductionEnvironment; 
             var mvcBuilder = MvcServiceCollectionExtensions.AddMvc(services);
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -91,9 +89,9 @@ namespace MicroService.Common.Web.API
                  * So, now we do not need to create controller class in an actual microservice project.
                  * Inspired from the article: https://www.strathweb.com/2018/04/generic-and-dynamically-generated-controllers-in-asp-net-core-mvc/
                 */
-            Action<MvcOptions> nativeAction = (o) =>
+            Action<MvcOptions> nativeAction = (option) =>
             {
-                o.Conventions.Add(new ControllerRouteConvention());
+                option.Conventions.Add(new ControllerRouteConvention());
             };
             OptionsServiceCollectionExtensions.Configure(mvcBuilder.Services, nativeAction);
             mvcBuilder.ConfigureApplicationPartManager(m => m.FeatureProviders.Add(new ControllerFeatureProvider()));
@@ -117,15 +115,16 @@ namespace MicroService.Common.Web.API
 
             //-:cnd:noEmit
 #if MODEL_USESWAGGER
-            services.AddSwaggerGen(opt => {
-                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            services.AddSwaggerGen(option => {
+                option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = SwaggerDocTitle,
                     Description = SwaggerDocDescription
                 });
 
 
-                opt.SchemaFilter<EnumSchemaFilter>();
+                option.SchemaFilter<EnumSchemaFilter>();
+                option.OperationFilter<OperationFilter>();
             });
 #endif
             //+:cnd:noEmit
@@ -146,7 +145,7 @@ namespace MicroService.Common.Web.API
         /// <returns>IMvcBuilder instance.</returns>
         public static IMvcBuilder AddMVC(this IServiceCollection services, Action<MvcOptions> action, bool isProductionEnvironment, string? SwaggerDocTitle = null, string? SwaggerDocDescription = null)
         {
-            Configuration.isProductionEnvironment = isProductionEnvironment;
+            Globals.IsProductionEnvironment = isProductionEnvironment;
             var nativeAction = action;
             //-:cnd:noEmit
 #if !MODEL_USEMYOWNCONTROLLER
@@ -156,10 +155,10 @@ namespace MicroService.Common.Web.API
                 goto CONFIGURE;
             }
 
-            nativeAction = (o) =>
+            nativeAction = (option) =>
             {
-                action(o);
-                o.Conventions.Add(new ControllerRouteConvention());
+                action(option);
+                option.Conventions.Add(new ControllerRouteConvention());
             };
 #endif
             //+:cnd:noEmit
@@ -190,15 +189,16 @@ namespace MicroService.Common.Web.API
 
             //-:cnd:noEmit
 #if MODEL_USESWAGGER
-            services.AddSwaggerGen(opt => {
-                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            services.AddSwaggerGen(option => {
+                option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = SwaggerDocTitle,
                     Description = SwaggerDocDescription
                 });
 
 
-                opt.SchemaFilter<EnumSchemaFilter>();
+                option.SchemaFilter<EnumSchemaFilter>();
+                option.OperationFilter<OperationFilter>();
             });
 #endif
             //+:cnd:noEmit
@@ -231,8 +231,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO: IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TService : Service<TOutDTO, TModel, TID, TDBContext>
             where TID : struct
             where TDBContext : DBContext
@@ -288,7 +288,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TService : Service<TOutDTO, TModel, TID, TDBContext>
             where TID : struct
             where TDBContext : DBContext
@@ -316,8 +316,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TID : struct
             #endregion
             => AddModel<TOutDTO, TModel, TID, TInDTO, Service<TOutDTO, TModel, TID, DBContext>, DBContext>(services, configuration, dbContextOptions);
@@ -342,8 +342,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             #endregion
             => AddModel<TOutDTO, TModel, int, TInDTO>(services, configuration, dbContextOptions);
 
@@ -366,7 +366,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
             => AddModel<TOutDTO, TModel, TOutDTO>(services, configuration, dbContextOptions);
 
@@ -413,7 +413,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TDBContext>
             where TDBContext : DBContext
             #endregion
@@ -465,7 +465,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
             => AddQueryModel<TOutDTO, TModel, QueryService<TOutDTO, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
 
@@ -514,7 +514,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TID, TDBContext>
             where TDBContext : DBContext
             where TID: struct
@@ -567,7 +567,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddKeyedQueryModel<TOutDTO, TModel, TID, QueryService<TOutDTO, TModel, TID, DBContext>, DBContext>(services, configuration, dbContextOptions);
@@ -591,7 +591,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
             => AddKeyedQueryModel<TOutDTO, TModel, int>(services, configuration, dbContextOptions);
 
@@ -639,8 +639,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TService : Service<TOutDTO, TModel, TID, TContext> 
             where TID : struct
             where TContext : IModelContext, new()
@@ -693,8 +693,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TID : struct
             where TContext : IModelContext, new()
             #endregion
@@ -721,7 +721,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddModelSingleton<TOutDTO, TModel, TID, TOutDTO, ModelContext>(services, configuration, source);
@@ -746,8 +746,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             #endregion
             => AddModelSingleton<TOutDTO, TModel, int, TInDTO>(services, configuration, source);
 
@@ -771,9 +771,9 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
-            => AddModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
+            => AddModelSingleton<TOutDTO, TModel, TOutDTO>(services, configuration, source);
 
         /// <summary>
         /// <summary>
@@ -818,8 +818,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TService : QueryService<TOutDTO, TModel, TID, TContext>
             where TID : struct
             where TContext : IModelContext, new()
@@ -872,8 +872,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TID : struct
             where TContext : IModelContext, new()
             #endregion
@@ -900,7 +900,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, TOutDTO, ModelContext>(services, configuration, source);
@@ -925,8 +925,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             #endregion
             => AddKeyedQueryModelSingleton<TOutDTO, TModel, int, TInDTO>(services, configuration, source);
 
@@ -950,9 +950,9 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
-            => AddKeyedQueryModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
+            => AddKeyedQueryModelSingleton<TOutDTO, TModel, TOutDTO>(services, configuration, source);
 
         /// <summary>
         /// <summary>
@@ -996,8 +996,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TService : QueryService<TOutDTO, TModel, TContext>
             where TContext : IModelContext, new()
             #endregion
@@ -1049,8 +1049,8 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
-            where TInDTO : IModel
+            where TOutDTO : IModel, new()
+            where TInDTO: IModel, new()
             where TContext : IModelContext, new()
             #endregion
             => AddQueryModelSingleton<TOutDTO, TModel, TOutDTO, QueryService<TOutDTO, TModel, TContext>, TContext>(services, configuration, source);
@@ -1075,7 +1075,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
             => AddQueryModelSingleton<TOutDTO, TModel, TOutDTO, ModelContext>(services, configuration, source);
 
@@ -1098,7 +1098,7 @@ namespace MicroService.Common.Web.API
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             #endregion
             => AddQueryModelSingleton<TOutDTO, TModel, IModel>(services, configuration, source);
 

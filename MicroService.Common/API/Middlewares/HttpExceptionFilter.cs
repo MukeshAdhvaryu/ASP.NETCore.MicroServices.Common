@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace MicroService.Common.Web.API.Middlewares
+namespace MicroService.Common.API.Middlewares
 {
     public class HttpExceptionFilter : IExceptionFilter
     {
@@ -28,7 +28,7 @@ namespace MicroService.Common.Web.API.Middlewares
             {
                 var modelException = ((IModelException)context.Exception);                 
 
-                modelException.GetConsolidatedMessage(out string title, out string type, out string? details, out string[]? stackTrace, Configuration.IsProductionEnvironment);
+                modelException.GetConsolidatedMessage(out string title, out string type, out string? details, out string[]? stackTrace, Globals.IsProductionEnvironment);
                 problem = new ProblemDetails()
                 {
                     Type = ((HttpStatusCode)modelException.Status).ToString() + ": " + type, // customize

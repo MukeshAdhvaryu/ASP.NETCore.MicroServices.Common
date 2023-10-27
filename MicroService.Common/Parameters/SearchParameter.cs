@@ -12,8 +12,18 @@ namespace MicroService.Common.Parameters
     /// <summary>
     /// Reprents a parameter which provides criteria for search.
     /// </summary>
-    public interface ISearchParameter : IParameter
+    public interface ISearchParameter 
     {
+        /// <summary>
+        /// Gets name of this object.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Gets value of this object.
+        /// </summary>
+        object? Value { get; }
+
         /// <summary>
         /// Gets criteria for the intended search.
         /// </summary>
@@ -23,18 +33,19 @@ namespace MicroService.Common.Parameters
     /// <summary>
     /// Reprents a parameter which provides criteria for search.
     /// </summary>
-    public readonly struct SearchParameter: ISearchParameter
+    public struct SearchParameter: ISearchParameter
     {
         public static readonly SearchParameter Empty = new SearchParameter();
-        public SearchParameter(string name, object? value, Criteria criteria = Criteria.Equal)
+
+        public SearchParameter(string name, Criteria criteria, object? value)
         {
             Name = name;
-            Value = value;
             Criteria = criteria;
+            Value = value;
         }
-        public string Name { get; }
-        public object? Value { get; }
-        public Criteria Criteria { get; }
+        public string Name { get; set; }
+        public object? Value { get; set; }
+        public Criteria Criteria { get; set; }
     }
 }
 #endif

@@ -1,6 +1,6 @@
 using UserDefined.Models;
 
-using MicroService.Common.Web.API;
+using MicroService.Common.API;
 using UserDefined.Models.Models;
 
 //-:cnd:noEmit
@@ -43,27 +43,28 @@ namespace UserDefined.API
 
             //builder.Services.AddModelSingleton<ISubjectOutDTO, Subject, ISubjectInDTO>(builder.Configuration, list);
 
-            builder.Services.AddModel<ISubjectOutDTO, Subject>(builder.Configuration);
+            builder.Services.AddModel<SubjectOutDTO, Subject, SubjectInDTO>(builder.Configuration);
 #else
             /*
              * Single Subject object can be used as in and out type.
              * Not reccomended...
              */
-            builder.Services.AddModel<ISubject, Subject>(builder.Configuration);
+            builder.Services.AddModel<Subject>(builder.Configuration);
 #endif
 
 #if !MODEL_NONQUERYABLE
-#if MODEL_NONREADABLE
-            //builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+#if MODEL_USEDTO
+            builder.Services.AddKeyedQueryModel<SubjectOutDTO, Subject>(builder.Configuration);
+#elif MODEL_NONREADABLE
+            builder.Services.AddKeyedQueryModel<Subject>(builder.Configuration);
 #endif
-            builder.Services.AddKeyedQueryModel<ISubjectOutDTO, Subject>(builder.Configuration);
-            builder.Services.AddQueryModel<IFacultyInfo, FacultyInfo>(builder.Configuration);
+            builder.Services.AddQueryModel<FacultyInfo, FacultyInfo>(builder.Configuration);
             //builder.Services.AddKeyedQueryModelSingleton<ISubjectOutDTO, Subject>(builder.Configuration, list);
 #endif
-            //+:cnd:noEmit
 
             //builder.Services.AddTransient<HttpExceptionMiddleWare>();
-            #endregion
+#endregion
+            //+:cnd:noEmit
 
             var app = builder.Build();
             

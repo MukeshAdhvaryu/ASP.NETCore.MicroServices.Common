@@ -5,85 +5,83 @@
 
 //-:cnd:noEmit
 #if !TDD && MODEL_SEARCHABLE && (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-using System.Text.Json.Nodes;
+using System.Net;
 using System.Xml.Linq;
 
+using MicroService.Common.Constants;
 using MicroService.Common.Models;
 using MicroService.Common.Parameters;
 
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-
-namespace MicroService.Common.Web.API
+namespace MicroService.Common.API
 {
-    public sealed class ParamBinder: ModelCreator, IModelBinder
+    public sealed class ParamBinder: Binder
     {
-        Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
+        #region CONSTRUCTORS
+        public ParamBinder(IObjectModelValidator _validator) :
+            base(_validator)
+        { }
+        #endregion
+
+        public override Task BindModelAsync(ModelBindingContext bindingContext)
         {
             var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
-            /* 
-                The following call will create an empty model according to TModel type defined in a controller
-                The method 'GetModel' is defined in ModelCreator class.
-            */
-            var model = (IExModel)GetModel(descriptor.ControllerTypeInfo, out _);
-
             var Query = bindingContext.ActionContext.HttpContext.Request.Query;
-            bool multiple = Query.ContainsKey(bindingContext.OriginalModelName);
 
-            List<ISearchParameter> list = new List<ISearchParameter>();
-            
-            if (multiple)
+            var controllerType = descriptor.ControllerTypeInfo.GetControllerType(out _);
+
+            if (controllerType == null || Query == null || Query.Count == 0)
+                goto ERROR;
+
+            var OriginalModelName = bindingContext.OriginalModelName;
+            object? Result;
+
+            bool IsJson = Query.ContainsKey(OriginalModelName);
+            if (IsJson)
             {
-                var items = Query[bindingContext.OriginalModelName];
-                foreach (var item in items)
-                {
-                    if (item == null)
-                        continue;
-                    JsonObject? result = JsonNode.Parse(item)?.AsObject();
-                    if(result == null)
-                        continue;
-                    string? Name = result["name"]?.GetValue<string>()?.ToLower();
-                    if (!string.IsNullOrEmpty(Name))
-                    {
-                        var pvalue = result["value"]?.GetValue<object>();
-                        var parameter = new ObjParameter(pvalue, Name);
-                        Enum.TryParse(result["criteria"]?.GetValue<string>(), true, out Criteria criteria);
+                var json = Query[OriginalModelName].ToString();
+                Result = bindingContext.ModelType.ToSearchParameter(json);
 
-                        var message = model.Parse(parameter, out _, out object? value, false, criteria);
-                        if (message.Status == ResultStatus.Sucess)
-                            list.Add(new SearchParameter(Name, value, criteria));
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                var Name = Query["name"][0]?.ToLower();
+                if (Result == null)
+                    goto ERROR;
 
-                if (!string.IsNullOrEmpty(Name))
-                {
-                    var parameter = new ModelParameter(Query["value"], Name);
-                    Enum.TryParse(Query["criteria"], true, out Criteria criteria);
-                    var message = model.Parse(parameter, out _, out object? value, false, criteria);
-
-                    if (message.Status == ResultStatus.Sucess)
-                        list.Add(new SearchParameter(Name, value, criteria));
-                }
-            }
-            if(list.Count ==0)
-            {
-                bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
-
-                return Task.CompletedTask;
-            }
-            if (multiple)
-            {
-                bindingContext.Result = ModelBindingResult.Success(list);
-                return Task.CompletedTask;
+                goto VALIDATE;
             }
 
-            bindingContext.Result = ModelBindingResult.Success(list[0]);
+            IExModel Model = (IExModel)controllerType.GetModel(true);
+            var propertyName = Query["name"][0]?.ToLower();
+            if (string.IsNullOrEmpty(propertyName))
+                goto ERROR;
+
+            Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+            var items = Query["value"]; 
+
+            if (!Model.Parse(propertyName, items, out Result))
+            {
+                goto ERROR;
+            }
+
+            Result = new SearchParameter(propertyName, criteria, Result);
+
+            VALIDATE:
+            if (Result != null)
+            {
+                Validator.Validate(
+                    bindingContext.ActionContext,
+                    validationState: bindingContext.ValidationState,
+                    prefix: string.Empty,
+                    model: Result
+                );
+            }
+            bindingContext.Result = ModelBindingResult.Success(Result);
+            return Task.CompletedTask;
+
+            ERROR:
+            bindingContext.Result = ModelBindingResult.Failed();
             return Task.CompletedTask;
         }
     }

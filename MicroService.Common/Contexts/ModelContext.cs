@@ -30,7 +30,7 @@ namespace MicroService.Common.Contexts
 
         protected virtual ICommand<TOutDTO, TModel, TID> newCommandObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -55,13 +55,14 @@ namespace MicroService.Common.Contexts
         }
         protected virtual IQuery<TOutDTO, TModel> newQueryObject<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
-            where TModel : class, ISelfModel<TModel>, new()
+            where TOutDTO : IModel, new()
+            where TModel : class, ISelfModel<TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
                 , TOutDTO
 #endif
             //+:cnd:noEmit
+            , new()
             #endregion
         {
             return new QueryObject<TOutDTO, TModel>(initialzeData, source);
@@ -74,13 +75,14 @@ namespace MicroService.Common.Contexts
 
         protected virtual IQuery<TOutDTO, TModel, TID> newQueryObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
-            where TModel : class, ISelfModel<TID, TModel>, new()
+            where TOutDTO : IModel, new()
+            where TModel : class, ISelfModel<TID, TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
                 , TOutDTO
 #endif
-    //+:cnd:noEmit
+            //+:cnd:noEmit
+            , new()
             where TID : struct
             #endregion
         {
@@ -105,7 +107,7 @@ namespace MicroService.Common.Contexts
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         class CommandObject<TOutDTO, TModel, TID> : Command<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -194,13 +196,14 @@ namespace MicroService.Common.Contexts
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         class QueryObject<TOutDTO, TModel, TID> : Query<TOutDTO, TModel>, IQuery<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : IModel
-            where TModel : class, ISelfModel<TID, TModel>, new()
+            where TOutDTO : IModel, new()
+            where TModel : class, ISelfModel<TID, TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
             , TOutDTO
 #endif
             //+:cnd:noEmit
+            , new()
             where TID : struct
             #endregion
         {
@@ -250,13 +253,14 @@ namespace MicroService.Common.Contexts
 
         class QueryObject<TOutDTO, TModel> : Query<TOutDTO, TModel>
             #region TYPE CONSTRINTS
-    where TOutDTO : IModel
-    where TModel : class, ISelfModel<TModel>, new()
+    where TOutDTO : IModel, new()
+    where TModel : class, ISelfModel<TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
     , TOutDTO
 #endif
             //+:cnd:noEmit
+            , new()
             #endregion
         {
             ICollection<TModel> models;

@@ -11,29 +11,16 @@ using MicroService.Common.Models;
 
 namespace MicroService.Common.Tests
 {
-    #region ITestModelDTO
-    /// <summary>
-    /// Represents a DTO for test model.
-    /// </summary>
-    public interface ITestModelDTO: IModel
-    {
-        /// <summary>
-        /// Gets name of the model.
-        /// </summary>
-        string Name { get; }
-    }
-    #endregion
-
     #region TestModelDTO
     /// <summary>
     /// Represents a DTO for test model.
     /// </summary>
-    public class TestModelDTO : ITestModelDTO
+    public struct TestModelDTO : IModel
     {
         /// <summary>
         /// Gets name of the model.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
         #region CONSTRUCTOR
         public TestModelDTO(TestModel model)

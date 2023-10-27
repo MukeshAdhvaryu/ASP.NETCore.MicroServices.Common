@@ -5,7 +5,11 @@
 using MicroService.Common.Contexts;
 using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
 using MicroService.Common.Parameters;
+#endif
+//+:cnd:noEmit
 
 //-:cnd:noEmit
 #if (MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE) || (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
@@ -25,7 +29,7 @@ namespace MicroService.Common.Services
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
     public partial class Service<TOutDTO, TModel, TID, TContext> : IContract<TOutDTO, TModel, TID>  
         #region TYPE CONSTRINTS
-        where TOutDTO : IModel
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -63,7 +67,7 @@ namespace MicroService.Common.Services
 #endif
             CREATEQUERY:
 #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
-            Query = _context.CreateQuery<TOutDTO, TModel, TID>(source: source);
+            Query = _context.CreateQuery<TOutDTO, TModel, TID>(source: source, initialzeData: true);
 #endif
             return;
             //+:cnd:noEmit

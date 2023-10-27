@@ -8,28 +8,21 @@ using UserDefined.Models;
 
 namespace UserDefined.DTOs
 {
-    #region ISubjectOutDTO
-    [Model(Name = "SubjectQry")]
-    public interface ISubjectOutDTO : IModel
-    {
-        int ID { get; }
-        string? Name { get; }
-        Faculty Faculty { get; }
-    }
-    #endregion
-
     #region SubjectOutDTO
-    public class SubjectOutDTO : ISubjectOutDTO
+    [Model(Name = "SubjectQry")]
+    public struct SubjectOutDTO : IModel
     {
         public SubjectOutDTO(ISubject subject)
         {
             Name = subject.Name;
             Faculty = subject.Faculty;
             ID = subject.ID;
+            Book = subject.Book;
         }
-        public string? Name { get; }
-        public Faculty Faculty { get; }
-        public int ID { get; }
+        public string? Name { get; set; }
+        public Faculty Faculty { get; set; }
+        public int ID { get; set; }
+        public Book Book { get; set; }
     }
     #endregion
 }

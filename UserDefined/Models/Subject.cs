@@ -1,12 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-using MicroService.Common;
 using MicroService.Common.Attributes;
-using MicroService.Common.Interfaces;
 using MicroService.Common.Models;
-using MicroService.Common.Parameters;
-using MicroService.Common.Services;
 
 //-:cnd:noEmit
 #if MODEL_USEDTO
@@ -35,6 +31,8 @@ namespace UserDefined.Models
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         string Description { get; }
+        
+        Book Book { get; }
     }
     #endregion
 
@@ -46,6 +44,7 @@ namespace UserDefined.Models
     {
         #region VARIABLES
         Faculty faculty;
+        Book book;
         #endregion
 
         #region CONSTRUCTORS
@@ -69,99 +68,169 @@ namespace UserDefined.Models
 
         #region PROPERTIES
         [Required]
-        public string? Name { get; internal set; }
+        public string? Name { get; set; }
 
         [Required]
-        public Faculty Faculty { get => faculty; internal set => faculty = value; }
+        public Faculty Faculty { get => faculty; set => faculty = value; }
 
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string Description => Faculty + ": " + Name;
+
+        public override object? this[string? propertyName]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(propertyName))
+                    return null;
+
+                propertyName = propertyName.ToLower();
+                switch (propertyName)
+                {
+                    case "name":
+                        return Name;
+                    case "faculty":
+                        return Faculty;
+                    case "description":
+                        return Description;
+                    default:
+                        break;
+                }
+                return base[propertyName];
+            }
+        }
+
+        public Book Book { get => book; set => book = value; }
         #endregion
 
         #region PARSE
-        protected override Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
+        protected override bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed)
         {
-            var valueFromParameter = parameter is IModelParameter? ((IModelParameter)parameter).FirstValue: parameter.Value;            
-            currentValue =  null;
-            parsedValue = null;
-            var name = parameter.Name.ToLower();
+            if( base.Parse(propertyName, propertyValue, out parsedValue, updateValueIfParsed))
+                return true;
+            
+            propertyName = propertyName?.ToLower();
+            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
+                return false;
 
-            switch (name)
+            switch (propertyName)
             {
                 case "name":
-                    currentValue = Name;
-                    if (valueFromParameter is string)
+                    if (propertyValue is string)
                     {
-                        var result = (string)valueFromParameter;
-                        parsedValue = result;
+                        var value = (string)propertyValue;
                         if (updateValueIfParsed)
-                            Name = result;
-                        return Message.Sucess(name);
+                            Name = value;
+                        parsedValue = value;
+                        return true;
                     }
-                    if (valueFromParameter == null)
-                        return Message.MissingRequiredValue(name);
-
                     break;
-                case "faculty":
-                    currentValue = faculty;
-                    Faculty f;
-                    if (valueFromParameter is Faculty)
+                case "description":
+                    if (propertyValue is string)
                     {
-                        var result = (Faculty)valueFromParameter;
-                        parsedValue = result;
-                        if (updateValueIfParsed)
-                            faculty = result;
-                        return Message.Sucess(name);
+                        parsedValue = (string)propertyValue;
+                        return true;
                     }
-                    if (valueFromParameter is string && (Enum.TryParse((string)valueFromParameter, out f)) ||
-                        valueFromParameter != null && (Enum.TryParse(valueFromParameter.ToString(), out f)))
+                    break;
+
+                case "faculty":
+                    Faculty f;
+                    if (propertyValue is Faculty)
                     {
-                        parsedValue = f;
+                        f = (Faculty)propertyValue;
                         if (updateValueIfParsed)
                             faculty = f;
-                        return Message.Sucess(name);
+                        parsedValue = f;
+                        return true;
                     }
-                    if (valueFromParameter == null)
-                        return Message.MissingValue(name);
+                    if (propertyValue is string && (Enum.TryParse((string)propertyValue, out f)) ||
+                        propertyValue != null && (Enum.TryParse(propertyValue.ToString(), out f)))
+                    {
+                        if (updateValueIfParsed)
+                            faculty = f;
+                        parsedValue = f;
+                        return true;
+                    }
+                    break;
+                case "book.title":
+                    if (propertyValue is string)
+                    {
+                        var title = (string)propertyValue;
+                        if (updateValueIfParsed)
+                            book.Title = title;
+                        parsedValue = title;
+                        return true;
+                    }
+                    break;
+                case "book.amount":
+                    if (propertyValue is float)
+                    {
+                        var a = (float)propertyValue;
+                        if (updateValueIfParsed)
+                            book.Amount = a;
+                        parsedValue = a;
+                        return true;
+                    }
+                    if (propertyValue is string)
+                    {
+                        if (float.TryParse((string)propertyValue, out float a))
+                        {
+                            if(updateValueIfParsed)
+                                book.Amount = a;
+                            parsedValue = a;
+                            return true;
+                        }
+                    }
                     break;
                 default:
                     break;
             }
-            return Message.Failure(name);
+            return false;
         }
         #endregion
 
         #region COPY FROM
-        protected override Task<bool> CopyFrom(IModel model)
+        protected override Task<Tuple<bool, string>> CopyFrom(IModel model)
         {
             if (model is ISubject)
             {
                 var subject = (ISubject)model;
                 faculty = subject.Faculty;
                 Name = subject.Name;
-                return Task.FromResult(true);
+                return Task.FromResult(Tuple.Create(true, "All success"));
             }
 
             //-:cnd:noEmit
 #if MODEL_USEDTO
-            if (model is ISubjectOutDTO)
+            if (model is SubjectOutDTO)
             {
-                var createSubjectDTO = (ISubjectOutDTO)model;
+                var createSubjectDTO = (SubjectOutDTO)model;
+                if (string.IsNullOrEmpty(createSubjectDTO.Name))
+                {
+                    var message = GetModelExceptionMessage(ExceptionType.MissingRequiredValue, nameof(Name));
+                    return Task.FromResult(Tuple.Create(false, message));
+                }
                 Name = createSubjectDTO.Name;
                 faculty = createSubjectDTO.Faculty;
-                return Task.FromResult(true);
+                Book= createSubjectDTO.Book;
+                return Task.FromResult(Tuple.Create(true, "All success"));
             }
-            if (model is ISubjectInDTO)
+            if (model is SubjectInDTO)
             {
-                var createSubjectDTO = (ISubjectInDTO)model;
+                var createSubjectDTO = (SubjectInDTO)model;
+                if (string.IsNullOrEmpty(createSubjectDTO.Name))
+                {
+                    var message = GetModelExceptionMessage(ExceptionType.MissingRequiredValue, nameof(Name));
+                    return Task.FromResult(Tuple.Create(false, message));
+                }
                 Name = createSubjectDTO.Name;
                 faculty = createSubjectDTO.Faculty;
-                return Task.FromResult(true);
+                Book= createSubjectDTO.Book;
+                return Task.FromResult(Tuple.Create(true, "All success"));
             }
 #endif
             //+:cnd:noEmit
-            return Task.FromResult(false);
+            return Task.FromResult(Tuple.Create(false, GetModelExceptionMessage(ExceptionType.InAppropriateModelSupplied, model?.ToString())));
         }
         #endregion
 
@@ -182,7 +251,7 @@ namespace UserDefined.Models
                     new Subject("English", Faculty.Arts),
                     new Subject("Hindi", Faculty.Arts),
                     new Subject("French", Faculty.Arts),
-                    new Subject("Historty", Faculty.Arts),
+                    new Subject("History", Faculty.Arts),
                 };
         }
         #endregion
@@ -192,9 +261,9 @@ namespace UserDefined.Models
 #if MODEL_USEDTO
         protected override IModel? ToDTO(Type type)
         {
-           if(type == typeof(ISubjectOutDTO) || type == typeof(SubjectOutDTO))
+           if(type == typeof(SubjectOutDTO))
                 return new SubjectOutDTO(this);
-            if (type == typeof(ISubjectInDTO) || type == typeof(SubjectInDTO))
+            if (type == typeof(SubjectInDTO))
                 return new SubjectInDTO(this);
             return base.ToDTO(type);
         }
@@ -204,4 +273,5 @@ namespace UserDefined.Models
         #endregion
     }
     #endregion
+
 }

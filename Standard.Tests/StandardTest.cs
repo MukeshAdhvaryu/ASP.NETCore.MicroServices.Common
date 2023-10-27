@@ -5,7 +5,8 @@
 using MicroService.Common.Tests;
 using MicroService.Common.Tests.Attributes;
 using MicroService.Common.Interfaces;
-using MicroService.Common.Web.API;
+using MicroService.Common.API;
+using Microsoft.AspNetCore.Http;
 
 /*
     * Yo can choose your own model to test by changing the using statements given beolow:

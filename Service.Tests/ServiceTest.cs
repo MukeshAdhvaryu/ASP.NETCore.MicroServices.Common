@@ -10,11 +10,11 @@ using MicroService.Common.Contexts;
 /*
 * Yo can choose your own model to test by changing the using statements given beolow:
 * For example:
-* using TOutDTO = UserDefined.Models.ISubject;
+* using TOutDTO = UserDefined.Models.Subject;
 * using TID = System.Int32;
 * using TModel = UserDefined.Models.Subject;
 * OR
-* using TOutDTO = UserDefined.DTOs.ISubjectDTO;
+* using TOutDTO = UserDefined.DTOs.SubjectDTO;
 * using TID = System.Int32;
 * using TModel = UserDefined.Models.Subject;
 * 
@@ -26,7 +26,7 @@ using TOutDTO = MicroService.Common.Tests.TestModel;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #else
-using TOutDTO = MicroService.Common.Tests.ITestModelDTO;
+using TOutDTO = MicroService.Common.Tests.TestModelDTO;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #endif

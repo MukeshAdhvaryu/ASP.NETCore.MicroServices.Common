@@ -8,7 +8,7 @@ Author: Mukesh Adhvaryu.
 //+:cnd:noEmit
 
 using MicroService.Common.Interfaces;
-using MicroService.Common.Web.API;
+using MicroService.Common.API;
 using MicroService.Common.Tests.Attributes;
 using MicroService.Common.Tests;
 
@@ -35,8 +35,8 @@ using TInDTO = MicroService.Common.Tests.TestModel;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #else
-using TOutDTO = MicroService.Common.Tests.ITestModelDTO;
-using TInDTO = MicroService.Common.Tests.ITestModelDTO;
+using TOutDTO = MicroService.Common.Tests.TestModelDTO;
+using TInDTO = MicroService.Common.Tests.TestModelDTO;
 using TID = System.Int32;
 using TModel = MicroService.Common.Tests.TestModel;
 #endif
