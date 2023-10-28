@@ -18,7 +18,7 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [HOW?](#HOW)
 
-[General Design](#General_Design)
+[General Design](#Genereal_Design)
 
 [Model Design](#Model_Design)
 
@@ -92,8 +92,9 @@ Option was to be provided to use interfaces and DTOs as input argument in POST/P
 
 ## The project was to end with CQRS (Command and Query Segregation) adaptation.
 
-## HOW 
-[GoBack](#Index)
+[GoTo Index](#Index)
+
+## HOW
 
 To provide supports for the above mentioned, the following CCC (Conditional Compilation Constants) were came to my mind:
 
@@ -156,8 +157,9 @@ If you want your model to specify a scope of attached service then..
 
 By default, DBContext uses InMemory SqlLite by using "InMemory" connection string stored in configuration.
 
+[GoTo Index](#Index)
+
 ## General_Design
-[GoBack](#Index)
 
 1. Defined an abstract layer called Microserives.Common
     This layer will have no awareness of any Web API controllers or DbContext. 
@@ -313,9 +315,9 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             }
         #endif     
 
-## Model_Design
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## Model_Design
    1. IModel
    2. IModel\<TID\>
    3. ISelfModel\<TModel\>
@@ -574,6 +576,8 @@ Now consider an implementation of all of the above to conjure up the model centr
 
 That's it. 
 
+[GoTo Index](#Index)
+
 ## UPDATE1 
 [GoBack](#Index)
 
@@ -733,7 +737,9 @@ One for Standard Web API testing (Controller via Service repository)
 
 Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
 If neither of those constants defined then MSTest will be used.
- 
+
+[GoTo Index](#Index)
+
 ## UPDATE2
 [GoBack](#Index)
 
@@ -943,6 +949,8 @@ And then In Query class:
     }
 Have a look at the Operations.cs class to know how generic comparison methods are defined.
 
+[GoTo Index](#Index)
+
 ## UPDATE3
 [GoBack](#Index)
 
@@ -1003,10 +1011,216 @@ To use class data, ArgSource\<source\> will suffice.
                 }
         }
     }
-    
+
+[GoTo Index](#Index)
+
 ## UPDATE4
 [GoBack](#Index)
 
+Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
+ParamBinder class code updated to handle parsing of multiple parameters.
+
+    public sealed class ParamBinder: Binder
+    {
+        #region CONSTRUCTORS
+        public ParamBinder(IObjectModelValidator _validator) :
+            base(_validator)
+        { }
+        #endregion
+
+        public override Task BindModelAsync(ModelBindingContext bindingContext)
+        {
+            var Request = bindingContext.ActionContext.HttpContext.Request;
+            var Query = Request.Query;
+            var ControllerTypeInfo = ((ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor).ControllerTypeInfo;
+
+            #region GET CONTROLLER TYPE AND DTO TYPE
+            var controllerType = ControllerTypeInfo.GetControllerType(out _);
+            #endregion
+
+            if (controllerType == null)
+                goto ERROR;
+
+            var OriginalModelName = bindingContext.OriginalModelName;
+
+            object? Result;
+            string? json;
+            bool IsJson;
+
+            #region PARAMETER IS FROM BODY
+            if (Query.Count == 0)
+            {
+                var obj = Request.ReadFromJsonAsync(typeof(object)).Result;
+                if (obj == null)
+                    goto ERROR;
+                json = obj.ToString();
+                IsJson = true;
+                goto PARSE_JSON;
+            }
+            #endregion
+
+            #region PARAMETER IS FROM QUERY - SINGLE JSON STRING
+            json = Query[OriginalModelName].ToString();
+            IsJson = Query.ContainsKey(OriginalModelName);
+            #endregion
+
+            #region PARSE JSON
+            PARSE_JSON:
+            if (IsJson)
+            {
+                json = Query[OriginalModelName].ToString();
+                Result = bindingContext.ModelType.ToSearchParam(json);
+
+                if (Result == null)
+                    goto ERROR;
+
+                goto VALIDATE;
+            }
+            #endregion
+
+            #region PARAMETER IS FROM QUERY BUT AS A COLLECTION OF STRING VALUES
+            IExModel Model = (IExModel)controllerType.GetModel(true);
+            var propertyName = Query["name"][0]?.ToLower();
+            if (string.IsNullOrEmpty(propertyName))
+                goto ERROR;
+
+            Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+            var items = Query["value"]; 
+
+            if (!Model.Parse(propertyName, items, out Result))
+            {
+                goto ERROR;
+            }
+
+            Result = new SearchParameter(propertyName, criteria, Result);
+            goto VALIDATE;
+            #endregion
+
+            #region VALIDATE
+            VALIDATE:
+            if (Result != null)
+            {
+                Validator.Validate(
+                    bindingContext.ActionContext,
+                    validationState: bindingContext.ValidationState,
+                    prefix: string.Empty,
+                    model: Result
+                );
+            }
+            #endregion
+
+            #region RETURN SUCCESS RESULT
+            bindingContext.Result = ModelBindingResult.Success(Result);
+            return Task.CompletedTask;
+            #endregion
+
+            #region RETURN ERROR RESULT
+            ERROR:
+            bindingContext.Result = ModelBindingResult.Failed();
+            return Task.CompletedTask;
+            #endregion
+        }
+    }
+
+And then In Query class:
+
+    public abstract class Query<TOutDTO, TModel> : IQuery<TOutDTO, TModel> 
+    where TModel : class, ISelfModel<TModel>, new()
+    where TOutDTO : IModel, new() 
+    {
+         readonly static IExModel DummyModel = (IExModel)new TModel(); 
+    #if MODEL_USEDTO
+        static readonly Type DTOType = typeof(TOutDTO);
+        static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
+    #endif 
+
+    #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+        public virtual Task<IEnumerable<TOutDTO>?> FindAll<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter
+        {
+            if (parameters == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+        if (GetModelCount() == 0)
+            throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
+
+        Predicate<TModel> predicate;
+
+        if (parameters.Length == 1)
+        {
+            var parameter = parameters[0];
+
+            if (parameter == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+            if (string.IsNullOrEmpty(parameter.Name))
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied, "Missing Name!");
+
+            predicate = (m) =>
+            {
+                if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                    return false;
+
+                var currentValue = m[parameter.Name];
+                if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                    return false;
+
+                return true;
+            };
+
+            goto EXIT;
+        }
+
+        switch (conditionJoin)
+        {
+            case AndOr.AND:
+            default:
+                predicate = (m) =>
+                {
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                            return false;
+                    }
+                    return true;
+                };
+                break;
+            case AndOr.OR:
+                predicate = (m) =>
+                {
+                    bool result = false;
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (Operations.Compare(currentValue, parameter.Criteria, value))
+                            return true;
+                    }
+                    return result;
+                };
+                break;
+            }
+
+            EXIT:
+            return Task.FromResult(ToDTO(GetItems().Where((m) => predicate(m))));
+        }
+    #endif             
+    }
+
+
+[GoTo Index](#Index)
+
+## UPDATE5
 Added Exception Middleware. Middleware type: IExceptionFiter type
 First, out own exception class and exception type enum are needed:
 
@@ -1150,6 +1364,9 @@ Finally,
 ## UPDATE5
 [GoBack](#Index)
 
+[GoTo Index](#Index)
+
+## UPDATE6
 Added Support for IActionResult for controller. 
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
@@ -1199,9 +1416,9 @@ Consider the following code in controller class:
     }
 As you can see if MODEL_USEACTION is true then Get(id) method result will be Task\<IActionResult\> instead of  Task\<TOutDTO?\>
 
-## UPDATE6
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE7
 Feature: Choose database at model level.
     
     public enum ConnectionKey
@@ -1239,9 +1456,9 @@ Please note that, regardless of any of these,
 2. Don't worry about downloading relevant package from nuget.
 3. Defining constant will automatically download the relevant package for you.
 
-## UPDATE7
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE8
 Controller class: 4th Type TInDTO included.
 
 So now it is Controller<TOutDTO, TModel, TID, TInDTO>
@@ -1263,9 +1480,9 @@ So now it is Controller<TOutDTO, TModel, TID, TInDTO>
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
 
-## UPDATE8 
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE9 
 Converted DBContext from generic to non-generic class.
 This is to allow single DBContext to hold multiple model sets..
 
@@ -1317,9 +1534,9 @@ all the way upto the model class and interfaces to define Model\<TModel\> and IS
 IEntityTypeConfiguration\<TModel\> is the key. Now every model that inherits from Model\<TModel\>
 will not need to worry about getting associated with DBContext.
 
-## UPDATE9 
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE10 
 Support for Query-Only-Controllers and Keyless models is added.
 
     [Keyless]
@@ -1358,9 +1575,9 @@ It is now possible to create separate controller for command and query purposes.
 Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, which is located in Configuration class, will create Query-only controller.
 
-## UPDATE10 
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE11 
 Abstract Models for common primary key type: int, long, Guid, enum are added.
 
     public abstract class ModelEnum<TEnum, TModel> : Model<TEnum, TModel>
@@ -1455,8 +1672,9 @@ and use as 'TID' because TID can only be struct.
 Also note that when you are using an actual database GetNewID() method implementation might change;
 You may want to get unique ID from the database itself. 
     
-## UPDATE11 
-[GoBack](#Index)
+[GoTo Index](#Index)
+
+## UPDATE12 
 
 Adapted Command and Query Segregation pattern.
 
@@ -1530,9 +1748,10 @@ ICommand\<TOutDTO, TModel, TID\>
     #endif
     }
     #endif
-    
-## UPDATE12
-[GoBack](#Index)
+
+ [GoTo Index](#Index)
+
+## UPDATE13
 
 Added: Support for List based (non DbContext) Sigleton CQRS
 Changes are made in IModelContext, Service classes and Configuration class 
@@ -1572,9 +1791,9 @@ Consider the following modified definition of IModelContext interface:
     }
 As you can see, external source can be passed while creating command or query object.
 
-## UPDATE13
-[GoBack](#Index)
+[GoTo Index](#Index)
 
+## UPDATE14
 MODIFY design: Mixed UOW with repository pattern.
 Why?
 Modifying IQuery or ICommand is easy as we do not need to change service repository.
@@ -1622,6 +1841,9 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
 ## UPDATE14
 [GoBack](#Index)
 
+[GoTo Index](#Index)
+
+## UPDATE15
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
 
 These are the optional methods; only available when the relevant CCC is true for example:
@@ -1690,6 +1912,9 @@ MODEL_DELETEBULK: For bulk model deletions.
 ## UPDATE15
 [GoBack](#Index)
 
+[GoTo Index](#Index)
+
+## UPDATE16
 UPDATE16: Support for Multi search criteria is added. 
 Consider the following four options.
 
