@@ -6,8 +6,12 @@
 //-:cnd:noEmit
 #if !TDD
 //+:cnd:noEmit
+using System.Text.Json;
+
 using MicroService.Common.Models;
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -25,22 +29,44 @@ namespace MicroService.Common.API
         #region BIND MODEL
         public override Task BindModelAsync(ModelBindingContext bindingContext)
         {
-            var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
-            var Query = bindingContext.ActionContext.HttpContext.Request.Query;
+            var Request = bindingContext.ActionContext.HttpContext.Request;
+            var Query = Request.Query;
+            var ControllerTypeInfo = ((ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor).ControllerTypeInfo;
 
-            var controllerType = descriptor.ControllerTypeInfo.GetControllerType(out Type? inDTOType);
+            #region GET CONTROLLER TYPE AND DTO TYPE
+            var controllerType = ControllerTypeInfo.GetControllerType(out Type? inDTOType);
+            #endregion
 
-            if (inDTOType == null || controllerType == null || Query == null || Query.Count == 0)
+            if (inDTOType == null || controllerType == null)
                 goto ERROR;
 
             var OriginalModelName = bindingContext.OriginalModelName;
 
             object? Result;
+            string? json;
+            bool IsJson;
 
-            bool IsJson = Query.ContainsKey(OriginalModelName);
+            #region DTO IS FROM BODY
+            if (Query.Count == 0)
+            {
+                var obj = Request.ReadFromJsonAsync(typeof(object)).Result;
+                if(obj == null)
+                    goto ERROR;
+                json = obj.ToString();
+                IsJson = true;
+                goto PARSE_JSON;
+            }
+            #endregion
+
+            #region DTO IS FROM QUERY - SINGLE JSON STRING
+            json = Query[OriginalModelName].ToString();
+            IsJson = Query.ContainsKey(OriginalModelName);
+            #endregion
+
+            #region PARSE JSON
+            PARSE_JSON:
             if (IsJson)
             {
-                var json = Query[OriginalModelName].ToString();
                 Result = bindingContext.ModelType.ToDTO(json, controllerType);
 
                 if (Result == null)
@@ -48,7 +74,9 @@ namespace MicroService.Common.API
 
                 goto VALIDATE;
             }
+            #endregion
 
+            #region DTO IS FROM QUERY BUT AS A COLLECTION OF STRING VALUES
             IExModel Model = (IExModel)controllerType.GetModel(Query.ContainsKey(OriginalModelName));
             bool NeedToUseDTO = !inDTOType.IsAssignableFrom(Model.GetType());
 
@@ -68,10 +96,11 @@ namespace MicroService.Common.API
             }
 #endif
             //+:cnd:noEmit
-
             Result = Model;
             goto VALIDATE;
+            #endregion
 
+            #region VALIDATE RESULT
             VALIDATE:
             if (Result != null)
             {
@@ -82,12 +111,18 @@ namespace MicroService.Common.API
                     model: Result
                 );
             }
+            #endregion
+
+            #region RETURN SUCCESS RESULT
             bindingContext.Result = ModelBindingResult.Success(Result);
             return Task.CompletedTask;
+            #endregion
 
+            #region RETURN ERROR RESULT
             ERROR:
             bindingContext.Result = ModelBindingResult.Failed();
             return Task.CompletedTask;
+            #endregion
         }
         #endregion
     }
