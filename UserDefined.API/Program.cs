@@ -58,7 +58,7 @@ namespace UserDefined.API
 #elif MODEL_NONREADABLE
             builder.Services.AddKeyedQueryModel<Subject>(builder.Configuration);
 #endif
-            builder.Services.AddQueryModel<FacultyInfo, FacultyInfo>(builder.Configuration);
+            //builder.Services.AddQueryModel<FacultyInfo, FacultyInfo>(builder.Configuration);
             //builder.Services.AddKeyedQueryModelSingleton<ISubjectOutDTO, Subject>(builder.Configuration, list);
 #endif
 

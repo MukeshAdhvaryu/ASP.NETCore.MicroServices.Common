@@ -148,7 +148,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>Model that is added.</returns>
-        [HttpPost("Add/model")]
+        [HttpPost("Add")]
         public async Task<TOutDTO?> Add([DTOBinder]TInDTO? model)
         {
             try 
@@ -170,7 +170,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpPost("Add/model")]
+        [HttpPost("Add")]
         public async Task<IActionResult> Add([ModelBinder(typeof(ModelBinder))]TInDTO? model)
         {
             try
@@ -201,7 +201,7 @@ namespace MicroService.Common.API
         /// </param>
         /// otherwise you will have to call SaveChanges method manually.</param>
         /// <returns></returns>
-        [HttpPut("Update/{id}/model")]
+        [HttpPut("Update/{id}")]
         public async Task<TOutDTO?> Update(TID id, [DTOBinder] TInDTO? model)
         {
             try
@@ -223,7 +223,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpPut("Update/{id}/model")]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(TID id, TInDTO? model)
         {
             try
@@ -297,7 +297,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>Model that is added.</returns>
-        [HttpPost("AddBulk/models")]
+        [HttpPost("AddBulk")]
         public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange([DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
@@ -319,8 +319,8 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpPost("AddBulk/models")]
-        public async Task<IActionResult> AddRange(IEnumerable<TInDTO?> models)
+        [HttpPost("AddBulk")]
+        public async Task<IActionResult> AddRange([DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
             {
@@ -346,8 +346,8 @@ namespace MicroService.Common.API
         /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
         /// <param name="models">An enumerable of models to update the model collection.</param>
         /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
-        [HttpPut("UpdateBulk/IDs/models")]
-        public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange([FromQuery]IEnumerable<TID>? IDs, IEnumerable<TInDTO?>? models)
+        [HttpPut("UpdateBulk")]
+        public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange([FromQuery]IEnumerable<TID>? IDs, [DTOBinder] IEnumerable<TInDTO?>? models)
         {
             try
             {
@@ -365,8 +365,8 @@ namespace MicroService.Common.API
         /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
         /// <param name="models">An enumerable of models to update the model collection.</param>
         /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
-        [HttpPut("UpdateBulk/IDs/models")]
-        public async Task<IActionResult> UpdateRange([FromQuery] IEnumerable<TID>? IDs,IEnumerable<TInDTO?> models)
+        [HttpPut("UpdateBulk")]
+        public async Task<IActionResult> UpdateRange([FromQuery] IEnumerable<TID>? IDs,[DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
             {
@@ -392,7 +392,7 @@ namespace MicroService.Common.API
         /// </summary>
         /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
         /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>        
-        [HttpPut("DeleteBulk/IDs")]
+        [HttpPut("DeleteBulk")]
         public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> DeleteRange([FromQuery] IEnumerable<TID>? IDs)
         {
             try
@@ -410,7 +410,7 @@ namespace MicroService.Common.API
         /// </summary>
         /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
         /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>        
-        HttpPut("DeleteBulk/IDs")]
+        HttpPut("DeleteBulk")]
         public async Task<IActionResult> DeleteRange([FromQuery] IEnumerable<TID>? IDs)
         {
             try

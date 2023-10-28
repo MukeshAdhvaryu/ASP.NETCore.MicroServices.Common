@@ -184,12 +184,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("FindAll/parameters/{conditionJoin}")]
-        public async Task<IEnumerable<TOutDTO>?> FindAll([ParamBinder]SearchParameter[]? parameters, AndOr conditionJoin = AndOr.OR)
+        [HttpGet("FindAll")]
+        public async Task<IEnumerable<TOutDTO>?> FindAll(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return await Query.FindAll(conditionJoin, parameters);
+                return await Query.FindAll(join, parameters);
             }
             catch
             {
@@ -204,12 +204,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("FindAll/parameters/{conditionJoin}")]
-        public async Task<IActionResult> FindAll([ParamBinder] SearchParameter[]? parameters, AndOr? conditionJoin = AndOr.OR)
+        [HttpGet("FindAll")]
+        public async Task<IActionResult> FindAll(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return Ok(await Query.FindAll(conditionJoin, parameters));
+                return Ok(await Query.FindAll(join, parameters));
             }
             catch
             {
@@ -232,12 +232,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("Find/parameters/{conditionJoin}")]
-        public async Task<TOutDTO?> Find([ParamBinder] SearchParameter[]? parameters, AndOr conditionJoin = AndOr.OR)
+        [HttpGet("Find")]
+        public async Task<TOutDTO?> Find(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return await Query.Find(conditionJoin, parameters);
+                return await Query.Find(join, parameters);
             }
             catch
             {
@@ -252,8 +252,8 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("Find/parameters/{conditionJoin}")]
-        public async Task<IActionResult> Find([ParamBinder] SearchParameter[]? parameters, AndOr? join = AndOr.OR)
+        [HttpGet("Find")]
+        public async Task<IActionResult> Find(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
