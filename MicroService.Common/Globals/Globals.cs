@@ -115,12 +115,12 @@ namespace MicroService.Common
         #endregion
 
         #region PARSE AS T
-        public static T? Parse<T>(string query)
+        public static T? Parse<T>(string json)
             where T: new()
         {
             try
             {
-                return  JsonSerializer.Deserialize<T>(query, JsonSerializerOptions);
+                return  JsonSerializer.Deserialize<T>(json, JsonSerializerOptions);
             }
             catch
             {
@@ -130,19 +130,19 @@ namespace MicroService.Common
         #endregion
 
         #region PARSE AS OBJECT
-        public static object? Parse(string query, Type type)
+        public static object? Parse(string json, Type type)
         {
             try
             {
-                return JsonSerializer.Deserialize(query, type, JsonSerializerOptions);
+                return JsonSerializer.Deserialize(json, type, JsonSerializerOptions);
             }
             catch
             {
                 throw;
             }
         }
-        #region PARSE AS OBJECT
-        public static T? Parse<T>(JsonElement element)
+        
+        public static T? Parse<T>(this JsonElement element)
         {
             try
             {
@@ -156,17 +156,34 @@ namespace MicroService.Common
                 throw;
             }
         }
-        #endregion
-
-        #endregion
-
-        #region PARSE ENUMERABLE
-        public static T?[] ParseArray<T>(string query)
-            where T : new()
+        public static T? Parse<T>(this JsonElement element, Type type)
         {
             try
             {
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(query)))
+                var obj = JsonSerializer.Deserialize(element, type, JsonSerializerOptions);
+                if (obj == null)
+                    return default(T);
+                return (T)obj;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        #endregion
+
+        #region PARSE ENUMERABLE
+        public static T?[] ParseArray<T>(string json)
+            where T : new()
+        {
+            json = json.Trim();
+            if (!json.StartsWith("["))
+                json = "[" + json;
+            if (!json.EndsWith("]"))
+                json += "]";
+            try
+            {
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
                 {
                     return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, JsonSerializerOptions).ToBlockingEnumerable().ToArray();
                 }
@@ -177,12 +194,17 @@ namespace MicroService.Common
             }
         }
 
-        public static U[] ParseArray<T, U>(string query)
+        public static U[] ParseArray<T, U>(string json)
             where T : U, new()
         {
+            json = json.Trim();
+            if (!json.StartsWith("["))
+                json = "[" + json;
+            if (!json.EndsWith("]"))
+                json += "]";
             try
             {
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(query)))
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
                 {
                     return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, JsonSerializerOptions).ToBlockingEnumerable().OfType<U>().ToArray();
                 }
