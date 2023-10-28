@@ -135,7 +135,7 @@ namespace MicroService.Common.API
         /// <param name="startIndex">Start index which to start picking records from.</param>
         /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>IEnumerable of models.</returns>
-        [HttpGet("GetAll/{startIndex}, {count}")]
+        [HttpGet("GetAll/{startIndex}/{count}")]
         public async Task<IEnumerable<TOutDTO>?> GetAll(int startIndex, int count)
         {
             try
@@ -156,7 +156,7 @@ namespace MicroService.Common.API
         /// <param name="startIndex">Start index which to start picking records from.</param>
         /// <param name="count">Number to limit the number of models returned.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("GetAll/{startIndex}, {count}")]
+        [HttpGet("GetAll/{startIndex}/{count}")]
         public async Task<IActionResult> GetAll(int startIndex, int count)
         {
             try
@@ -184,12 +184,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("FindAll/parameters/{conditionJoin}")]
-        public async Task<IEnumerable<TOutDTO>?> FindAll([ParamBinder]SearchParameter[]? parameters, AndOr conditionJoin = AndOr.OR)
+        [HttpGet("FindAll/{join}/{parameters}")]
+        public async Task<IEnumerable<TOutDTO>?> FindAll(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return await Query.FindAll(conditionJoin, parameters);
+                return await Query.FindAll(join, parameters);
             }
             catch
             {
@@ -204,12 +204,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("FindAll/parameters/{conditionJoin}")]
-        public async Task<IActionResult> FindAll([ParamBinder] SearchParameter[]? parameters, AndOr? conditionJoin = AndOr.OR)
+        [HttpGet("FindAll/{join}/{parameters}")]
+        public async Task<IActionResult> FindAll(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return Ok(await Query.FindAll(conditionJoin, parameters));
+                return Ok(await Query.FindAll(join, parameters));
             }
             catch
             {
@@ -232,12 +232,12 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        [HttpGet("Find/parameters/{conditionJoin}")]
-        public async Task<TOutDTO?> Find([ParamBinder] SearchParameter[]? parameters, AndOr conditionJoin = AndOr.OR)
+        [HttpGet("Find/{join}/{parameters}")]
+        public async Task<TOutDTO?> Find(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {
-                return await Query.Find(conditionJoin, parameters);
+                return await Query.Find(join, parameters);
             }
             catch
             {
@@ -252,8 +252,8 @@ namespace MicroService.Common.API
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpGet("Find/parameters/{conditionJoin}")]
-        public async Task<IActionResult> Find([ParamBinder] SearchParameter[]? parameters, AndOr? join = AndOr.OR)
+        [HttpGet("Find/{join}/{parameters}")]
+        public async Task<IActionResult> Find(AndOr join = AndOr.OR, [ParamBinder] params SearchParameter[]? parameters)
         {
             try
             {

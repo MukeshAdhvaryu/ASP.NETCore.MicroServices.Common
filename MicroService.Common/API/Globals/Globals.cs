@@ -23,10 +23,10 @@ namespace MicroService.Common
     partial class Globals
     {
         #region VARIABLES
-        const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
-        const string jsonArr = "[{0}]";
+        const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.IgnoreCase;
         #endregion
 
+        #region GET MODEL INSTANCE
         /// <summary>
         /// Creates model instance getiing 3rd generic parameter from specified controller type.
         /// </summary>
@@ -41,6 +41,7 @@ namespace MicroService.Common
                 throw new NotSupportedException("Model is not supported!");
             return (IExModel)model;
         }
+        #endregion
 
         #region GET CONTROLLER TYPE
         /// <summary>
@@ -80,29 +81,34 @@ namespace MicroService.Common
         #endregion
 
         #region TO DTO
-        internal static object? ToDTO(this Type objType, string json, Type controllerType)
+        internal static object? ToDTO(this Type objType, string? json, Type controllerType)
         {
-            if (objType.IsAssignableTo(typeof(IEnumerable)))
-                return controllerType.GetMethod("ToInDTOEnumerable", flags)?.Invoke(null, new object[] { string.Format(jsonArr, json) });
-            else
-                return controllerType.GetMethod("ToInDTO", flags)?.Invoke(null, new object[] { json });
+            if (string.IsNullOrEmpty(json))
+                return null;
+
+            bool isEnumerable = objType.IsAssignableTo(typeof(IEnumerable));
+            string methodname = isEnumerable ? "ToInDTOEnumerable" : "ToInDTO";
+            return controllerType.GetMethod(methodname, flags)?.Invoke(null, new object[] { json });
         }
         #endregion
 
-#region TO DTO
-//-:cnd:noEmit
+        #region TO DTO
+        //-:cnd:noEmit
 #if MODEL_SEARCHABLE
-internal static object? ToSearchParameter(this Type objType, string json)
+        internal static object? ToSearchParam(this Type objType, string? json)
         {
-            if (objType.IsAssignableTo(typeof(IEnumerable)))
-                return ParseArray<SearchParameter>(string.Format(jsonArr, json));
+            if (string.IsNullOrEmpty(json))
+                return null;
+            bool isEnumerable = objType.IsAssignableTo(typeof(IEnumerable));
+            if (isEnumerable)
+                return ParseArray<SearchParameter>(json);
             else
                 return Parse<SearchParameter>(json);
         }
 #endif
         //+:cnd:noEmit
-        
-#endregion
+
+        #endregion
     }
 }
 #endif
