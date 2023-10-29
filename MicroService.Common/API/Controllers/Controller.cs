@@ -84,7 +84,7 @@ namespace MicroService.Common.API
             //+:cnd:noEmit
         }
 #endif
-        #endregion
+#endregion
 
         #region PROPERTIES
         //-:cnd:noEmit
@@ -284,7 +284,7 @@ namespace MicroService.Common.API
         //+:cnd:noEmit
         #endregion
 
-        #region ADD RANGE
+        #region ADD BULK
         //-:cnd:noEmit
 #if (MODEL_APPENDABLE) && MODEL_APPENDBULK
 #if !MODEL_USEACTION
@@ -297,7 +297,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>Model that is added.</returns>
-        [HttpPost("AddBulk")]
+        [HttpPost("AddBulk/{models}")]
         public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange([DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
@@ -319,7 +319,7 @@ namespace MicroService.Common.API
         /// This allows DTOs to be used instead of an actual model object.
         /// </param>
         /// <returns>An instance of IActionResult.</returns>
-        [HttpPost("AddBulk")]
+        [HttpPost("AddBulk/{models}")]
         public async Task<IActionResult> AddRange([DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
@@ -336,22 +336,22 @@ namespace MicroService.Common.API
         //+:cnd:noEmit
         #endregion
 
-        #region UPDATE RANGE
+        #region UPDATE BULK
         //-:cnd:noEmit
 #if (MODEL_UPDATABLE) && MODEL_UPDATEBULK
 #if !MODEL_USEACTION
         /// <summary>
         /// Updates models based on an enumerable of models specified.
         /// </summary>
-        /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
+        /// <param name="ids">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
         /// <param name="models">An enumerable of models to update the model collection.</param>
         /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
-        [HttpPut("UpdateBulk")]
-        public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange([FromQuery]IEnumerable<TID>? IDs, [DTOBinder] IEnumerable<TInDTO?>? models)
+        [HttpPut("UpdateBulk/{ids}/{models}")]
+        public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange([FromQuery]IEnumerable<TID>? ids, [DTOBinder] IEnumerable<TInDTO?>? models)
         {
             try
             {
-                return await Command.UpdateRange(IDs, models);
+                return await Command.UpdateRange(ids, models);
             }
             catch
             {
@@ -365,7 +365,7 @@ namespace MicroService.Common.API
         /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
         /// <param name="models">An enumerable of models to update the model collection.</param>
         /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
-        [HttpPut("UpdateBulk")]
+        [HttpPut("UpdateBulk/{ids}/{models}")]
         public async Task<IActionResult> UpdateRange([FromQuery] IEnumerable<TID>? IDs,[DTOBinder]IEnumerable<TInDTO?> models)
         {
             try
@@ -382,7 +382,7 @@ namespace MicroService.Common.API
         //+:cnd:noEmit
         #endregion
 
-        #region DELETE RANGE
+        #region DELETE BULK
         //-:cnd:noEmit
 #if (MODEL_DELETABLE) && MODEL_DELETEBULK
 #if !MODEL_USEACTION
@@ -392,7 +392,7 @@ namespace MicroService.Common.API
         /// </summary>
         /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
         /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>        
-        [HttpPut("DeleteBulk")]
+        [HttpPut("DeleteBulk/{ids}")]
         public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> DeleteRange([FromQuery] IEnumerable<TID>? IDs)
         {
             try
@@ -410,7 +410,7 @@ namespace MicroService.Common.API
         /// </summary>
         /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
         /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>        
-        HttpPut("DeleteBulk")]
+        HttpPut("DeleteBulk/{ids}")]
         public async Task<IActionResult> DeleteRange([FromQuery] IEnumerable<TID>? IDs)
         {
             try
