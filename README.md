@@ -18,9 +18,9 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [HOW?](#HOW)
 
-[Design](#Design)
+[General Design](#Genereal_Design)
 
-[Design_Of_Model](#Design_Of_Model)
+[Model Design](#Model_Design)
 
 [UPDATE1: Common test project for all three frameworks i.e. xUnit, NUnit or MSTest.](#UPDATE1)
 
@@ -94,6 +94,8 @@ Option was to be provided to use interfaces and DTOs as input argument in POST/P
 
 ## The project was to end with CQRS (Command and Query Segregation) adaptation.
 
+[GoTo Index](#Index)
+
 ## HOW
 
 To provide supports for the above mentioned, the following CCC (Conditional Compilation Constants) were came to my mind:
@@ -157,7 +159,9 @@ If you want your model to specify a scope of attached service then..
 
 By default, DBContext uses InMemory SqlLite by using "InMemory" connection string stored in configuration.
 
-## Design_Of_Model
+[GoTo Index](#Index)
+
+## General_Design
 
 1. Defined an abstract layer called Microserives.Common
     This layer will have no awareness of any Web API controllers or DbContext. 
@@ -313,30 +317,18 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             }
         #endif     
 
-## Design: Model
+[GoTo Index](#Index)
+
+## Model_Design
    1. IModel
    2. IModel\<TID\>
    3. ISelfModel\<TModel\>
    4. ISelfModel\<TID, TModel\> 
 
-    /// <summary>
-    /// This interface represents a model.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE; MODEL_APPENDABLE; MODEL_UPDATABLE; MODEL_USEMYOWNCONTROLLER
-    /// </summary>
     public interface IModel
     { 
     }
 
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IModel<TID> : IModel, IMatch
         where TID : struct
     {
@@ -348,19 +340,11 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
         TID ID { get; }
     }
  
-    /// <summary>
-    /// This interface represents a self-referencing model.
-    /// </summary>
-    /// <typeparam name="TModel"></typeparam>
     public partial interface ISelfModel<TModel> : IModel, IMatch
         where TModel : ISelfModel<TModel>
     {
     }
     
-    /// <summary>
-    /// This interface represents a self-referencing model with the primary key of type TID.
-    /// </summary>
-    /// <typeparam name="TModel"></typeparam>
     public partial interface ISelfModel<TID, TModel> : ISelfModel<TModel>, IModel<TID>
         where TModel : ISelfModel<TID, TModel>, IModel<TID>
         where TID : struct
@@ -371,59 +355,23 @@ As we already talked about a model centric approach, the following internal inte
     1. IExModel 
     2. IExModel\<TID\>
 
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// </summary>
     internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
     #if MODEL_USEDTO
         , IExModelToDTO
     #endif
     {
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
-
-        /// <summary>
-        /// Gets initial data.
-        /// </summary>
-        /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
         IEnumerable<IModel> GetInitialData();
     }
         
-    /// <summary>
-    /// This interface represents a model with primary key named as ID.
-    /// Highly customizable by using the following conditional compilation symbols:
-    /// MODEL_DELETABLE;
-    /// MODEL_APPENDABLE;
-    /// MODEL_UPDATABLE;
-    /// MODEL_USEMYOWNCONTROLLER
-    /// </summary>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     internal interface IExModel<TID> : IModel<TID>, IExModel
         where TID : struct
     {
-        /// <summary>
-        /// gets primary key value of this model.
-        /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         new TID ID { get; set; }
 
-        /// <summary>
-        /// Gets unique id.
-        /// </summary>
-        /// <returns>Newly generated id.</returns>
         TID GetNewID();
 
-        /// <summary>
-        /// Tries to parse the given value to the type of ID
-        /// Returns parsed value if succesful, otherwise default value.
-        /// </summary>
-        /// <param name="value">Value to be parsed as TID.</param>
-        /// <param name="newID">Parsed value.</param>
-        /// <returns>True if succesful, otherwise false</returns>
         bool TryParseID(object value, out TID newID);
     }
     #endregion
@@ -434,67 +382,24 @@ Single repsonsibility interfaces:
    3. IExParamParser
    4. IExModelExceptionSupplier       
 
-    /// <summary>
-    /// Represents a model which can provide get accesor to extract properties it contains.
-    /// </summary>
     public interface IEntity: IModel
     {
-        /// <summary>
-        /// Gets value of the property specified by property Name.
-        /// </summary>
-        /// <param name="propertyName">Name of the property which to get value for.</param>
-        /// <returns>Value of property if found, otherwise null.</returns>
         object? this[string? propertyName] { get; }
     }
     
-    /// <summary>
-    /// This interface represents an object that copies data from another model.
-    /// </summary>
     internal interface IExCopyable
     {
-        /// <summary>
-        /// Copies model data from the given model parameter.
-        /// </summary>
-        /// <param name="model">Model to copy data from.</param>
-        /// <returns>True if the copy operation is successful; otherwise, false.</returns>
-        
         Task<bool> CopyFrom(IModel model);
     }
 
-    /// <summary>
-    /// This interface represents an object that offers parameter parsing capability.
-    /// Provided, the given property exist as one of its members.
-    /// </summary>
     internal interface IExParamParser
     {
-        /// <summary>
-        /// Parses the specified parameter and if possible emits the value compitible with
-        /// the property this object posseses.
-        /// </summary>
-        /// <param name="propertyName">Name of the property which to parse the value against.</param>
-        /// <param name="propertyValue">Value to be parsed to obtain compitible value.</param>
-        /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
-        /// <param name="updateValueIfParsed">If succesful, replaces the current value with the compitible parsed value.</param>
-        /// <returns>Result Message with Status of the parse operation.</returns>
-        /// <param name="criteria">Criteria to be used when parsing value.</param>
-
         bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
     }
     
-    /// <summary>
-    /// This interface represents an object which supplies an appropriate exception for a failure in a specified method.
-    /// </summary>
     internal interface IExModelExceptionSupplier
     {
-        /// <summary>
-        /// Supplies an appropriate exception for a failure in a specified method.
-        /// </summary>
-        /// <param name="exceptionType">Type of exception to get.</param>
-        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
-        /// <param name="innerException">Inner exception which is already thrown.</param>
-        /// <returns>Instance of SpecialException class.</returns>
-       
-       ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+       string GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo = null);
     }
 
 Now consider an implementation of all of the above to conjure up the model centric design:
@@ -502,32 +407,16 @@ Now consider an implementation of all of the above to conjure up the model centr
     public abstract partial class Model<TModel> : ISelfModel<TModel>, IExModel, IMatch
         where TModel : Model<TModel>, ISelfModel<TModel>
     {
-        #region VARIABLES
         readonly string modelName;
-        #endregion
 
-        #region CONSTRUCTOR
         protected Model()
         {
             var type = GetType();
             modelName = type.Name;
         }
-        #endregion
 
-        #region PROPERTIES
         public string ModelName => modelName;
-        #endregion       
 
-        #region PARSE
-        /// <summary>
-        /// Parses the specified parameter and if possible emits the value compitible with
-        /// the property this object posseses.
-        /// </summary>
-        /// <param name="parameter">Parameter to parse.</param>
-        /// <param name="currentValue">Current value exists for the given property in this object.</param>
-        /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
-        /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
-        /// <returns>Result Message with Status of the parse operation.</returns>
         protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
         bool IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
@@ -552,38 +441,17 @@ Now consider an implementation of all of the above to conjure up the model centr
             }
             return Parse(propertyName, propertyValue, out parsedValue, updateValueIfParsed, criteria);
         }
-        #endregion
 
-        #region COPY FROM
-        /// <summary>
-        /// Copies data from the given model to this instance.
-        /// </summary>
-        /// <param name="model">Model to copy data from.</param>
-        /// <returns></returns>
         protected abstract Task<bool> CopyFrom(IModel model);
 
         Task<bool> IExCopyable.CopyFrom(IModel model) =>
             CopyFrom(model);
-        #endregion
 
-        #region GET INITIAL DATA
-        /// <summary>
-        /// Gets initial data.
-        /// </summary>
-        /// <returns>IEnumerable\<IModel\> containing list of initial data.</returns>
         protected abstract IEnumerable<IModel> GetInitialData();
 
         IEnumerable<IModel> IExModel.GetInitialData() =>
             GetInitialData();
-        #endregion
 
-        #region GET APPROPRIATE EXCEPTION
-                /// <summary>
-        /// Supplies an appropriate exception message for a failure in a specified method.
-        /// </summary>
-        /// <param name="exceptionType">Type of exception to get.</param>
-        /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
-        /// <returns>Exception message.</returns>
         protected virtual string GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo = null)
         {
             bool noAdditionalInfo = string.IsNullOrEmpty(additionalInfo);
@@ -599,16 +467,8 @@ Now consider an implementation of all of the above to conjure up the model centr
 
         string IExModelExceptionSupplier.GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo, Exception? innerException) =>
             GetAppropriateExceptionMessage(exceptionType, additionalInfo, innerException);
-        #endregion
 
         #if MODEL_USEDTO
-            #region IModelToDTO
-            /// <summary>
-            /// Provides compitible DTO of given type from this model.
-            /// You must override this method to support dtos.
-            /// </summary>
-            /// <param name="type"></param>
-            /// <returns>Compitible DTO.</returns>
             protected virtual IModel? ToDTO(Type type)
             {
                 var t = GetType();
@@ -618,7 +478,6 @@ Now consider an implementation of all of the above to conjure up the model centr
             }
             IModel? IExModelToDTO.ToDTO(Type type) =>
                 ToDTO(type);
-            #endregion
         #endif
     }
 
@@ -627,19 +486,14 @@ Now consider an implementation of all of the above to conjure up the model centr
         where TID : struct
         where TModel : Model<TID, TModel>
     {
-        #region VARIABLES
         TID id;
-        #endregion
 
-        #region CONSTRUCTOR
         protected Model(bool generateNewID)
         {
             if (generateNewID)
                 id = GetNewID();
         }
-        #endregion
 
-        #region PROPERTIES
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public TID ID { get => id; protected set => id = value; }
@@ -647,7 +501,6 @@ Now consider an implementation of all of the above to conjure up the model centr
         TID IExModel<TID>.ID { get => id; set => id = value; }
         #endregion        
 
-        #region COPY FROM
         Task<bool> IExCopyable.CopyFrom(IModel model)
         {
             if (model is IModel<TID>)
@@ -671,22 +524,11 @@ Now consider an implementation of all of the above to conjure up the model centr
             //+:cnd:noEmit
             return Task.FromResult(false);
         }
-        #endregion
 
-        #region GET NEW ID
         protected abstract TID GetNewID();
         TID IExModel<TID>.GetNewID() =>
             GetNewID();
-        #endregion
 
-                #region TRY PARSE ID
-        /// <summary>
-        /// Tries to parse the given value to the type of ID
-        /// Returns parsed value if succesful, otherwise default value.
-        /// </summary>
-        /// <param name="propertyValue">Value to be parsed as TIDType.</param>
-        /// <param name="id">Parsed value.</param>
-        /// <returns>True if succesful, otherwise false</returns>
         protected virtual bool TryParseID(object? propertyValue, out TID id)
         {
             id = default(TID);
@@ -731,11 +573,12 @@ Now consider an implementation of all of the above to conjure up the model centr
             //Handles custom ID types.
             return TryParseID(propertyValue, out id);
         }
-        #endregion
     }
 
 
 That's it. 
+
+[GoTo Index](#Index)
 
 ## UPDATE1 
 A single test project is created for each TDD and Non TDD environment.
@@ -895,11 +738,15 @@ One for Standard Web API testing (Controller via Service repository)
 Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
 If neither of those constants defined then MSTest will be used.
 
+[GoTo Index](#Index)
+
 ## UPDATE2
 Criteria based search feature for models added.
 
 Try FindAll (ISearchParameter searchParameter) method.
 Have a look at the Operations.cs class to know how generic comparison methods are defined.
+
+[GoTo Index](#Index)
 
 ## UPDATE3
 Support for ClassData and MemberData test attributes added.
@@ -960,93 +807,213 @@ To use class data, ArgSource\<source\> will suffice.
         }
     }
 
+[GoTo Index](#Index)
+
 ## UPDATE4
 Feature to perform search for multiple models using multiple search parameters added.
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
 ParamBinder class code updated to handle parsing of multiple parameters.
 
-    public sealed class ParamBinder: ModelCreator, IModelBinder
+    public sealed class ParamBinder: Binder
     {
-        Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
+        #region CONSTRUCTORS
+        public ParamBinder(IObjectModelValidator _validator) :
+            base(_validator)
+        { }
+        #endregion
+
+        public override Task BindModelAsync(ModelBindingContext bindingContext)
         {
-            var descriptor = (ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor;
-            /* 
-                The following call will create an empty model according to TModel type defined in a controller
-                The method 'GetModel' is defined in ModelCreator class.
-            */
-            var model = (IExModel)GetModel(descriptor.ControllerTypeInfo, out _);
+            var Request = bindingContext.ActionContext.HttpContext.Request;
+            var Query = Request.Query;
+            var ControllerTypeInfo = ((ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor).ControllerTypeInfo;
 
-            var Query = bindingContext.ActionContext.HttpContext.Request.Query;
-            bool multiple = Query.ContainsKey(bindingContext.OriginalModelName);
+            #region GET CONTROLLER TYPE AND DTO TYPE
+            var controllerType = ControllerTypeInfo.GetControllerType(out _);
+            #endregion
 
-            List<ISearchParameter> list = new List<ISearchParameter>();
-            var PropertyNames = model.GetPropertyNames();
-            
-            if (multiple)
+            if (controllerType == null)
+                goto ERROR;
+
+            var OriginalModelName = bindingContext.OriginalModelName;
+
+            object? Result;
+            string? json;
+            bool IsJson;
+
+            #region PARAMETER IS FROM BODY
+            if (Query.Count == 0)
             {
-                var items = Query[bindingContext.OriginalModelName];
-                foreach (var item in items)
-                {
-                    if (item == null)
-                        continue;
-                    JsonObject? result = JsonNode.Parse(item)?.AsObject();
-                    if(result == null)
-                        continue;
-                    string? Name = result["name"]?.GetValue<string>()?.ToLower();
-                    if (!string.IsNullOrEmpty(Name))
-                    {
-                        foreach (var name in PropertyNames)
-                        {
-                            if (Name == name.ToLower())
-                            {
-                                var pvalue = result["value"]?.GetValue<object>();
-                                var parameter = new ObjParameter(pvalue, name);
-                                Enum.TryParse(result["criteria"]?.GetValue<string>(), true, out Criteria criteria);
-
-                                var message = model.Parse(parameter, out _, out object? value, false, criteria);
-                                if (message.Status == ResultStatus.Sucess)
-                                    list.Add(new SearchParameter(name, value, criteria));
-                                break;
-                            }
-                        }
-                    }
-                }
+                var obj = Request.ReadFromJsonAsync(typeof(object)).Result;
+                if (obj == null)
+                    goto ERROR;
+                json = obj.ToString();
+                IsJson = true;
+                goto PARSE_JSON;
             }
-            else
+            #endregion
+
+            #region PARAMETER IS FROM QUERY - SINGLE JSON STRING
+            json = Query[OriginalModelName].ToString();
+            IsJson = Query.ContainsKey(OriginalModelName);
+            #endregion
+
+            #region PARSE JSON
+            PARSE_JSON:
+            if (IsJson)
             {
-                var Name = Query["name"][0]?.ToLower();
+                json = Query[OriginalModelName].ToString();
+                Result = bindingContext.ModelType.ToSearchParam(json);
 
-                foreach (var name in PropertyNames)
-                {
-                    if (Name == name.ToLower())
-                    {
-                        var parameter = new ModelParameter(Query["value"], name);
-                        Enum.TryParse(Query["criteria"], true, out Criteria criteria);
-                        var message = model.Parse(parameter, out _, out object? value, false, criteria);
+                if (Result == null)
+                    goto ERROR;
 
-                        if (message.Status == ResultStatus.Sucess)
-                            list.Add(new SearchParameter(name, value, criteria));
-                        break;
-                    }
-                }
+                goto VALIDATE;
             }
-            if(list.Count ==0)
-            {
-                bindingContext.Result = ModelBindingResult.Success(SearchParameter.Empty);
+            #endregion
 
-                return Task.CompletedTask;
-            }
-            if (multiple)
+            #region PARAMETER IS FROM QUERY BUT AS A COLLECTION OF STRING VALUES
+            IExModel Model = (IExModel)controllerType.GetModel(true);
+            var propertyName = Query["name"][0]?.ToLower();
+            if (string.IsNullOrEmpty(propertyName))
+                goto ERROR;
+
+            Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+            var items = Query["value"]; 
+
+            if (!Model.Parse(propertyName, items, out Result))
             {
-                bindingContext.Result = ModelBindingResult.Success(list);
-                return Task.CompletedTask;
+                goto ERROR;
             }
 
-            bindingContext.Result = ModelBindingResult.Success(list[0]);
+            Result = new SearchParameter(propertyName, criteria, Result);
+            goto VALIDATE;
+            #endregion
+
+            #region VALIDATE
+            VALIDATE:
+            if (Result != null)
+            {
+                Validator.Validate(
+                    bindingContext.ActionContext,
+                    validationState: bindingContext.ValidationState,
+                    prefix: string.Empty,
+                    model: Result
+                );
+            }
+            #endregion
+
+            #region RETURN SUCCESS RESULT
+            bindingContext.Result = ModelBindingResult.Success(Result);
             return Task.CompletedTask;
+            #endregion
+
+            #region RETURN ERROR RESULT
+            ERROR:
+            bindingContext.Result = ModelBindingResult.Failed();
+            return Task.CompletedTask;
+            #endregion
         }
     }
+
+And then In Query class:
+
+    public abstract class Query<TOutDTO, TModel> : IQuery<TOutDTO, TModel> 
+    where TModel : class, ISelfModel<TModel>, new()
+    where TOutDTO : IModel, new() 
+    {
+         readonly static IExModel DummyModel = (IExModel)new TModel(); 
+    #if MODEL_USEDTO
+        static readonly Type DTOType = typeof(TOutDTO);
+        static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
+    #endif 
+
+    #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+        public virtual Task<IEnumerable<TOutDTO>?> FindAll<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter
+        {
+            if (parameters == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+        if (GetModelCount() == 0)
+            throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
+
+        Predicate<TModel> predicate;
+
+        if (parameters.Length == 1)
+        {
+            var parameter = parameters[0];
+
+            if (parameter == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+            if (string.IsNullOrEmpty(parameter.Name))
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied, "Missing Name!");
+
+            predicate = (m) =>
+            {
+                if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                    return false;
+
+                var currentValue = m[parameter.Name];
+                if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                    return false;
+
+                return true;
+            };
+
+            goto EXIT;
+        }
+
+        switch (conditionJoin)
+        {
+            case AndOr.AND:
+            default:
+                predicate = (m) =>
+                {
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                            return false;
+                    }
+                    return true;
+                };
+                break;
+            case AndOr.OR:
+                predicate = (m) =>
+                {
+                    bool result = false;
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (Operations.Compare(currentValue, parameter.Criteria, value))
+                            return true;
+                    }
+                    return result;
+                };
+                break;
+            }
+
+            EXIT:
+            return Task.FromResult(ToDTO(GetItems().Where((m) => predicate(m))));
+        }
+    #endif             
+    }
+
+
+[GoTo Index](#Index)
 
 ## UPDATE5
 Added Exception Middleware. Middleware type: IExceptionFiter type
@@ -1126,36 +1093,14 @@ First, out own exception class and exception type enum are needed:
             }
         }
         #endregion
-
-        #region CREATE
-        /// <summary>
-        /// Creates an instance of ModelException.
-        /// </summary>
-        /// <param name="message">Custom message provided by user.</param>
-        /// <param name="type">Type of the model exception.</param>
-        /// <param name="exception">Original exception raised by some operation performed on model.</param>
-        /// <returns></returns>
-        public static ModelException Create(string message, ExceptionType type, Exception? exception = null)
-        {
-            if(exception == null) 
-                return new ModelException(message, type);
-            return new ModelException(message, type, exception);
-        }
-        #endregion
     }
     
     public enum ExceptionType : ushort
     {
         Unknown = 0,
 
-        /// <summary>
-        /// Represents an exception to indicate that no model is found in the collection for a given search or the collection is empty.
-        /// </summary>
         NoModelFound,
 
-        /// <summary>
-        /// Represents an exception to indicate that no model is found in the collection while searching it with specific ID.
-        /// </summary>
         NoModelFoundForID,
 
         /*
@@ -1211,6 +1156,8 @@ Finally,
         }
     }
 
+[GoTo Index](#Index)
+
 ## UPDATE6
 Added Support for IActionResult for controller. 
 So, Now we have support for IActionResult and actual object return types.
@@ -1231,11 +1178,6 @@ Consider the following code in controller class:
     {
         #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
         #if !MODEL_USEACTION
-            /// <summary>
-            /// Gets a single model with the specified ID.
-            /// </summary>
-            /// <param name="id">ID of the model to read.</param>
-            /// <returns>Instance of TModelImplementation represented through TOutDTO</returns>
             [HttpGet("Get/{id}")]
             public async Task<TOutDTO?> Get(TID? id)
             {
@@ -1249,11 +1191,6 @@ Consider the following code in controller class:
                 }
             }
         #else
-            /// <summary>
-            /// Gets a single model with the specified ID.
-            /// </summary>
-            /// <param name="id">ID of the model to read.</param>
-            /// <returns>An instance of IActionResult.</returns>
             [HttpGet("Get/{id}")]
             public async Task<IActionResult> Get(TID? id)
             {
@@ -1270,6 +1207,8 @@ Consider the following code in controller class:
          #endif
     }
 As you can see if MODEL_USEACTION is true then Get(id) method result will be Task\<IActionResult\> instead of  Task\<TOutDTO?\>
+
+[GoTo Index](#Index)
 
 ## UPDATE7
 Feature: Choose database at model level.
@@ -1309,6 +1248,8 @@ Please note that, regardless of any of these,
 2. Don't worry about downloading relevant package from nuget.
 3. Defining constant will automatically download the relevant package for you.
 
+[GoTo Index](#Index)
+
 ## UPDATE8
 Controller class: 4th Type TInDTO included.
 
@@ -1330,6 +1271,8 @@ So now it is Controller<TOutDTO, TModel, TID, TInDTO>
     }
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
+
+[GoTo Index](#Index)
 
 ## UPDATE9 
 Converted DBContext from generic to non-generic class.
@@ -1383,6 +1326,8 @@ all the way upto the model class and interfaces to define Model\<TModel\> and IS
 IEntityTypeConfiguration\<TModel\> is the key. Now every model that inherits from Model\<TModel\>
 will not need to worry about getting associated with DBContext.
 
+[GoTo Index](#Index)
+
 ## UPDATE10 
 Support for Query-Only-Controllers and Keyless models is added.
 
@@ -1421,6 +1366,8 @@ It is now possible to create separate controller for command and query purposes.
 
 Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, which is located in Configuration class, will create Query-only controller.
+
+[GoTo Index](#Index)
 
 ## UPDATE11 
 Abstract Models for common primary key type: int, long, Guid, enum are added.
@@ -1517,6 +1464,8 @@ and use as 'TID' because TID can only be struct.
 Also note that when you are using an actual database GetNewID() method implementation might change;
 You may want to get unique ID from the database itself. 
     
+[GoTo Index](#Index)
+
 ## UPDATE12 
 
 Adapted Command and Query Segregation pattern.
@@ -1530,11 +1479,6 @@ IQuery\<TModel\>
 
 IQuery\<TOutDTO, TModel, TID\>
 
-     /// <summary>
-    /// Represents an object which holds a enumerables of keyless models directly or indirectly.
-    /// </summary>
-    /// <typeparam name="TModel">Type of keyless Model></typeparam>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
     public partial interface IQuery<TOutDTO, TModel> : IModelCount, IFirstModel<TModel>, 
         IFetch<TOutDTO, TModel>
     #if MODEL_SEARCHABLE
@@ -1545,12 +1489,6 @@ IQuery\<TOutDTO, TModel, TID\>
     { 
     }
 
-    /// <summary>
-    /// This interface represents an object that allows reading a single or multiple models with primary key of type TID.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>,
         IFindByID<TOutDTO, TModel, TID>
         where TOutDTO : IModel, new()
@@ -1567,12 +1505,6 @@ For Command Part:
 ICommand\<TOutDTO, TModel, TID\>
 
     #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface ICommand<TOutDTO, TModel, TID> : IModelCount
     #if MODEL_APPENDABLE
         , IAppendable<TOutDTO, TModel, TID>
@@ -1595,12 +1527,6 @@ ICommand\<TOutDTO, TModel, TID\>
 
 
     #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-    /// <summary>
-    /// This interface represents an object that allows reading a single model or multiple models.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>
     where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>, new()
@@ -1615,7 +1541,9 @@ ICommand\<TOutDTO, TModel, TID\>
     }
     #endif
 
- ## UPDATE13
+ [GoTo Index](#Index)
+
+## UPDATE13
 
 Added: Support for List based (non DbContext) Sigleton CQRS
 Changes are made in IModelContext, Service classes and Configuration class 
@@ -1625,16 +1553,6 @@ Consider the following modified definition of IModelContext interface:
     public interface IModelContext : IDisposable
     {
     #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
-        /// <summary>
-        /// <summary>
-        /// Creates a new instance implementing ICommand<TOutDTO, TModel, TID> interface.
-        /// </summary>
-        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
-        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
-        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
-        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
-        /// <param name="source">Optional source - providing pre-existing model data.</param>
-        /// <returns>An Instance implementing ICommand<TOutDTO, TModel, TID></returns>
         ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true, ICollection<TModel>? source = null)
             where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>, new()
@@ -1646,28 +1564,11 @@ Consider the following modified definition of IModelContext interface:
     #endif
 
     #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
-        /// <summary>
-        /// Creates a new instance implementing IQuery<TOutDTO, TModel> interface.
-        /// </summary>
-        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
-        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
-        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
-        /// <param name="source">Optional source - providing pre-existing model data.</param>
-        /// <returns>An Instance implementing IQuery<TOutDTO, TModel></returns>
         IQuery<TOutDTO, TModel> CreateQuery<TOutDTO, TModel>(bool initialzeData = false, ICollection<TModel>? source = null)
             where TModel : class, ISelfModel<TModel>, new()
             where TOutDTO : IModel, new()
             ;
 
-        /// <summary>
-        /// Creates a new instance implementing IQuery<TOutDTO, TModel, TID> interface.
-        /// </summary>
-        /// <typeparam name="TOutDTO">DTO interface of your choice as a return type of GET calls - must derived from IModel interface.</typeparam>
-        /// <typeparam name="TModel">Model implementation of your choice - must derived from Model class.</typeparam>
-        /// <typeparam name="TID">Type of primary key such as type of int or Guid etc. </typeparam>
-        /// <param name="initialzeData">If true then seed data is added to the internal collection the instance represents.</param>
-        /// <param name="source">Optional source - providing pre-existing model data.</param>
-        /// <returns>An Instance implementing IQuery<TOutDTO, TModel, TID></returns>
         IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
             where TOutDTO : IModel, new()
@@ -1682,6 +1583,8 @@ Consider the following modified definition of IModelContext interface:
     }
 As you can see, external source can be passed while creating command or query object.
 
+[GoTo Index](#Index)
+
 ## UPDATE14
 MODIFY design: Mixed UOW with repository pattern.
 Why?
@@ -1691,12 +1594,6 @@ Less code same result. Consider the following changes made in IContract\<TOutDTO
 
 OLD IContract\<TOutDTO, TModel, TID\> interface:
 
-    /// <summary>
-    /// This interface represents a contract of operations.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IContract<TOutDTO, TModel, TID> : IContract
     #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
         , IQuery<TOutDTO, TModel, TID>
@@ -1716,12 +1613,6 @@ OLD IContract\<TOutDTO, TModel, TID\> interface:
 
 NEW IContract\<TOutDTO, TModel, TID\> interface:
 
-    /// <summary>
-    /// This interface represents a contract of operations.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IContract<TOutDTO, TModel, TID> : IContract, IFirstModel<TModel>
     where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TID, TModel>,
@@ -1739,6 +1630,8 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
     #endif
     }
 
+[GoTo Index](#Index)
+
 ## UPDATE15
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
 
@@ -1749,13 +1642,6 @@ MODEL_DELETEBULK: For bulk model deletions.
 
 
     #if MODEL_APPENDABLE
-    /// <summary>
-    /// This interface represents an object that has a list of models to which a new model can be appended.
-    /// Any object that implements the IModel interface can be provided. This allows DTOs to be used instead of an actual model object.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IAppendable<TOutDTO, TModel, TID>
         where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>,
@@ -1765,23 +1651,9 @@ MODEL_DELETEBULK: For bulk model deletions.
         new()
         where TID : struct
     {
-        /// <summary>
-        /// Adds a new model based on the given model.
-        /// If the given model is not TModel, then a new appropriate model will be created by copying data from the given model.
-        /// </summary>
-        /// <param name="model">
-        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
-        /// This allows DTOs to be used instead of an actual model object.
-        /// </param>
-        /// <returns>Model that is added.</returns>
         Task<TOutDTO?> Add(IModel? model);
 
     #if MODEL_APPENDBULK
-        /// <summary>
-        /// Adds new models based on an enumerable of models specified.
-        /// </summary>
-        /// <param name="models">An enumerable of models to add to the model collection.</param>
-        /// <returns>Collection of models which are successfully added and a message for those which are not.</returns>
         Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange<T>(IEnumerable<T?>? models)
             where T: IModel;
     #endif
@@ -1790,12 +1662,6 @@ MODEL_DELETEBULK: For bulk model deletions.
 
     #region IUpdatable<TOutDTO, TModel, TID>
     #if MODEL_UPDATABLE
-    /// <summary>
-    /// This interface represents an object that has a list of models and allows a model with a specified ID to be updated with data from the given model parameter.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IUpdatable<TOutDTO, TModel, TID>
         where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>,
@@ -1805,24 +1671,9 @@ MODEL_DELETEBULK: For bulk model deletions.
         new()
         where TID : struct
     {
-        /// <summary>
-        /// Updates a model specified by the given ID with the data of the given model.
-        /// </summary>
-        /// <param name="id">ID of the model to be updated.</param>
-        /// <param name="model">
-        /// Any model that implements the IModel interface and has all or a few data members identical to TModel.
-        /// This allows DTOs to be used instead of an actual model object.
-        /// </param>
-        /// <returns></returns>
         Task<TOutDTO?> Update(TID id, IModel? model);
 
     #if MODEL_UPDATEBULK
-        /// <summary>
-        /// Updates models based on an enumerable of models specified.
-        /// </summary>
-        /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
-        /// <param name="models">An enumerable of models to update the model collection.</param>
-        /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
         Task<Tuple<IEnumerable<TOutDTO?>?, string>> UpdateRange<T>(IEnumerable<TID>? IDs, IEnumerable<T?>? models)
             where T: IModel;
     #endif
@@ -1830,12 +1681,6 @@ MODEL_DELETEBULK: For bulk model deletions.
     #endif
 
     #if MODEL_DELETABLE
-    /// <summary>
-    /// This interface represents an object that allows deleting a single model with a specified ID.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IDeleteable<TOutDTO, TModel, TID>
         where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>,
@@ -1845,23 +1690,15 @@ MODEL_DELETEBULK: For bulk model deletions.
         new()
         where TID : struct
     {
-        /// <summary>
-        /// Deletes the model with the specified ID.
-        /// </summary>
-        /// <param name="id">ID of the model to delete.</param>
-        /// <returns></returns>
         Task<TOutDTO?> Delete(TID id);
 
     #if MODEL_DELETEBULK
-        /// <summary>
-        /// Deletes new models based on an enumerable of IDs specified.
-        /// </summary>
-        /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
-        /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>
         Task<Tuple<IEnumerable<TOutDTO?>?, string>> DeleteRange(IEnumerable<TID>? IDs);
     #endif
     }
     #endif
+
+[GoTo Index](#Index)
 
 ## UPDATE16
 UPDATE16: Support for Multi search criteria is added. 
