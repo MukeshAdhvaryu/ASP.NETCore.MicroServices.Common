@@ -18,7 +18,7 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [HOW?](#HOW)
 
-[General Design](#Genereal_Design)
+[General Design](#General_Design)
 
 [Model Design](#Model_Design)
 
@@ -86,7 +86,7 @@ At last, the user should be able choose to use dynamically generated controller 
 The goal was also to include a common test project to handle all three without the user need to change much except any custom test they want to write.
 It would be an apt thing to do to define custom attributes to map important attributes from all three testing frameworks.
 
-### Support for keyless (query) models was also to be provided (perhaps not at the begining of the project).
+### Support for keyless (query) models was also to be provided (perhaps not at the beginning of the project).
 Keyed models should be flexible enough to use various common keys such as int, long, Guid, enum etc.
 
 ## To handle under-fetching and over-fetching problems,
@@ -94,7 +94,7 @@ Option was to be provided to use interfaces and DTOs as input argument in POST/P
 
 ## The project was to end with CQRS (Command and Query Segregation) adaptation.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## HOW
 
@@ -159,7 +159,7 @@ If you want your model to specify a scope of attached service then..
 
 By default, DBContext uses InMemory SqlLite by using "InMemory" connection string stored in configuration.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## General_Design
 
@@ -170,10 +170,14 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
     In TDD mode, all we need is to make sure that contract operations on a given model works.
     We should be able to create test projects before we even create an actual Web API project.
  2. Operation contracts are defined in three categories:
+    
      a. Query contract (read-only)
+    
      b. Command contract (write-only)
+    
      c. Contract - (read-only or read - write)
- 3. Contract interfaces are formed by inheriting either Command interface or Query interface or both.
+    
+ 4. Contract interfaces are formed by inheriting either Command interface or Query interface or both.
  
         public interface IContract<TOutDTO, TModel, TID> : IContract
             #if (!MODEL_NONREADABLE && !MODEL_NONQUERYABLE)
@@ -246,7 +250,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             }
         #endif
 
- 4. Single repsonsibility interfaces:
+ 5. Single repsonsibility interfaces:
       1. IAppendable\<TOutDTO, TModel, TID\>
       2. IUpdatable\<TOutDTO, TModel, TID\>
       3. IDeleteable\<TOutDTO, TModel, TID\>
@@ -317,7 +321,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
             }
         #endif     
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## Model_Design
    1. IModel
@@ -578,7 +582,7 @@ Now consider an implementation of all of the above to conjure up the model centr
 
 That's it. 
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE1 
 A single test project is created for each TDD and Non TDD environment.
@@ -738,7 +742,7 @@ One for Standard Web API testing (Controller via Service repository)
 Which framework will be used can be decided by a user simply by defining compiler constants MODEL_USEXUNIT or MODEL_USENUNIT. 
 If neither of those constants defined then MSTest will be used.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE2
 Criteria based search feature for models added.
@@ -746,7 +750,7 @@ Criteria based search feature for models added.
 Try FindAll (ISearchParameter searchParameter) method.
 Have a look at the Operations.cs class to know how generic comparison methods are defined.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE3
 Support for ClassData and MemberData test attributes added.
@@ -807,7 +811,7 @@ To use class data, ArgSource\<source\> will suffice.
         }
     }
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE4
 Feature to perform search for multiple models using multiple search parameters added.
@@ -1013,7 +1017,7 @@ And then In Query class:
     }
 
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE5
 Added Exception Middleware. Middleware type: IExceptionFiter type
@@ -1156,7 +1160,7 @@ Finally,
         }
     }
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE6
 Added Support for IActionResult for controller. 
@@ -1208,7 +1212,7 @@ Consider the following code in controller class:
     }
 As you can see if MODEL_USEACTION is true then Get(id) method result will be Task\<IActionResult\> instead of  Task\<TOutDTO?\>
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE7
 Feature: Choose database at model level.
@@ -1248,7 +1252,7 @@ Please note that, regardless of any of these,
 2. Don't worry about downloading relevant package from nuget.
 3. Defining constant will automatically download the relevant package for you.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE8
 Controller class: 4th Type TInDTO included.
@@ -1272,7 +1276,7 @@ So now it is Controller<TOutDTO, TModel, TID, TInDTO>
 We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE9 
 Converted DBContext from generic to non-generic class.
@@ -1326,7 +1330,7 @@ all the way upto the model class and interfaces to define Model\<TModel\> and IS
 IEntityTypeConfiguration\<TModel\> is the key. Now every model that inherits from Model\<TModel\>
 will not need to worry about getting associated with DBContext.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE10 
 Support for Query-Only-Controllers and Keyless models is added.
@@ -1367,7 +1371,7 @@ It is now possible to create separate controller for command and query purposes.
 Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, which is located in Configuration class, will create Query-only controller.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE11 
 Abstract Models for common primary key type: int, long, Guid, enum are added.
@@ -1464,7 +1468,7 @@ and use as 'TID' because TID can only be struct.
 Also note that when you are using an actual database GetNewID() method implementation might change;
 You may want to get unique ID from the database itself. 
     
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE12 
 
@@ -1541,7 +1545,7 @@ ICommand\<TOutDTO, TModel, TID\>
     }
     #endif
 
- [GoTo Index](#Index)
+ [GoBack](#Index)
 
 ## UPDATE13
 
@@ -1583,7 +1587,7 @@ Consider the following modified definition of IModelContext interface:
     }
 As you can see, external source can be passed while creating command or query object.
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE14
 MODIFY design: Mixed UOW with repository pattern.
@@ -1630,7 +1634,7 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
     #endif
     }
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE15
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
@@ -1698,7 +1702,7 @@ MODEL_DELETEBULK: For bulk model deletions.
     }
     #endif
 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 ## UPDATE16
 UPDATE16: Support for Multi search criteria is added. 
