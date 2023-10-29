@@ -93,7 +93,7 @@ Option was to be provided to use interfaces and DTOs as input argument in POST/P
 ## The project was to end with CQRS (Command and Query Segregation) adaptation.
 
 ## HOW 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 To provide supports for the above mentioned, the following CCC (Conditional Compilation Constants) were came to my mind:
 
@@ -157,7 +157,7 @@ If you want your model to specify a scope of attached service then..
 By default, DBContext uses InMemory SqlLite by using "InMemory" connection string stored in configuration.
 
 ## General_Design
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 1. Defined an abstract layer called Microserives.Common
     This layer will have no awareness of any Web API controllers or DbContext. 
@@ -314,7 +314,7 @@ By default, DBContext uses InMemory SqlLite by using "InMemory" connection strin
         #endif     
 
 ## Model_Design
-[GoTo Index](#Index)
+[GoBack](#Index)
 
    1. IModel
    2. IModel\<TID\>
@@ -575,7 +575,7 @@ Now consider an implementation of all of the above to conjure up the model centr
 That's it. 
 
 ## UPDATE1 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 A single test project is created for each TDD and Non TDD environment.
 One for testing a service in TDD environment:
@@ -735,7 +735,7 @@ Which framework will be used can be decided by a user simply by defining compile
 If neither of those constants defined then MSTest will be used.
  
 ## UPDATE2
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Criteria based search feature for models added.
 
@@ -944,7 +944,7 @@ And then In Query class:
 Have a look at the Operations.cs class to know how generic comparison methods are defined.
 
 ## UPDATE3
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Support for ClassData and MemberData test attributes added.
 
@@ -1005,7 +1005,7 @@ To use class data, ArgSource\<source\> will suffice.
     }
     
 ## UPDATE4
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Added Exception Middleware. Middleware type: IExceptionFiter type
 First, out own exception class and exception type enum are needed:
@@ -1148,7 +1148,7 @@ Finally,
     }
     
 ## UPDATE5
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Added Support for IActionResult for controller. 
 So, Now we have support for IActionResult and actual object return types.
@@ -1200,7 +1200,7 @@ Consider the following code in controller class:
 As you can see if MODEL_USEACTION is true then Get(id) method result will be Task\<IActionResult\> instead of  Task\<TOutDTO?\>
 
 ## UPDATE6
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Feature: Choose database at model level.
     
@@ -1240,7 +1240,7 @@ Please note that, regardless of any of these,
 3. Defining constant will automatically download the relevant package for you.
 
 ## UPDATE7
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Controller class: 4th Type TInDTO included.
 
@@ -1264,7 +1264,7 @@ We can define different DTOs for Out (GET calls) and IN (POST, PUT calls).
 We can still use any DTO for the both IN and OUT though.
 
 ## UPDATE8 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Converted DBContext from generic to non-generic class.
 This is to allow single DBContext to hold multiple model sets..
@@ -1318,7 +1318,7 @@ IEntityTypeConfiguration\<TModel\> is the key. Now every model that inherits fro
 will not need to worry about getting associated with DBContext.
 
 ## UPDATE9 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Support for Query-Only-Controllers and Keyless models is added.
 
@@ -1359,7 +1359,7 @@ Use constant MODEL_NONREADABLE: this will create Command-only controller.
 Then for the same model, call AddQueryModel() method, which is located in Configuration class, will create Query-only controller.
 
 ## UPDATE10 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Abstract Models for common primary key type: int, long, Guid, enum are added.
 
@@ -1456,7 +1456,7 @@ Also note that when you are using an actual database GetNewID() method implement
 You may want to get unique ID from the database itself. 
     
 ## UPDATE11 
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Adapted Command and Query Segregation pattern.
 
@@ -1532,7 +1532,7 @@ ICommand\<TOutDTO, TModel, TID\>
     #endif
     
 ## UPDATE12
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Added: Support for List based (non DbContext) Sigleton CQRS
 Changes are made in IModelContext, Service classes and Configuration class 
@@ -1573,7 +1573,7 @@ Consider the following modified definition of IModelContext interface:
 As you can see, external source can be passed while creating command or query object.
 
 ## UPDATE13
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 MODIFY design: Mixed UOW with repository pattern.
 Why?
@@ -1620,7 +1620,7 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
     }
     
 ## UPDATE14
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
 
@@ -1688,7 +1688,7 @@ MODEL_DELETEBULK: For bulk model deletions.
     #endif
     
 ## UPDATE15
-[GoTo Index](#Index)
+[GoBack](#Index)
 
 UPDATE16: Support for Multi search criteria is added. 
 Consider the following four options.
