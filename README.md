@@ -18,41 +18,39 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 
 [HOW?](#HOW)
 
-[General Design](#Genereal_Design)
+[General Design](#General_Design)
 
 [Model Design](#Model_Design)
 
 [UPDATE1: Common test project for all three frameworks i.e. xUnit, NUnit or MSTest.](#UPDATE1)
 
-[UPDATE2: Criteria based search feature for models added.](#UPDATE2)
+[UPDATE2: Feature to perform search for multiple models using multiple search parameters added.](#UPDATE2)
 
 [UPDATE3: Support for ClassData and MemberData test attributes added.](#UPDATE3)
 
-[UPDATE4: Feature to perform search for multiple models using multiple search parameters added.](#UPDATE4)
+[UPDATE4: Added Exception Middleware.](#UPDATE4)
 
-[UPDATE5: Added Exception Middleware.](#UPDATE5)
+[UPDATE5: Added Support for IActionResult for controller. ](#UPDATE5)
 
-[UPDATE6: Added Support for IActionResult for controller. ](#UPDATE6)
+[UPDATE6: Feature: Choose database at model level.](#UPDATE6)
 
-[UPDATE7: Feature: Choose database at model level.](#UPDATE7)
+[UPDATE7: Controller class: 4th Type def TInDTO included (input for POST/PUT calls).](#UPDATE7)
 
-[UPDATE8: Controller class: 4th Type def TInDTO included (input for POST/PUT calls).](#UPDATE8)
+[UPDATE8: Converted DBContext from generic to non-generic class.](#UPDATE8)
 
-[UPDATE9: Converted DBContext from generic to non-generic class.](#UPDATE9)
+[UPDATE9: Support for Query-Only-Controllers and Keyless models is added.](#UPDATE9)
 
-[UPDATE10: Support for Query-Only-Controllers and Keyless models is added.](#UPDATE10)
+[UPDATE10: Abstract Models for common primary key type: int, long, Guid, enum are added.](#UPDATE10)
 
-[UPDATE11: Abstract Models for common primary key type: int, long, Guid, enum are added.](#UPDATE11)
+[UPDATE11: Adapted Command and Query Segregation pattern.](#UPDATE11)
 
-[UPDATE12: Adapted Command and Query Segregation pattern.](#UPDATE12)
+[UPDATE12: ADD: Support for List based (non DbContext) Singleton CQRS.](#UPDATE12)
 
-[UPDATE13: ADD: Support for List based (non DbContext) Singleton CQRS.](#UPDATE13)
+[UPDATE13: MODIFY design: Mixed UOW with repository pattern.](#UPDATE13)
 
-[UPDATE14: MODIFY design: Mixed UOW with repository pattern.](#UPDATE14)
+[UPDATE14: Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.](#UPDATE14) 
 
-[UPDATE15: Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.](#UPDATE15)
-
-[UPDATE16: Support for Multi search criteria is added.](#UPDATE16)
+[UPDATE15: Support for Multi search criteria is added. ](#UPDATE15)
 
 ## WHY?
 We already know that a controller can have standard HTTP calls such as HttpGet, HttpPost, etc.
@@ -743,77 +741,11 @@ If neither of those constants defined then MSTest will be used.
 ## UPDATE2
 Criteria based search feature for models added.
 
-Try FindAll (ISearchParameter searchParameter) method.
-Have a look at the Operations.cs class to know how generic comparison methods are defined.
-
-[GoTo Index](#Index)
-
-## UPDATE3
-Support for ClassData and MemberData test attributes added.
-
-ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
-ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
-You will have to inherit from this class and provide your own data and then you can use
-
-This is an example on how to use source member data.
-To use member data, you must define a static method or property returning IEnumerable<object[]>.
-
-
-    [WithArgs]
-    [ArgSource(typeof(MemberDataExample), "GetData")]
-    public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
-    {
-        //
-    }
-
-This is an example on how to use source class data.
-To use class data, ArgSource\<source\> will suffice.
-
-
-    [WithArgs]
-    [ArgSource<ClassDataExample>]
-    public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
-    {
-        //
-    
-    }
-    
- Then, those classes can be defined in the following manner:
- 
-    class MemberDataExample 
-    {
-        public static IEnumerable<object[]> GetData   
-        {
-            get
-            {
-                yield return new object[] { 0 };
-                yield return new object[] { 3 };
-                yield return new object[] { -1 };
-            }
-        }
-    }
-
-    class ClassDataExample: ArgSource 
-    {
-
-        public override IEnumerable<object[]> Data  
-        {
-                get
-                {
-                    yield return new object[] { 0 };
-                    yield return new object[] { 3 };
-                    yield return new object[] { -1 };
-                }
-        }
-    }
-
-[GoTo Index](#Index)
-
-## UPDATE4
 Feature to perform search for multiple models using multiple search parameters added.
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
-ParamBinder class code updated to handle parsing of multiple parameters.
+
+ParamBinder class code to handle parsing of multiple parameters.
 
     public sealed class ParamBinder: Binder
     {
@@ -1011,11 +943,72 @@ And then In Query class:
         }
     #endif             
     }
-
+Have a look at the Operations.cs class to know how generic comparison methods are defined.
 
 [GoTo Index](#Index)
 
-## UPDATE5
+## UPDATE3
+Support for ClassData and MemberData test attributes added.
+
+ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
+ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
+You will have to inherit from this class and provide your own data and then you can use
+
+This is an example on how to use source member data.
+To use member data, you must define a static method or property returning IEnumerable<object[]>.
+
+
+    [WithArgs]
+    [ArgSource(typeof(MemberDataExample), "GetData")]
+    public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+    {
+        //
+    }
+
+This is an example on how to use source class data.
+To use class data, ArgSource\<source\> will suffice.
+
+
+    [WithArgs]
+    [ArgSource<ClassDataExample>]
+    public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+    {
+        //
+    
+    }
+    
+ Then, those classes can be defined in the following manner:
+ 
+    class MemberDataExample 
+    {
+        public static IEnumerable<object[]> GetData   
+        {
+            get
+            {
+                yield return new object[] { 0 };
+                yield return new object[] { 3 };
+                yield return new object[] { -1 };
+            }
+        }
+    }
+
+    class ClassDataExample: ArgSource 
+    {
+
+        public override IEnumerable<object[]> Data  
+        {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+        }
+    }
+
+[GoTo Index](#Index)
+
+## UPDATE4
 Added Exception Middleware. Middleware type: IExceptionFiter type
 First, out own exception class and exception type enum are needed:
 
@@ -1158,7 +1151,7 @@ Finally,
 
 [GoTo Index](#Index)
 
-## UPDATE6
+## UPDATE5
 Added Support for IActionResult for controller. 
 So, Now we have support for IActionResult and actual object return types.
 Use conditional compiler constant: MODEL_USEACTION
@@ -1210,7 +1203,7 @@ As you can see if MODEL_USEACTION is true then Get(id) method result will be Tas
 
 [GoTo Index](#Index)
 
-## UPDATE7
+## UPDATE6
 Feature: Choose database at model level.
     
     public enum ConnectionKey
@@ -1250,7 +1243,7 @@ Please note that, regardless of any of these,
 
 [GoTo Index](#Index)
 
-## UPDATE8
+## UPDATE7
 Controller class: 4th Type TInDTO included.
 
 So now it is Controller<TOutDTO, TModel, TID, TInDTO>
@@ -1274,7 +1267,7 @@ We can still use any DTO for the both IN and OUT though.
 
 [GoTo Index](#Index)
 
-## UPDATE9 
+## UPDATE8 
 Converted DBContext from generic to non-generic class.
 This is to allow single DBContext to hold multiple model sets..
 
@@ -1328,7 +1321,7 @@ will not need to worry about getting associated with DBContext.
 
 [GoTo Index](#Index)
 
-## UPDATE10 
+## UPDATE9 
 Support for Query-Only-Controllers and Keyless models is added.
 
     [Keyless]
@@ -1369,7 +1362,7 @@ Then for the same model, call AddQueryModel() method, which is located in Config
 
 [GoTo Index](#Index)
 
-## UPDATE11 
+## UPDATE10 
 Abstract Models for common primary key type: int, long, Guid, enum are added.
 
     public abstract class ModelEnum<TEnum, TModel> : Model<TEnum, TModel>
@@ -1466,7 +1459,7 @@ You may want to get unique ID from the database itself.
     
 [GoTo Index](#Index)
 
-## UPDATE12 
+## UPDATE11 
 
 Adapted Command and Query Segregation pattern.
 
@@ -1543,7 +1536,7 @@ ICommand\<TOutDTO, TModel, TID\>
 
  [GoTo Index](#Index)
 
-## UPDATE13
+## UPDATE12
 
 Added: Support for List based (non DbContext) Sigleton CQRS
 Changes are made in IModelContext, Service classes and Configuration class 
@@ -1585,7 +1578,7 @@ As you can see, external source can be passed while creating command or query ob
 
 [GoTo Index](#Index)
 
-## UPDATE14
+## UPDATE13
 MODIFY design: Mixed UOW with repository pattern.
 Why?
 Modifying IQuery or ICommand is easy as we do not need to change service repository.
@@ -1632,7 +1625,7 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
 
 [GoTo Index](#Index)
 
-## UPDATE15
+## UPDATE14
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
 
 These are the optional methods; only available when the relevant CCC is true for example:
