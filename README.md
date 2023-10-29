@@ -417,8 +417,8 @@ Now consider an implementation of all of the above to conjure up the model centr
 
         public string ModelName => modelName;
 
-        protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
-        bool IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
+        protected abstract Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
+        bool IExParamParser.Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
         {
             var name = parameter.Name;
             parsedValue = null;
@@ -465,8 +465,8 @@ Now consider an implementation of all of the above to conjure up the model centr
             }
         }
 
-        string IExModelExceptionSupplier.GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo, Exception? innerException) =>
-            GetAppropriateExceptionMessage(exceptionType, additionalInfo, innerException);
+        string IExModelExceptionSupplier.GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo) =>
+            GetAppropriateExceptionMessage(exceptionType, additionalInfo);
 
         #if MODEL_USEDTO
             protected virtual IModel? ToDTO(Type type)
