@@ -92,8 +92,7 @@ Option was to be provided to use interfaces and DTOs as input argument in POST/P
 
 ## The project was to end with CQRS (Command and Query Segregation) adaptation.
 
-[GoTo Index](#Index)
-## HOW
+## HOW [GoTo Index](#Index)
 
 To provide supports for the above mentioned, the following CCC (Conditional Compilation Constants) were came to my mind:
 
