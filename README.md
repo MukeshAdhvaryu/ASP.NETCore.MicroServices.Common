@@ -86,7 +86,7 @@ At last, the user should be able choose to use dynamically generated controller 
 The goal was also to include a common test project to handle all three without the user need to change much except any custom test they want to write.
 It would be an apt thing to do to define custom attributes to map important attributes from all three testing frameworks.
 
-### Support for keyless (query) models was also to be provided (perhaps not at the begining of the project).
+### Support for keyless (query) models was also to be provided (perhaps not at the beginning of the project).
 Keyed models should be flexible enough to use various common keys such as int, long, Guid, enum etc.
 
 ## To handle under-fetching and over-fetching problems,
