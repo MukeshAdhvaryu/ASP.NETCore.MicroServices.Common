@@ -298,10 +298,18 @@ namespace MicroService.Common.CQRS
         #endregion
 
         #region GET FIRST MODEL
-        IModel? IFirstModel.GetFirstModel() =>
-            GetItems().FirstOrDefault();
-        TModel? IFirstModel<TModel>.GetFirstModel() =>
-            GetItems().FirstOrDefault();
+        IModel? IFirstModel.GetFirstModel()
+        {
+            if(GetModelCount() == 0)
+                return null;
+          return  GetItems().FirstOrDefault();
+        }
+        TModel? IFirstModel<TModel>.GetFirstModel()
+        {
+            if (GetModelCount() == 0)
+                return null;
+            return GetItems().FirstOrDefault();
+        }
         #endregion
 
         #region GET MODEL COUNT
@@ -338,7 +346,7 @@ namespace MicroService.Common.CQRS
                 var result = ((IExModel)model).ToDTO(DTOType);
                 if (result == null)
                     return default(TOutDTO);
-                return (TOutDTO?)((IExModel)model).ToDTO(DTOType);
+                return (TOutDTO?)result;
             }
 #endif
             //+:cnd:noEmit
