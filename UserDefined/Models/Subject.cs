@@ -197,6 +197,7 @@ namespace UserDefined.Models
                 var subject = (ISubject)model;
                 faculty = subject.Faculty;
                 Name = subject.Name;
+                book= subject.Book;
                 return Task.FromResult(Tuple.Create(true, "All success"));
             }
 
