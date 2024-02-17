@@ -25,13 +25,17 @@ Creating a microservice by choosing from .NET templates is a standard way to get
 [UPDATE1: Common test project for all three frameworks i.e. xUnit, NUnit or MSTest.](#UPDATE1)
 
 [UPDATE2: Feature to perform search for multiple models using multiple search parameters added.](#UPDATE2)
+[UPDATE2: Feature to perform search for multiple models using multiple search parameters added.](#UPDATE2)
 
 [UPDATE3: Support for ClassData and MemberData test attributes added.](#UPDATE3)
 
 [UPDATE4: Added Exception Middleware.](#UPDATE4)
+[UPDATE4: Added Exception Middleware.](#UPDATE4)
 
 [UPDATE5: Added Support for IActionResult for controller. ](#UPDATE5)
+[UPDATE5: Added Support for IActionResult for controller. ](#UPDATE5)
 
+[UPDATE6: Feature: Choose database at model level.](#UPDATE6)
 [UPDATE6: Feature: Choose database at model level.](#UPDATE6)
 
 [UPDATE7: Controller class: 4th Type def TInDTO included (input for POST/PUT calls).](#UPDATE7)
@@ -577,6 +581,7 @@ That's it.
 ## UPDATE1 
 [GoBack](#Index)
 
+## UPDATE1 
 A single test project is created for each TDD and Non TDD environment.
 One for testing a service in TDD environment:
 
@@ -737,9 +742,280 @@ If neither of those constants defined then MSTest will be used.
 ## UPDATE2
 [GoBack](#Index)
 
+## UPDATE2
 Criteria based search feature for models added.
 
 Feature to perform search for multiple models using multiple search parameters added.
+
+Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
+
+ParamBinder class code to handle parsing of multiple parameters.
+
+    public sealed class ParamBinder: Binder
+    {
+        #region CONSTRUCTORS
+        public ParamBinder(IObjectModelValidator _validator) :
+            base(_validator)
+        { }
+        #endregion
+
+        public override Task BindModelAsync(ModelBindingContext bindingContext)
+        {
+            var Request = bindingContext.ActionContext.HttpContext.Request;
+            var Query = Request.Query;
+            var ControllerTypeInfo = ((ControllerActionDescriptor)bindingContext.ActionContext.ActionDescriptor).ControllerTypeInfo;
+
+            #region GET CONTROLLER TYPE AND DTO TYPE
+            var controllerType = ControllerTypeInfo.GetControllerType(out _);
+            #endregion
+
+            if (controllerType == null)
+                goto ERROR;
+
+            var OriginalModelName = bindingContext.OriginalModelName;
+
+            object? Result;
+            string? json;
+            bool IsJson;
+
+            #region PARAMETER IS FROM BODY
+            if (Query.Count == 0)
+            {
+                var obj = Request.ReadFromJsonAsync(typeof(object)).Result;
+                if (obj == null)
+                    goto ERROR;
+                json = obj.ToString();
+                IsJson = true;
+                goto PARSE_JSON;
+            }
+            #endregion
+
+            #region PARAMETER IS FROM QUERY - SINGLE JSON STRING
+            json = Query[OriginalModelName].ToString();
+            IsJson = Query.ContainsKey(OriginalModelName);
+            #endregion
+
+            #region PARSE JSON
+            PARSE_JSON:
+            if (IsJson)
+            {
+                json = Query[OriginalModelName].ToString();
+                Result = bindingContext.ModelType.ToSearchParam(json);
+
+                if (Result == null)
+                    goto ERROR;
+
+                goto VALIDATE;
+            }
+            #endregion
+
+            #region PARAMETER IS FROM QUERY BUT AS A COLLECTION OF STRING VALUES
+            IExModel Model = (IExModel)controllerType.GetModel(true);
+            var propertyName = Query["name"][0]?.ToLower();
+            if (string.IsNullOrEmpty(propertyName))
+                goto ERROR;
+
+            Enum.TryParse(Query["criteria"], true, out Criteria criteria);
+            var items = Query["value"]; 
+
+            if (!Model.Parse(propertyName, items, out Result))
+            {
+                goto ERROR;
+            }
+
+            Result = new SearchParameter(propertyName, criteria, Result);
+            goto VALIDATE;
+            #endregion
+
+            #region VALIDATE
+            VALIDATE:
+            if (Result != null)
+            {
+                Validator.Validate(
+                    bindingContext.ActionContext,
+                    validationState: bindingContext.ValidationState,
+                    prefix: string.Empty,
+                    model: Result
+                );
+            }
+            #endregion
+
+            #region RETURN SUCCESS RESULT
+            bindingContext.Result = ModelBindingResult.Success(Result);
+            return Task.CompletedTask;
+            #endregion
+
+            #region RETURN ERROR RESULT
+            ERROR:
+            bindingContext.Result = ModelBindingResult.Failed();
+            return Task.CompletedTask;
+            #endregion
+        }
+    }
+
+And then In Query class:
+
+    public abstract class Query<TOutDTO, TModel> : IQuery<TOutDTO, TModel> 
+    where TModel : class, ISelfModel<TModel>, new()
+    where TOutDTO : IModel, new() 
+    {
+         readonly static IExModel DummyModel = (IExModel)new TModel(); 
+    #if MODEL_USEDTO
+        static readonly Type DTOType = typeof(TOutDTO);
+        static readonly bool NeedToUseDTO = !DTOType.IsAssignableFrom(typeof(TModel));
+    #endif 
+
+    #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
+        public virtual Task<IEnumerable<TOutDTO>?> FindAll<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter
+        {
+            if (parameters == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+        if (GetModelCount() == 0)
+            throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
+
+        Predicate<TModel> predicate;
+
+        if (parameters.Length == 1)
+        {
+            var parameter = parameters[0];
+
+            if (parameter == null)
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+            if (string.IsNullOrEmpty(parameter.Name))
+                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied, "Missing Name!");
+
+            predicate = (m) =>
+            {
+                if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                    return false;
+
+                var currentValue = m[parameter.Name];
+                if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                    return false;
+
+                return true;
+            };
+
+            goto EXIT;
+        }
+
+        switch (conditionJoin)
+        {
+            case AndOr.AND:
+            default:
+                predicate = (m) =>
+                {
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                            return false;
+                    }
+                    return true;
+                };
+                break;
+            case AndOr.OR:
+                predicate = (m) =>
+                {
+                    bool result = false;
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter == null || string.IsNullOrEmpty(parameter.Name))
+                            continue;
+                        if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                            return false;
+
+                        var currentValue = m[parameter.Name];
+                        if (Operations.Compare(currentValue, parameter.Criteria, value))
+                            return true;
+                    }
+                    return result;
+                };
+                break;
+            }
+
+            EXIT:
+            return Task.FromResult(ToDTO(GetItems().Where((m) => predicate(m))));
+        }
+    #endif             
+    }
+Have a look at the Operations.cs class to know how generic comparison methods are defined.
+
+[GoBack](#Index)
+
+## UPDATE3
+[GoBack](#Index)
+
+Support for ClassData and MemberData test attributes added.
+
+ClassData attribute is mapped to: ArgSourceAttribute\<T\> where T: ArgSource
+ArgSource is an abstract class with an abstract property IEnumerable<object[]> Data {get; }
+You will have to inherit from this class and provide your own data and then you can use
+
+This is an example on how to use source member data.
+To use member data, you must define a static method or property returning IEnumerable<object[]>.
+
+
+    [WithArgs]
+    [ArgSource(typeof(MemberDataExample), "GetData")]
+    public Task GetAll_ReturnAllUseMemberData(int limitOfResult = 0)
+    {
+        //
+    }
+
+This is an example on how to use source class data.
+To use class data, ArgSource\<source\> will suffice.
+
+
+    [WithArgs]
+    [ArgSource<ClassDataExample>]
+    public Task GetAll_ReturnAllUseClassData(int limitOfResult = 0)
+    {
+        //
+    
+    }
+    
+ Then, those classes can be defined in the following manner:
+ 
+    class MemberDataExample 
+    {
+        public static IEnumerable<object[]> GetData   
+        {
+            get
+            {
+                yield return new object[] { 0 };
+                yield return new object[] { 3 };
+                yield return new object[] { -1 };
+            }
+        }
+    }
+
+    class ClassDataExample: ArgSource 
+    {
+
+        public override IEnumerable<object[]> Data  
+        {
+                get
+                {
+                    yield return new object[] { 0 };
+                    yield return new object[] { 3 };
+                    yield return new object[] { -1 };
+                }
+        }
+    }
+
+[GoBack](#Index)
+
+## UPDATE4
+[GoBack](#Index)
 
 Try FindAll (IEnumerable\<ISearchParameter\> searchParameter) method.
 
@@ -1146,8 +1422,7 @@ Finally,
             context.Result = new JsonResult(problem);
         }
     }
-    
-## UPDATE5
+
 [GoBack](#Index)
 
 Added Support for IActionResult for controller. 
@@ -1618,8 +1893,7 @@ NEW IContract\<TOutDTO, TModel, TID\> interface:
         ICommand<TOutDTO, TModel, TID> Command { get; }
     #endif
     }
-    
-## UPDATE14
+
 [GoBack](#Index)
 
 Support for Bulk command calls (HttpPut, HttpPost, HttpDelete) is added.
@@ -1686,8 +1960,7 @@ MODEL_DELETEBULK: For bulk model deletions.
     #endif
     }
     #endif
-    
-## UPDATE15
+
 [GoBack](#Index)
 
 UPDATE16: Support for Multi search criteria is added. 
