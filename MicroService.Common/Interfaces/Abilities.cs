@@ -376,72 +376,72 @@ namespace MicroService.Common.Interfaces
     //+:cnd:noEmit
     #endregion
 
-    #region IAdd<TModel>
-    //-:cnd:noEmit
-#if MODEL_APPENDABLE
-    public interface IAdd<TModel> where TModel : IModel
-    {
-        /// <summary>
-        /// Adds a specified model.
-        /// </summary>
-        /// <param name="model">Model to add.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> Add(TModel? model);
+//    #region IAdd<TModel>
+//    //-:cnd:noEmit
+//#if MODEL_APPENDABLE
+//    public interface IAdd<TModel> where TModel : IModel
+//    {
+//        /// <summary>
+//        /// Adds a specified model.
+//        /// </summary>
+//        /// <param name="model">Model to add.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> Add(TModel? model);
 
-        /// <summary>
-        /// Adds a range of specified models.
-        /// </summary>
-        /// <param name="models">Models to add.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> AddRange(IEnumerable<TModel>? models);
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
+//        /// <summary>
+//        /// Adds a range of specified models.
+//        /// </summary>
+//        /// <param name="models">Models to add.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> AddRange(IEnumerable<TModel>? models);
+//    }
+//#endif
+//    //+:cnd:noEmit
+//    #endregion
 
-    #region IDelete<TModel>
-    //-:cnd:noEmit
-#if MODEL_DELETABLE
-    public interface IDelete<TModel> where TModel : IModel
-    {
-        /// <summary>
-        /// Adds a specified model.
-        /// </summary>
-        /// <param name="model">Model to delete.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> Delete(TModel? model);
+//    #region IDelete<TModel>
+//    //-:cnd:noEmit
+//#if MODEL_DELETABLE
+//    public interface IDelete<TModel> where TModel : IModel
+//    {
+//        /// <summary>
+//        /// Adds a specified model.
+//        /// </summary>
+//        /// <param name="model">Model to delete.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> Delete(TModel? model);
 
-        /// <summary>
-        /// Deletes a range of specified models.
-        /// </summary>
-        /// <param name="models">Models to delete.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> DeleteRange(IEnumerable<TModel>? models);
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
+//        /// <summary>
+//        /// Deletes a range of specified models.
+//        /// </summary>
+//        /// <param name="models">Models to delete.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> DeleteRange(IEnumerable<TModel>? models);
+//    }
+//#endif
+//    //+:cnd:noEmit
+//    #endregion
 
-    #region IUpdate<TModel>
-    //-:cnd:noEmit
-#if MODEL_UPDATABLE
-    public interface IUpdate<TModel> where TModel : IModel
-    {
-        /// <summary>
-        /// Updates a specified model.
-        /// </summary>
-        /// <param name="model">Model to update.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> Update(TModel? model);
+//    #region IUpdate<TModel>
+//    //-:cnd:noEmit
+//#if MODEL_UPDATABLE
+//    public interface IUpdate<TModel> where TModel : IModel
+//    {
+//        /// <summary>
+//        /// Updates a specified model.
+//        /// </summary>
+//        /// <param name="model">Model to update.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> Update(TModel? model);
 
-        /// <summary>
-        /// Updates a range of specified models.
-        /// </summary>
-        /// <param name="models">Models to update.</param>
-        /// <returns>Task with result of type boolean.</returns>
-        Task<bool> UpdateRange(IEnumerable<TModel>? models);
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
+//        /// <summary>
+//        /// Updates a range of specified models.
+//        /// </summary>
+//        /// <param name="models">Models to update.</param>
+//        /// <returns>Task with result of type boolean.</returns>
+//        Task<bool> UpdateRange(IEnumerable<TModel>? models);
+//    }
+//#endif
+//    //+:cnd:noEmit
+//    #endregion
 }

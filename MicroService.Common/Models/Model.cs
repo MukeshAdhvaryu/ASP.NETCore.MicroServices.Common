@@ -176,7 +176,7 @@ namespace MicroService.Common.Models
         #endregion
 
         #region PROPERTIES
-        public virtual object? this[string? propertyName]
+        public override object? this[string? propertyName]
         {
             get 
             {

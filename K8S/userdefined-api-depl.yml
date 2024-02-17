@@ -1,0 +1,30 @@
+# define application version
+apiVersion: apps/v1
+
+# define of which kind this yaml file represents
+kind: Deployment
+#specify metadata for the deployment
+metadata:
+  name: userdefined-api-depl
+#define specification for deployment
+spec: 
+  # number of replicas to create for this deplyment
+  replicas: 1
+  #define selector
+  selector:
+    matchLabels:
+      app: userdefined-api
+  template:
+    metadata:
+      labels:
+        app: userdefined-api
+    spec:
+      #define containers. single or multiple containers can be defined here.
+      #do not forget to put hypen before each entry. hyphen denotes to an item in a list
+      containers:
+      - 
+        name: userdefined-api
+        image: maadhvaryu/userdefined.api:latest
+
+
+  

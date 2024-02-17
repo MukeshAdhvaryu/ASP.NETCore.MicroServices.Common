@@ -281,7 +281,7 @@ namespace MicroService.Common.Tests
             if (model == null)
                 return default(TOutDTO);
             if (NeedToUseDTO)
-                return (TOutDTO)((IExModel)model).ToDTO(DTOType);
+                return (TOutDTO?)((IExModel)model).ToDTO(DTOType);
             return (TOutDTO)(object)model;
         }
 #else
